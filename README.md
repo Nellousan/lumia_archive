@@ -208,8 +208,9 @@ still reads aloud.
 
 ### Derived facts about the current dataset
 
-- 346 items, **174 craftable**, 22 areas, `research_center` has no loot.
-- 153 items appear in an area; the other 193 do not, and 24 of those have no recipe either — those
+- 629 items, **446 craftable**, 22 areas, `research_center` has no loot. Recipes now nest up to five
+  levels (`ash` → `lye` → `poison` → `venom_dart` → `dart_of_souls` → `dart_of_blood`).
+- 153 items appear in an area; the other 476 do not, and 35 of those have no recipe either — those
   are the components a route assumes are already carried (see below).
 - 331 loot slots collapse to **330 distinct area/item pairs** — Alley lists Scrap Metal twice
   (×2 and ×9); the loader sums them to ×11 and reports it as a data note.
@@ -277,8 +278,8 @@ missing from `CATEGORY_TABS` raises its own note.
   requirements.
 - **Components the island cannot supply are carried, not searched for.** Some materials have no
   location in `data.json` at all — creature drops, random spawns, the rare finds (`mithril`,
-  `meteorite`, `tree_of_life`, `holy_blood`, `ogre_skin`, `bread`, the `crude_*` weapons). A route
-  takes those as already in the pack rather than declaring the plan impossible: each is spent once,
+  `meteorite`, `tree_of_life`, `holy_blood`, `ogre_skin`, `bread`, the `crude_*` weapons, the
+  randomly-found blades like `muramasa` and `viper`). A route takes those as already in the pack rather than declaring the plan impossible: each is spent once,
   walks in with the survivor (taking its bag slot like anything else, and getting worn at the first
   stop if it is equipment), and is never gathered or built. Only items with **no area and no recipe**
   qualify — a craftable intermediate such as `iron_sheet` spawns nowhere but its recipe is known, so

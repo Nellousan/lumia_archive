@@ -871,7 +871,7 @@
     {
       "id": "stallion_medal",
       "name": "Stallion Medal",
-      "rarity": "common",
+      "rarity": "uncommon",
       "type": [
         "thrown"
       ],
@@ -882,7 +882,7 @@
     {
       "id": "playing_cards",
       "name": "Playing Cards",
-      "rarity": "common",
+      "rarity": "uncommon",
       "type": [
         "thrown"
       ],
@@ -4866,6 +4866,3429 @@
         "arcane_stone",
         "feather_boots"
       ]
+    },
+    {
+      "id": "belt",
+      "name": "Belt",
+      "rarity": "uncommon",
+      "type": [
+        "accessory"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather",
+        "scrap_metal"
+      ]
+    },
+    {
+      "id": "doll",
+      "name": "Doll",
+      "rarity": "uncommon",
+      "type": [
+        "accessory"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cloth",
+        "glass_marble"
+      ]
+    },
+    {
+      "id": "buddha_sarira",
+      "name": "Buddha Sarira",
+      "rarity": "uncommon",
+      "type": [
+        "accessory"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": [
+        "buddhist_scripture",
+        "wooden_fish"
+      ]
+    },
+    {
+      "id": "flag_pole",
+      "name": "Flag Pole",
+      "rarity": "uncommon",
+      "type": [
+        "accessory"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_rod",
+        "nail"
+      ]
+    },
+    {
+      "id": "army_suspenders",
+      "name": "Army Suspenders",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "magazine",
+        "belt"
+      ]
+    },
+    {
+      "id": "ancient_elixir_stone",
+      "name": "Ancient Elixir Stone",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "flint",
+        "herb"
+      ]
+    },
+    {
+      "id": "saint_s_relic",
+      "name": "Saint's Relic",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "holy_grail",
+        "cross"
+      ]
+    },
+    {
+      "id": "flag",
+      "name": "Flag",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 16,
+      "defaultQuantity": 1,
+      "recipe": [
+        "flag_pole",
+        "cloth"
+      ]
+    },
+    {
+      "id": "moon_stone",
+      "name": "Moon Stone",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 16,
+      "defaultQuantity": 1,
+      "recipe": [
+        "meteorsteel",
+        "stone"
+      ]
+    },
+    {
+      "id": "sniping_scope",
+      "name": "Sniping Scope",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 16,
+      "defaultQuantity": 1,
+      "recipe": [
+        "laser_pointer",
+        "binoculars"
+      ]
+    },
+    {
+      "id": "mounted_archer_s_quiver",
+      "name": "Mounted Archer's Quiver",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 16,
+      "defaultQuantity": 1,
+      "recipe": [
+        "quiver",
+        "belt"
+      ]
+    },
+    {
+      "id": "dice_of_destiny",
+      "name": "Dice of Destiny",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 18,
+      "defaultQuantity": 1,
+      "recipe": [
+        "playing_cards",
+        "dice"
+      ]
+    },
+    {
+      "id": "mirror_marble",
+      "name": "Mirror Marble",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "mithril",
+        "glass_marble"
+      ]
+    },
+    {
+      "id": "uchiwa",
+      "name": "Uchiwa",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "fan",
+        "doll"
+      ]
+    },
+    {
+      "id": "moonlight_pendant",
+      "name": "Moonlight Pendant",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "moon_stone",
+        "ribbon"
+      ]
+    },
+    {
+      "id": "schrodinger_s_box",
+      "name": "Schrodinger's Box",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "box",
+        "poison"
+      ]
+    },
+    {
+      "id": "eye_of_horus",
+      "name": "Eye of Horus",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "ancient_elixir_stone",
+        "piano_wire"
+      ]
+    },
+    {
+      "id": "quiver_of_infinity",
+      "name": "Quiver of Infinity",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 21,
+      "defaultQuantity": 1,
+      "recipe": [
+        "mounted_archer_s_quiver",
+        "gold"
+      ]
+    },
+    {
+      "id": "sultan_s_quiver",
+      "name": "Sultan's Quiver",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 22,
+      "defaultQuantity": 1,
+      "recipe": [
+        "mounted_archer_s_quiver",
+        "gold"
+      ]
+    },
+    {
+      "id": "pirate_flag",
+      "name": "Pirate Flag",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 24,
+      "defaultQuantity": 1,
+      "recipe": [
+        "flag",
+        "sharp_kitchen_knife"
+      ]
+    },
+    {
+      "id": "optical_camouflage_bag",
+      "name": "Optical Camouflage Bag",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 24,
+      "defaultQuantity": 1,
+      "recipe": [
+        "army_suspenders",
+        "glass_pieces"
+      ]
+    },
+    {
+      "id": "veritas_lux_mea",
+      "name": "Veritas Lux Mea",
+      "rarity": "epic",
+      "type": [
+        "accessory"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "saint_s_relic",
+        "buddha_sarira"
+      ]
+    },
+    {
+      "id": "kundala",
+      "name": "Kundala",
+      "rarity": "legendary",
+      "type": [
+        "accessory"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "adamantium",
+        "moon_stone"
+      ]
+    },
+    {
+      "id": "jamadhar",
+      "name": "Jamadhar",
+      "rarity": "uncommon",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "knuckle",
+        "kitchen_knife"
+      ]
+    },
+    {
+      "id": "axe_chain",
+      "name": "Axe Chain",
+      "rarity": "uncommon",
+      "type": [
+        "blade"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_chain",
+        "hatchet"
+      ]
+    },
+    {
+      "id": "chain_scythe",
+      "name": "Chain Scythe",
+      "rarity": "uncommon",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_chain",
+        "sickle"
+      ]
+    },
+    {
+      "id": "battle_axe",
+      "name": "Battle Axe",
+      "rarity": "uncommon",
+      "type": [
+        "blade"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bamboo",
+        "hatchet"
+      ]
+    },
+    {
+      "id": "sabre",
+      "name": "Sabre",
+      "rarity": "uncommon",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "shamshir",
+        "heated_whetstone"
+      ]
+    },
+    {
+      "id": "scimitar",
+      "name": "Scimitar",
+      "rarity": "uncommon",
+      "type": [
+        "blade"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "shamshir",
+        "kitchen_knife"
+      ]
+    },
+    {
+      "id": "army_knife",
+      "name": "Army Knife",
+      "rarity": "uncommon",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "knife",
+        "branch"
+      ]
+    },
+    {
+      "id": "viper",
+      "name": "Viper",
+      "rarity": "rare",
+      "type": [
+        "blade"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bastard_sword",
+      "name": "Bastard Sword",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_sword",
+        "steel"
+      ]
+    },
+    {
+      "id": "twin_sword",
+      "name": "Twin Sword",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sharp_kitchen_knife",
+        "kitchen_knife"
+      ]
+    },
+    {
+      "id": "horse_guandao",
+      "name": "Horse Guandao",
+      "rarity": "rare",
+      "type": [
+        "blade"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "scimitar",
+        "spear_handle"
+      ]
+    },
+    {
+      "id": "reaper_s_scythe",
+      "name": "Reaper's Scythe",
+      "rarity": "rare",
+      "type": [
+        "blade"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sickle",
+        "spear_handle"
+      ]
+    },
+    {
+      "id": "odachi",
+      "name": "Odachi",
+      "rarity": "rare",
+      "type": [
+        "blade"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "katana",
+        "iron_sheet"
+      ]
+    },
+    {
+      "id": "plasma_sword",
+      "name": "Plasma Sword",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sabre",
+        "laser_pointer"
+      ]
+    },
+    {
+      "id": "chainsaw",
+      "name": "Chainsaw",
+      "rarity": "rare",
+      "type": [
+        "blade"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "soldering_iron",
+        "battery"
+      ]
+    },
+    {
+      "id": "arondight",
+      "name": "Arondight",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bastard_sword",
+        "cross"
+      ]
+    },
+    {
+      "id": "sword_of_justice",
+      "name": "Sword of Justice",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "stallion_medal",
+        "long_sword"
+      ]
+    },
+    {
+      "id": "excalibur",
+      "name": "Excalibur",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "jewel_sword",
+        "cross"
+      ]
+    },
+    {
+      "id": "meteor_claymore",
+      "name": "Meteor Claymore",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "meteorsteel",
+        "long_sword"
+      ]
+    },
+    {
+      "id": "death_adder",
+      "name": "Death Adder",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 33,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "black_mamba",
+      "name": "Black Mamba",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 33,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "starsteel_twin_sword",
+      "name": "Starsteel Twin Sword",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "meteorsteel",
+        "twin_sword"
+      ]
+    },
+    {
+      "id": "monohoshizao",
+      "name": "Monohoshizao",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "odachi",
+        "blueprint"
+      ]
+    },
+    {
+      "id": "harpe",
+      "name": "Harpe",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "scimitar",
+        "jewel_sword"
+      ]
+    },
+    {
+      "id": "durendal_mk2",
+      "name": "Durendal mk2",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "plasma_sword",
+        "tree_of_life"
+      ]
+    },
+    {
+      "id": "muramasa",
+      "name": "Muramasa",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "long_spear",
+      "name": "Long Spear",
+      "rarity": "uncommon",
+      "type": [
+        "stab"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "short_spear",
+        "spear_handle"
+      ]
+    },
+    {
+      "id": "halberd_axe",
+      "name": "Halberd Axe",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_spear",
+        "hatchet"
+      ]
+    },
+    {
+      "id": "divine_dual_swords",
+      "name": "Divine Dual Swords",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "muramasa",
+        "masamune"
+      ]
+    },
+    {
+      "id": "seven_star_sword",
+      "name": "Seven Star Sword",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "meteorite",
+        "jewel_sword"
+      ]
+    },
+    {
+      "id": "vibroblade",
+      "name": "Vibroblade",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "motor",
+        "knife"
+      ]
+    },
+    {
+      "id": "beam_axe",
+      "name": "Beam Axe",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "battle_axe",
+        "plasma_sword"
+      ]
+    },
+    {
+      "id": "santa_muerte",
+      "name": "Santa Muerte",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "reaper_s_scythe",
+        "horse_guandao"
+      ]
+    },
+    {
+      "id": "rapier",
+      "name": "Rapier",
+      "rarity": "rare",
+      "type": [
+        "blade"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sabre",
+        "heated_whetstone"
+      ]
+    },
+    {
+      "id": "hades_edge",
+      "name": "Hades' Edge",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bastard_sword",
+        "rapier"
+      ]
+    },
+    {
+      "id": "dragon_guandao",
+      "name": "Dragon Guandao",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "halberd_axe",
+        "tree_of_life"
+      ]
+    },
+    {
+      "id": "d_insleif",
+      "name": "Dáinsleif",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "holy_blood",
+        "bastard_sword"
+      ]
+    },
+    {
+      "id": "sky_piercer",
+      "name": "Sky Piercer",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "halberd_axe",
+        "horse_guandao"
+      ]
+    },
+    {
+      "id": "axe_of_pangu",
+      "name": "Axe of Pangu",
+      "rarity": "epic",
+      "type": [
+        "blade"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "battle_axe",
+        "adamantium"
+      ]
+    },
+    {
+      "id": "laevateinn",
+      "name": "Laevateinn",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "true_samadhi_fire",
+        "jewel_sword"
+      ]
+    },
+    {
+      "id": "arcane_edge",
+      "name": "Arcane Edge",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 53,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arcane_stone",
+        "bastard_sword"
+      ]
+    },
+    {
+      "id": "queen_death_adder",
+      "name": "Queen Death Adder",
+      "rarity": "legendary",
+      "type": [
+        "blade"
+      ],
+      "value": 41,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "king_black_mamba",
+      "name": "King Black Mamba",
+      "rarity": "legendary",
+      "type": [
+        "blade"
+      ],
+      "value": 41,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "tachyon_blade",
+      "name": "Tachyon Blade",
+      "rarity": "legendary",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 57,
+      "defaultQuantity": 1,
+      "recipe": [
+        "engineered_arcane_motor",
+        "laser_pointer"
+      ]
+    },
+    {
+      "id": "bamboo_spear",
+      "name": "Bamboo Spear",
+      "rarity": "uncommon",
+      "type": [
+        "stab"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bamboo",
+        "knife"
+      ]
+    },
+    {
+      "id": "bident",
+      "name": "Bident",
+      "rarity": "rare",
+      "type": [
+        "stab"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "rapier",
+        "short_spear"
+      ]
+    },
+    {
+      "id": "trident",
+      "name": "Trident",
+      "rarity": "rare",
+      "type": [
+        "stab"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_spear",
+        "twin_sword"
+      ]
+    },
+    {
+      "id": "hooded_katar",
+      "name": "Hooded Katar",
+      "rarity": "rare",
+      "type": [
+        "stab"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "jamadhar",
+        "arm_warmers"
+      ]
+    },
+    {
+      "id": "volticletto",
+      "name": "Volticletto",
+      "rarity": "rare",
+      "type": [
+        "stab"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "awl",
+        "electronic_parts"
+      ]
+    },
+    {
+      "id": "pile_bunker",
+      "name": "Pile Bunker",
+      "rarity": "rare",
+      "type": [
+        "stab"
+      ],
+      "value": 38,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sgoty870",
+        "harpoon"
+      ]
+    },
+    {
+      "id": "lance_of_poseidon",
+      "name": "Lance of Poseidon",
+      "rarity": "epic",
+      "type": [
+        "stab"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "purified_water",
+        "trident"
+      ]
+    },
+    {
+      "id": "vijayanagara",
+      "name": "Vijayanagara",
+      "rarity": "epic",
+      "type": [
+        "stab"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "volticletto",
+        "hooded_katar"
+      ]
+    },
+    {
+      "id": "cosmic_bident",
+      "name": "Cosmic Bident",
+      "rarity": "epic",
+      "type": [
+        "stab"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bident",
+        "ion_battery"
+      ]
+    },
+    {
+      "id": "long_serpent_spear",
+      "name": "Long Serpent Spear",
+      "rarity": "epic",
+      "type": [
+        "stab"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "halberd_axe",
+        "tree_of_life"
+      ]
+    },
+    {
+      "id": "spear_of_longinus",
+      "name": "Spear of Longinus",
+      "rarity": "epic",
+      "type": [
+        "stab"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_spear",
+        "holy_blood"
+      ]
+    },
+    {
+      "id": "blazing_lance",
+      "name": "Blazing Lance",
+      "rarity": "epic",
+      "type": [
+        "stab"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "true_samadhi_fire",
+        "long_spear"
+      ]
+    },
+    {
+      "id": "morning_star",
+      "name": "Morning Star",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_rod",
+        "iron_ball"
+      ]
+    },
+    {
+      "id": "tonfa",
+      "name": "Tonfa",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 18,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cotton_work_glove",
+        "short_rod"
+      ]
+    },
+    {
+      "id": "dead_battery",
+      "name": "Dead Battery",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 14,
+      "defaultQuantity": 1,
+      "recipe": [
+        "water",
+        "battery"
+      ]
+    },
+    {
+      "id": "high_voltage_line",
+      "name": "High Voltage Line",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "dead_battery",
+        "wire"
+      ]
+    },
+    {
+      "id": "chain_rod",
+      "name": "Chain Rod",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_chain",
+        "short_rod"
+      ]
+    },
+    {
+      "id": "bullwhip",
+      "name": "Bullwhip",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "razor",
+        "whip"
+      ]
+    },
+    {
+      "id": "nightstick",
+      "name": "Nightstick",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "white_crane_fan",
+      "name": "White Crane Fan",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "feather",
+        "fan"
+      ]
+    },
+    {
+      "id": "warhammer",
+      "name": "Warhammer",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 22,
+      "defaultQuantity": 1,
+      "recipe": [
+        "hammer",
+        "spear_handle"
+      ]
+    },
+    {
+      "id": "leather_whip",
+      "name": "Leather Whip",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 24,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather",
+        "scissors"
+      ]
+    },
+    {
+      "id": "claw_hammer",
+      "name": "Claw Hammer",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "iron_mace",
+      "name": "Iron Mace",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "stone_axe",
+        "steel_chain"
+      ]
+    },
+    {
+      "id": "spiked_bat",
+      "name": "Spiked Bat",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bat",
+        "nail"
+      ]
+    },
+    {
+      "id": "torch_hold",
+      "name": "Torch Hold",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "oilcloth",
+        "bamboo"
+      ]
+    },
+    {
+      "id": "spiked_plank",
+      "name": "Spiked Plank",
+      "rarity": "uncommon",
+      "type": [
+        "trap"
+      ],
+      "value": 30,
+      "defaultQuantity": 2,
+      "recipe": [
+        "needle",
+        "branch"
+      ]
+    },
+    {
+      "id": "thorn_whip",
+      "name": "Thorn Whip",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "spiked_plank",
+        "whip"
+      ]
+    },
+    {
+      "id": "lightning_whip",
+      "name": "Lightning Whip",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bullwhip",
+        "dead_battery"
+      ]
+    },
+    {
+      "id": "nunchaku",
+      "name": "Nunchaku",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "chain_rod",
+        "short_rod"
+      ]
+    },
+    {
+      "id": "rope_cuffs",
+      "name": "Rope Cuffs",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "stallion_medal",
+        "whip"
+      ]
+    },
+    {
+      "id": "umbrella",
+      "name": "Umbrella",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "oilcloth",
+        "long_rod"
+      ]
+    },
+    {
+      "id": "torch",
+      "name": "Torch",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "torch_hold",
+        "lighter"
+      ]
+    },
+    {
+      "id": "steel_tonfa",
+      "name": "Steel Tonfa",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "tonfa",
+        "steel"
+      ]
+    },
+    {
+      "id": "dwarf_s_mallet",
+      "name": "Dwarf's Mallet",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "warhammer",
+        "adamantium"
+      ]
+    },
+    {
+      "id": "golf_club",
+      "name": "Golf Club",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "heated_steel_pipe",
+        "hammer"
+      ]
+    },
+    {
+      "id": "flail",
+      "name": "Flail",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 38,
+      "defaultQuantity": 1,
+      "recipe": [
+        "chain_rod",
+        "iron_ball"
+      ]
+    },
+    {
+      "id": "thunder_whip",
+      "name": "Thunder Whip",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bullwhip",
+        "gold"
+      ]
+    },
+    {
+      "id": "triple_nunchaku",
+      "name": "Triple Nunchaku",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 43,
+      "defaultQuantity": 1,
+      "recipe": [
+        "nunchaku",
+        "chain_rod"
+      ]
+    },
+    {
+      "id": "double_nunchaku",
+      "name": "Double Nunchaku",
+      "rarity": "rare",
+      "type": [
+        "blunt"
+      ],
+      "value": 43,
+      "defaultQuantity": 1,
+      "recipe": [
+        "nunchaku",
+        "bullwhip"
+      ]
+    },
+    {
+      "id": "spy_umbrella",
+      "name": "Spy Umbrella",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 2,
+      "defaultQuantity": 1,
+      "recipe": [
+        "umbrella",
+        "poison"
+      ]
+    },
+    {
+      "id": "vajra",
+      "name": "Vajra",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 41,
+      "defaultQuantity": 1,
+      "recipe": [
+        "tree_of_life",
+        "spiked_bat"
+      ]
+    },
+    {
+      "id": "plasma_tonfa",
+      "name": "Plasma Tonfa",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 43,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_tonfa",
+        "laser_pointer"
+      ]
+    },
+    {
+      "id": "banana_leaf_fan",
+      "name": "Banana Leaf Fan",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 44,
+      "defaultQuantity": 1,
+      "recipe": [
+        "white_crane_fan",
+        "umbrella"
+      ]
+    },
+    {
+      "id": "red_muffler",
+      "name": "Red Muffler",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "oilcloth",
+        "holy_blood"
+      ]
+    },
+    {
+      "id": "plasma_whip",
+      "name": "Plasma Whip",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "lightning_whip",
+        "high_voltage_line"
+      ]
+    },
+    {
+      "id": "titan_hammer",
+      "name": "Titan Hammer",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "warhammer",
+        "ogre_skin"
+      ]
+    },
+    {
+      "id": "gleipnir",
+      "name": "Gleipnir",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "rope_cuffs",
+        "thorn_whip"
+      ]
+    },
+    {
+      "id": "fang_mace",
+      "name": "Fang Mace",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arcane_stone",
+        "goblin_bat"
+      ]
+    },
+    {
+      "id": "magic_stick",
+      "name": "Magic Stick",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "warhammer",
+        "moonlight_pendant"
+      ]
+    },
+    {
+      "id": "statue_of_soteria",
+      "name": "Statue of Soteria",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "torch",
+        "anatomy_model"
+      ]
+    },
+    {
+      "id": "hammer_of_thor",
+      "name": "Hammer of Thor",
+      "rarity": "epic",
+      "type": [
+        "blunt"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "dwarf_s_mallet",
+        "high_voltage_line"
+      ]
+    },
+    {
+      "id": "monkey_king_bar",
+      "name": "Monkey King Bar",
+      "rarity": "legendary",
+      "type": [
+        "blunt"
+      ],
+      "value": 56,
+      "defaultQuantity": 1,
+      "recipe": [
+        "engineered_arcane_motor",
+        "long_rod"
+      ]
+    },
+    {
+      "id": "cd_player",
+      "name": "CD Player",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": [
+        "electronic_parts",
+        "glass_marble"
+      ]
+    },
+    {
+      "id": "glue_lump",
+      "name": "Glue Lump",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 20,
+      "defaultQuantity": 10,
+      "recipe": [
+        "glue",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "paper_ball",
+      "name": "Paper Ball",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 20,
+      "defaultQuantity": 40,
+      "recipe": [
+        "thick_paper",
+        "glue"
+      ]
+    },
+    {
+      "id": "flubber",
+      "name": "Flubber",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 20,
+      "defaultQuantity": 19,
+      "recipe": [
+        "rubber",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "shuriken",
+      "name": "Shuriken",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 24,
+      "defaultQuantity": 20,
+      "recipe": null
+    },
+    {
+      "id": "throwing_stars",
+      "name": "Throwing Stars",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 24,
+      "defaultQuantity": 15,
+      "recipe": [
+        "box_cutter",
+        "razor"
+      ]
+    },
+    {
+      "id": "boomerang",
+      "name": "Boomerang",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 26,
+      "defaultQuantity": 2,
+      "recipe": [
+        "branch",
+        "rubber"
+      ]
+    },
+    {
+      "id": "dynamite",
+      "name": "Dynamite",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "wire",
+        "gunpowder"
+      ]
+    },
+    {
+      "id": "dart",
+      "name": "Dart",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 28,
+      "defaultQuantity": 12,
+      "recipe": null
+    },
+    {
+      "id": "grenade",
+      "name": "Grenade",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 28,
+      "defaultQuantity": 9,
+      "recipe": [
+        "gunpowder",
+        "iron_ball"
+      ]
+    },
+    {
+      "id": "javelin",
+      "name": "Javelin",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 28,
+      "defaultQuantity": 8,
+      "recipe": [
+        "spear_handle",
+        "throwing_dagger"
+      ]
+    },
+    {
+      "id": "molotov_cocktail",
+      "name": "Molotov Cocktail",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 30,
+      "defaultQuantity": 4,
+      "recipe": [
+        "oil",
+        "glass_bottle"
+      ]
+    },
+    {
+      "id": "vintage_card",
+      "name": "Vintage Card",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 30,
+      "defaultQuantity": 12,
+      "recipe": [
+        "playing_cards",
+        "fountain_pen"
+      ]
+    },
+    {
+      "id": "flour_bomb",
+      "name": "Flour Bomb",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 32,
+      "defaultQuantity": 2,
+      "recipe": [
+        "white_powder",
+        "plastic_bottle"
+      ]
+    },
+    {
+      "id": "onyx_dagger",
+      "name": "Onyx Dagger",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 34,
+      "defaultQuantity": 12,
+      "recipe": [
+        "cross",
+        "throwing_dagger"
+      ]
+    },
+    {
+      "id": "chakram",
+      "name": "Chakram",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 35,
+      "defaultQuantity": 25,
+      "recipe": [
+        "throwing_stars",
+        "cd"
+      ]
+    },
+    {
+      "id": "enhanced_boomerang",
+      "name": "Enhanced Boomerang",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 37,
+      "defaultQuantity": 1,
+      "recipe": [
+        "boomerang",
+        "oilcloth"
+      ]
+    },
+    {
+      "id": "storm_bolt",
+      "name": "Storm Bolt",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 38,
+      "defaultQuantity": 25,
+      "recipe": [
+        "warhammer",
+        "dead_battery"
+      ]
+    },
+    {
+      "id": "trick_card",
+      "name": "Trick Card",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 38,
+      "defaultQuantity": 20,
+      "recipe": [
+        "buddhist_scripture",
+        "playing_cards"
+      ]
+    },
+    {
+      "id": "pilum",
+      "name": "Pilum",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 38,
+      "defaultQuantity": 7,
+      "recipe": [
+        "javelin",
+        "short_spear"
+      ]
+    },
+    {
+      "id": "spiky_bouncy_ball",
+      "name": "Spiky Bouncy Ball",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 39,
+      "defaultQuantity": 12,
+      "recipe": [
+        "flubber",
+        "glass_pieces"
+      ]
+    },
+    {
+      "id": "incendiary_bomb",
+      "name": "Incendiary Bomb",
+      "rarity": "rare",
+      "type": [
+        "thrown"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "molotov_cocktail",
+        "gunpowder"
+      ]
+    },
+    {
+      "id": "dharma_chakram",
+      "name": "Dharma Chakram",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 41,
+      "defaultQuantity": 38,
+      "recipe": [
+        "buddha_sarira",
+        "chakram"
+      ]
+    },
+    {
+      "id": "ruthenium_marble",
+      "name": "Ruthenium Marble",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 44,
+      "defaultQuantity": 24,
+      "recipe": [
+        "white_powder",
+        "spiky_bouncy_ball"
+      ]
+    },
+    {
+      "id": "bloody_chakram",
+      "name": "Bloody Chakram",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 44,
+      "defaultQuantity": 50,
+      "recipe": [
+        "holy_blood",
+        "chakram"
+      ]
+    },
+    {
+      "id": "azure_dagger",
+      "name": "Azure Dagger",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 44,
+      "defaultQuantity": 30,
+      "recipe": [
+        "poison",
+        "onyx_dagger"
+      ]
+    },
+    {
+      "id": "fuhma_shuriken",
+      "name": "Fuhma Shuriken",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 45,
+      "defaultQuantity": 35,
+      "recipe": [
+        "throwing_stars",
+        "twin_sword"
+      ]
+    },
+    {
+      "id": "rdx",
+      "name": "RDX",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "scrap_metal",
+        "dynamite"
+      ]
+    },
+    {
+      "id": "high_explosive_grenade",
+      "name": "High Explosive Grenade",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 46,
+      "defaultQuantity": 16,
+      "recipe": [
+        "grenade",
+        "rdx"
+      ]
+    },
+    {
+      "id": "astrape",
+      "name": "Astrape",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 46,
+      "defaultQuantity": 60,
+      "recipe": [
+        "pilum",
+        "volticletto"
+      ]
+    },
+    {
+      "id": "bone_crusher",
+      "name": "Bone Crusher",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 47,
+      "defaultQuantity": 17,
+      "recipe": [
+        "tomahawk",
+        "motor"
+      ]
+    },
+    {
+      "id": "david_s_sling",
+      "name": "David's Sling",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 50,
+      "defaultQuantity": 60,
+      "recipe": [
+        "glue_lump",
+        "arcane_stone"
+      ]
+    },
+    {
+      "id": "venom_dart",
+      "name": "Venom Dart",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 56,
+      "defaultQuantity": 4,
+      "recipe": [
+        "needle",
+        "poison"
+      ]
+    },
+    {
+      "id": "dart_of_souls",
+      "name": "Dart of Souls",
+      "rarity": "epic",
+      "type": [
+        "thrown"
+      ],
+      "value": 100,
+      "defaultQuantity": 1,
+      "recipe": [
+        "venom_dart",
+        "glacial_ice"
+      ]
+    },
+    {
+      "id": "sudarsana",
+      "name": "Sudarsana",
+      "rarity": "legendary",
+      "type": [
+        "thrown"
+      ],
+      "value": 58,
+      "defaultQuantity": 60,
+      "recipe": [
+        "engineered_arcane_motor",
+        "cd"
+      ]
+    },
+    {
+      "id": "stingburst",
+      "name": "Stingburst",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 80,
+      "defaultQuantity": 1,
+      "recipe": [
+        "spiked_plank",
+        "rdx"
+      ]
+    },
+    {
+      "id": "dart_of_blood",
+      "name": "Dart of Blood",
+      "rarity": "legendary",
+      "type": [
+        "thrown"
+      ],
+      "value": 185,
+      "defaultQuantity": 1,
+      "recipe": [
+        "dart_of_souls",
+        "stingburst"
+      ]
+    },
+    {
+      "id": "akr98",
+      "name": "AKR98",
+      "rarity": "uncommon",
+      "type": [
+        "gun"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_rifle",
+        "scrap_metal"
+      ]
+    },
+    {
+      "id": "hand_cannon",
+      "name": "Hand Cannon",
+      "rarity": "uncommon",
+      "type": [
+        "gun"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "iron_sheet",
+        "gunpowder"
+      ]
+    },
+    {
+      "id": "zug",
+      "name": "ZUG",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "im_10",
+        "laser_pointer"
+      ]
+    },
+    {
+      "id": "sam57",
+      "name": "SAM57",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "f92s",
+        "steel"
+      ]
+    },
+    {
+      "id": "double_revolver_sp",
+      "name": "Double Revolver SP",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "northern_revolver",
+        "southern_revolver"
+      ]
+    },
+    {
+      "id": "c5",
+      "name": "C5",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "v_pp",
+        "steel"
+      ]
+    },
+    {
+      "id": "railgun",
+      "name": "Railgun",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "electronic_parts",
+        "zug"
+      ]
+    },
+    {
+      "id": "mr16",
+      "name": "MR16",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 38,
+      "defaultQuantity": 1,
+      "recipe": [
+        "v_pp",
+        "laser_pointer"
+      ]
+    },
+    {
+      "id": "op5",
+      "name": "OP5",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 38,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sam57",
+        "laser_pointer"
+      ]
+    },
+    {
+      "id": "machine_gun",
+      "name": "Machine Gun",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "motor",
+        "mr16"
+      ]
+    },
+    {
+      "id": "magnum_anaconda",
+      "name": "Magnum-Anaconda",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "magnum_python",
+        "holy_water"
+      ]
+    },
+    {
+      "id": "gi_f2",
+      "name": "GI-F2",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 43,
+      "defaultQuantity": 1,
+      "recipe": [
+        "akr98",
+        "sniping_scope"
+      ]
+    },
+    {
+      "id": "psr_1",
+      "name": "PSR-1",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 43,
+      "defaultQuantity": 1,
+      "recipe": [
+        "zug",
+        "sniping_scope"
+      ]
+    },
+    {
+      "id": "harpoon_gun",
+      "name": "Harpoon Gun",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_rifle",
+        "harpoon"
+      ]
+    },
+    {
+      "id": "golden_rifle",
+      "name": "Golden Rifle",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 55,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bolt_action_rifle",
+        "gold"
+      ]
+    },
+    {
+      "id": "grand_hand_cannon",
+      "name": "Grand Hand Cannon",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "hand_cannon",
+        "true_samadhi_fire"
+      ]
+    },
+    {
+      "id": "polaris",
+      "name": "Polaris",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "railgun",
+        "blueprint"
+      ]
+    },
+    {
+      "id": "plasma_rifle",
+      "name": "Plasma Rifle",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "electron_blaster",
+        "gi_f2"
+      ]
+    },
+    {
+      "id": "devil_s_marksman",
+      "name": "Devil's Marksman",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "double_revolver_sp",
+        "hand_cannon"
+      ]
+    },
+    {
+      "id": "gatling_gun",
+      "name": "Gatling Gun",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "machine_gun",
+        "akr98"
+      ]
+    },
+    {
+      "id": "elegance",
+      "name": "Elegance",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 49,
+      "defaultQuantity": 1,
+      "recipe": [
+        "c5",
+        "sam57"
+      ]
+    },
+    {
+      "id": "blizzard_cannon",
+      "name": "Blizzard Cannon",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "hand_cannon",
+        "glacial_ice"
+      ]
+    },
+    {
+      "id": "eb_m17a1",
+      "name": "EB-M17A1",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 51,
+      "defaultQuantity": 1,
+      "recipe": [
+        "psr_1",
+        "hand_cannon"
+      ]
+    },
+    {
+      "id": "uranium_cannon",
+      "name": "Uranium Cannon",
+      "rarity": "epic",
+      "type": [
+        "gun"
+      ],
+      "value": 52,
+      "defaultQuantity": 1,
+      "recipe": [
+        "hand_cannon",
+        "arcane_stone"
+      ]
+    },
+    {
+      "id": "kelte",
+      "name": "Kelte",
+      "rarity": "legendary",
+      "type": [
+        "gun"
+      ],
+      "value": 59,
+      "defaultQuantity": 1,
+      "recipe": [
+        "engineered_arcane_motor",
+        "magnum_python"
+      ]
+    },
+    {
+      "id": "longbow",
+      "name": "Longbow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "yumi_bow",
+        "rubber"
+      ]
+    },
+    {
+      "id": "strong_bow",
+      "name": "Strong Bow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "longbow",
+        "oil"
+      ]
+    },
+    {
+      "id": "steel_bow",
+      "name": "Steel Bow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_crossbow",
+        "iron_sheet"
+      ]
+    },
+    {
+      "id": "crossbow",
+      "name": "Crossbow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "composite_bow",
+        "bamboo"
+      ]
+    },
+    {
+      "id": "power_crossbow",
+      "name": "Power Crossbow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "crossbow",
+        "rubber"
+      ]
+    },
+    {
+      "id": "scorchbow",
+      "name": "Scorchbow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "yumi_bow",
+        "flint"
+      ]
+    },
+    {
+      "id": "sniper_bow",
+      "name": "Sniper Bow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 38,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_crossbow",
+        "laser_pointer"
+      ]
+    },
+    {
+      "id": "golden_ratio_bow",
+      "name": "Golden-Ratio Bow",
+      "rarity": "rare",
+      "type": [
+        "bow"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "pellet_bow",
+        "gold"
+      ]
+    },
+    {
+      "id": "stallion_bow",
+      "name": "Stallion Bow",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "wooden_bow",
+        "stallion_medal"
+      ]
+    },
+    {
+      "id": "elemental_bow",
+      "name": "Elemental Bow",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "scorchbow",
+        "purified_water"
+      ]
+    },
+    {
+      "id": "cupid_s_bow",
+      "name": "Cupid's Bow",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "composite_bow",
+        "ruby"
+      ]
+    },
+    {
+      "id": "ballista",
+      "name": "Ballista",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_bow",
+        "javelin"
+      ]
+    },
+    {
+      "id": "twinbow",
+      "name": "Twinbow",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_crossbow",
+        "strong_bow"
+      ]
+    },
+    {
+      "id": "hwacha",
+      "name": "Hwacha",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "scorchbow",
+        "power_crossbow"
+      ]
+    },
+    {
+      "id": "bow_of_zephyrus",
+      "name": "Bow of Zephyrus",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 49,
+      "defaultQuantity": 1,
+      "recipe": [
+        "composite_bow",
+        "powder_of_life"
+      ]
+    },
+    {
+      "id": "bow_of_apollo",
+      "name": "Bow of Apollo",
+      "rarity": "epic",
+      "type": [
+        "bow"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arcane_stone",
+        "long_crossbow"
+      ]
+    },
+    {
+      "id": "sharanga",
+      "name": "Sharanga",
+      "rarity": "legendary",
+      "type": [
+        "bow"
+      ],
+      "value": 56,
+      "defaultQuantity": 1,
+      "recipe": [
+        "short_crossbow",
+        "engineered_arcane_motor"
+      ]
+    },
+    {
+      "id": "glass_knuckle",
+      "name": "Glass Knuckle",
+      "rarity": "uncommon",
+      "type": [
+        "hand"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "knuckle",
+        "glass_pieces"
+      ]
+    },
+    {
+      "id": "rubber_glove",
+      "name": "Rubber Glove",
+      "rarity": "uncommon",
+      "type": [
+        "hand"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cotton_work_glove",
+        "rubber"
+      ]
+    },
+    {
+      "id": "sap_glove",
+      "name": "Sap Glove",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather_glove",
+        "iron_ore"
+      ]
+    },
+    {
+      "id": "open_finger_glove",
+      "name": "Open Finger Glove",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather_glove",
+        "scissors"
+      ]
+    },
+    {
+      "id": "wing_knuckle",
+      "name": "Wing Knuckle",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "iron_knuckle",
+        "feather"
+      ]
+    },
+    {
+      "id": "devil_s_hand",
+      "name": "Devil's Hand",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "iron_claw",
+        "scissors"
+      ]
+    },
+    {
+      "id": "bone_gauntlet",
+      "name": "Bone Gauntlet",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gauntlet",
+        "turtle_shell"
+      ]
+    },
+    {
+      "id": "blood_temple_claw",
+      "name": "Blood Temple Claw",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "ripped_scroll_1",
+        "ripped_scroll_2"
+      ]
+    },
+    {
+      "id": "finger_punch",
+      "name": "Finger Punch",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "open_finger_glove",
+        "iron_ore"
+      ]
+    },
+    {
+      "id": "nirvana_gauntlet",
+      "name": "Nirvana Gauntlet",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 36,
+      "defaultQuantity": 1,
+      "recipe": [
+        "open_finger_glove",
+        "ash"
+      ]
+    },
+    {
+      "id": "enhanced_gauntlet",
+      "name": "Enhanced Gauntlet",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 37,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sap_glove",
+        "gauntlet"
+      ]
+    },
+    {
+      "id": "crimson_gauntlet",
+      "name": "Crimson Gauntlet",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "ruby",
+        "gauntlet"
+      ]
+    },
+    {
+      "id": "holy_gauntlet",
+      "name": "Holy Gauntlet",
+      "rarity": "rare",
+      "type": [
+        "hand"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sap_glove",
+        "cross"
+      ]
+    },
+    {
+      "id": "poison_glass_knuckle",
+      "name": "Poison Glass Knuckle",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": [
+        "glass_knuckle",
+        "poison"
+      ]
+    },
+    {
+      "id": "white_claw_punch",
+      "name": "White Claw Punch",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "blood_temple_claw",
+        "white_powder"
+      ]
+    },
+    {
+      "id": "shatter_shell_gauntlet",
+      "name": "Shatter Shell Gauntlet",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gunpowder",
+        "bone_gauntlet"
+      ]
+    },
+    {
+      "id": "fenrir_s_claw",
+      "name": "Fenrir's Claw",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 44,
+      "defaultQuantity": 1,
+      "recipe": [
+        "adamantium",
+        "iron_claw"
+      ]
+    },
+    {
+      "id": "bloodwing_knuckle",
+      "name": "Bloodwing Knuckle",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "wing_knuckle",
+        "crimson_bracelet"
+      ]
+    },
+    {
+      "id": "meteor_gauntlet",
+      "name": "Meteor Gauntlet",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gauntlet",
+        "meteorite"
+      ]
+    },
+    {
+      "id": "one_inch_punch",
+      "name": "One Inch Punch",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "anatomy_model",
+        "enhanced_gauntlet"
+      ]
+    },
+    {
+      "id": "rulai_s_palm",
+      "name": "RuLai's Palm",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "nirvana_gauntlet",
+        "buddhist_scripture"
+      ]
+    },
+    {
+      "id": "ahriman_s_hand",
+      "name": "Ahriman's Hand",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "devil_s_hand",
+        "motor"
+      ]
+    },
+    {
+      "id": "power_fist",
+      "name": "Power Fist",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "ogre_skin",
+        "bone_gauntlet"
+      ]
+    },
+    {
+      "id": "brasil_gauntlet",
+      "name": "Brasil Gauntlet",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "enhanced_gauntlet",
+        "oilcloth"
+      ]
+    },
+    {
+      "id": "phoenix_arms_tattoo",
+      "name": "Phoenix Arms Tattoo",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gauntlet",
+        "true_samadhi_fire"
+      ]
+    },
+    {
+      "id": "mithril_string",
+      "name": "Mithril String",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 70,
+      "defaultQuantity": 2,
+      "recipe": [
+        "mithril",
+        "wire"
+      ]
+    },
+    {
+      "id": "imperial_silk_glove",
+      "name": "Imperial Silk Glove",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 47,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sap_glove",
+        "mithril_string"
+      ]
+    },
+    {
+      "id": "frost_petal_hand",
+      "name": "Frost Petal Hand",
+      "rarity": "epic",
+      "type": [
+        "hand"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "glacial_ice",
+        "leather_glove"
+      ]
+    },
+    {
+      "id": "chimera_s_cry",
+      "name": "Chimera's Cry",
+      "rarity": "legendary",
+      "type": [
+        "hand"
+      ],
+      "value": 53,
+      "defaultQuantity": 1,
+      "recipe": [
+        "knuckle",
+        "engineered_arcane_motor"
+      ]
+    },
+    {
+      "id": "bamboo_trap",
+      "name": "Bamboo Trap",
+      "rarity": "uncommon",
+      "type": [
+        "trap"
+      ],
+      "value": 20,
+      "defaultQuantity": 2,
+      "recipe": [
+        "snare",
+        "bamboo"
+      ]
+    },
+    {
+      "id": "electrical_shock_trap",
+      "name": "Electrical Shock Trap",
+      "rarity": "uncommon",
+      "type": [
+        "trap"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "dead_battery",
+        "piano_wire"
+      ]
+    },
+    {
+      "id": "enhanced_mouse_trap",
+      "name": "Enhanced Mouse Trap",
+      "rarity": "uncommon",
+      "type": [
+        "trap"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "mouse_trap",
+        "glue"
+      ]
+    },
+    {
+      "id": "booby_trap",
+      "name": "Booby Trap",
+      "rarity": "uncommon",
+      "type": [
+        "trap"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "snare",
+        "glue"
+      ]
+    },
+    {
+      "id": "meiji_s_roulette",
+      "name": "Meiji's Roulette",
+      "rarity": "uncommon",
+      "type": [
+        "trap"
+      ],
+      "value": 45,
+      "defaultQuantity": 2,
+      "recipe": [
+        "kitchen_knife",
+        "bamboo"
+      ]
+    },
+    {
+      "id": "mine",
+      "name": "Mine",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "enhanced_mouse_trap",
+        "rdx"
+      ]
+    },
+    {
+      "id": "fire_mine",
+      "name": "Fire Mine",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 40,
+      "defaultQuantity": 3,
+      "recipe": [
+        "oilcloth",
+        "mine"
+      ]
+    },
+    {
+      "id": "jungle_guillotine",
+      "name": "Jungle Guillotine",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 65,
+      "defaultQuantity": 1,
+      "recipe": [
+        "booby_trap",
+        "shamshir"
+      ]
+    },
+    {
+      "id": "explosive_trap",
+      "name": "Explosive Trap",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 65,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gunpowder",
+        "booby_trap"
+      ]
+    },
+    {
+      "id": "small_claymore",
+      "name": "Small Claymore",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 70,
+      "defaultQuantity": 1,
+      "recipe": [
+        "glass_pieces",
+        "mine"
+      ]
+    },
+    {
+      "id": "pendulum_axe",
+      "name": "Pendulum Axe",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 70,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bamboo_trap",
+        "axe_chain"
+      ]
+    },
+    {
+      "id": "fire_trap",
+      "name": "Fire Trap",
+      "rarity": "rare",
+      "type": [
+        "trap"
+      ],
+      "value": 110,
+      "defaultQuantity": 1,
+      "recipe": [
+        "oilcloth",
+        "explosive_trap"
+      ]
+    },
+    {
+      "id": "c_4",
+      "name": "C-4",
+      "rarity": "epic",
+      "type": [
+        "trap"
+      ],
+      "value": 70,
+      "defaultQuantity": 2,
+      "recipe": [
+        "rdx",
+        "white_powder"
+      ]
+    },
+    {
+      "id": "smart_bomb",
+      "name": "Smart Bomb",
+      "rarity": "epic",
+      "type": [
+        "trap"
+      ],
+      "value": 80,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cell_phone",
+        "rdx"
+      ]
+    },
+    {
+      "id": "claymore",
+      "name": "Claymore",
+      "rarity": "epic",
+      "type": [
+        "trap"
+      ],
+      "value": 80,
+      "defaultQuantity": 1,
+      "recipe": [
+        "small_claymore",
+        "iron_ball"
+      ]
+    },
+    {
+      "id": "hidden_maiden",
+      "name": "Hidden Maiden",
+      "rarity": "epic",
+      "type": [
+        "trap"
+      ],
+      "value": 80,
+      "defaultQuantity": 2,
+      "recipe": [
+        "stingburst",
+        "meiji_s_roulette"
+      ]
+    },
+    {
+      "id": "remote_mine",
+      "name": "Remote Mine",
+      "rarity": "legendary",
+      "type": [
+        "trap"
+      ],
+      "value": 120,
+      "defaultQuantity": 3,
+      "recipe": [
+        "engineered_arcane_motor",
+        "rdx"
+      ]
     }
   ],
   "areas": [
@@ -5985,15 +9408,6 @@
         "trail",
         "forest"
       ]
-    },
-    {
-      "id": "crow_two",
-      "name": "Crow Two",
-      "baseHp": 0,
-      "baseAtk": 0,
-      "baseDef": 0,
-      "loot": [],
-      "areas": []
     }
   ]
 }

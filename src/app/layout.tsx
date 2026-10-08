@@ -19,7 +19,7 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   title: "Lumia Archive — Black Survival Wiki",
   description:
-    "Interactive item and resource map for Lumia Island, the map of Black Survival (2015). Not affiliated with Eternal Return.",
+    "Interactive item and resource map for Black Survival Project Lumia",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -158,7 +158,6 @@ export function IslandMap({
               state={regionState(area)}
               dimmed={regionDimmed(area)}
               hovered={hoveredAreaId === area.id}
-              showLabel={!bubbledAreaIds.has(area.id)}
               onHover={onHoverArea}
               onSelect={onSelectArea}
             />

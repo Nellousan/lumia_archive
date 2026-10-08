@@ -4337,6 +4337,535 @@
         "arcane_stone",
         "playing_cards"
       ]
+    },
+    {
+      "id": "leather_shield",
+      "name": "Leather Shield",
+      "rarity": "uncommon",
+      "type": [
+        "arm"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather",
+        "turtle_shell"
+      ]
+    },
+    {
+      "id": "bracer",
+      "name": "Bracer",
+      "rarity": "uncommon",
+      "type": [
+        "arm"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arm_warmers",
+        "relief_patch"
+      ]
+    },
+    {
+      "id": "bazuband",
+      "name": "Bazuband",
+      "rarity": "uncommon",
+      "type": [
+        "arm"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arm_warmers",
+        "iron_sheet"
+      ]
+    },
+    {
+      "id": "squad_leader_armband",
+      "name": "Squad Leader Armband",
+      "rarity": "rare",
+      "type": [
+        "arm"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "reserve_armband",
+        "needle"
+      ]
+    },
+    {
+      "id": "wrist_band",
+      "name": "Wrist Band",
+      "rarity": "rare",
+      "type": [
+        "arm"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bandage",
+        "rubber"
+      ]
+    },
+    {
+      "id": "steel_shield",
+      "name": "Steel Shield",
+      "rarity": "rare",
+      "type": [
+        "arm"
+      ],
+      "value": 24,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather_shield",
+        "steel"
+      ]
+    },
+    {
+      "id": "sheath",
+      "name": "Sheath",
+      "rarity": "rare",
+      "type": [
+        "arm"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather",
+        "iron_sheet"
+      ]
+    },
+    {
+      "id": "golden_bracelet",
+      "name": "Golden Bracelet",
+      "rarity": "rare",
+      "type": [
+        "arm"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gold",
+        "bracelet"
+      ]
+    },
+    {
+      "id": "sports_watch",
+      "name": "Sports Watch",
+      "rarity": "rare",
+      "type": [
+        "arm"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "watch",
+        "ion_battery"
+      ]
+    },
+    {
+      "id": "vital_sign_sensor",
+      "name": "Vital Sign Sensor",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "creed_of_the_knight",
+      "name": "Creed of the Knight",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_shield",
+        "squad_leader_armband"
+      ]
+    },
+    {
+      "id": "draupnir",
+      "name": "Draupnir",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "golden_bracelet",
+        "wrist_band"
+      ]
+    },
+    {
+      "id": "iron_claw",
+      "name": "Iron Claw",
+      "rarity": "uncommon",
+      "type": [
+        "hand"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "iron_ore",
+        "claw"
+      ]
+    },
+    {
+      "id": "centipede_s_pauldron",
+      "name": "Centipede's Pauldron",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "meteorite",
+        "iron_claw"
+      ]
+    },
+    {
+      "id": "sword_stopper",
+      "name": "Sword Stopper",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bazuband",
+        "iron_claw"
+      ]
+    },
+    {
+      "id": "scarab_bracelet",
+      "name": "Scarab Bracelet",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "flint",
+        "crimson_bracelet"
+      ]
+    },
+    {
+      "id": "sword_of_shah_jahan",
+      "name": "Sword of Shah Jahan",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 34,
+      "defaultQuantity": 1,
+      "recipe": [
+        "golden_bracelet",
+        "sheath"
+      ]
+    },
+    {
+      "id": "mithril_shield",
+      "name": "Mithril Shield",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "turtle_shell",
+        "mithril"
+      ]
+    },
+    {
+      "id": "atlas_gauntlet",
+      "name": "Atlas Gauntlet",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "ogre_skin",
+        "gauntlet"
+      ]
+    },
+    {
+      "id": "cosmic_watch",
+      "name": "Cosmic Watch",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "electronic_parts",
+        "sports_watch"
+      ]
+    },
+    {
+      "id": "glacial_ice",
+      "name": "Glacial Ice",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 16,
+      "defaultQuantity": 1,
+      "recipe": [
+        "powder_of_life",
+        "ice"
+      ]
+    },
+    {
+      "id": "bracelet_of_skadi",
+      "name": "Bracelet of Skadi",
+      "rarity": "epic",
+      "type": [
+        "arm"
+      ],
+      "value": 39,
+      "defaultQuantity": 1,
+      "recipe": [
+        "glacial_ice",
+        "bracelet"
+      ]
+    },
+    {
+      "id": "radar",
+      "name": "Radar",
+      "rarity": "legendary",
+      "type": [
+        "arm"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "blueprint",
+        "vital_sign_sensor"
+      ]
+    },
+    {
+      "id": "electron_blaster",
+      "name": "Electron Blaster",
+      "rarity": "rare",
+      "type": [
+        "gun"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "crt",
+        "ion_battery"
+      ]
+    },
+    {
+      "id": "splendor",
+      "name": "Splendor",
+      "rarity": "legendary",
+      "type": [
+        "arm"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "creed_of_the_knight",
+        "electron_blaster"
+      ]
+    },
+    {
+      "id": "advanced_military_boots",
+      "name": "Advanced Military Boots",
+      "rarity": "uncommon",
+      "type": [
+        "leg"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "boots",
+        "cloth"
+      ]
+    },
+    {
+      "id": "high_heels",
+      "name": "High Heels",
+      "rarity": "rare",
+      "type": [
+        "leg"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "slippers",
+        "steel"
+      ]
+    },
+    {
+      "id": "heelys",
+      "name": "Heelys",
+      "rarity": "rare",
+      "type": [
+        "leg"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "running_shoes",
+        "iron_ball"
+      ]
+    },
+    {
+      "id": "chain_leggings",
+      "name": "Chain Leggings",
+      "rarity": "rare",
+      "type": [
+        "leg"
+      ],
+      "value": 22,
+      "defaultQuantity": 1,
+      "recipe": [
+        "tights",
+        "steel_chain"
+      ]
+    },
+    {
+      "id": "steel_knee_pads",
+      "name": "Steel Knee Pads",
+      "rarity": "rare",
+      "type": [
+        "leg"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "knee_pads",
+        "steel"
+      ]
+    },
+    {
+      "id": "maverick_runner",
+      "name": "Maverick Runner",
+      "rarity": "epic",
+      "type": [
+        "leg"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "heelys",
+        "electronic_parts"
+      ]
+    },
+    {
+      "id": "battle_boots",
+      "name": "Battle Boots",
+      "rarity": "epic",
+      "type": [
+        "leg"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "advanced_military_boots",
+        "knee_pads"
+      ]
+    },
+    {
+      "id": "bio_booster",
+      "name": "Bio Booster",
+      "rarity": "epic",
+      "type": [
+        "leg"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "chain_leggings",
+        "lye"
+      ]
+    },
+    {
+      "id": "blade_boots",
+      "name": "Blade Boots",
+      "rarity": "epic",
+      "type": [
+        "leg"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "high_heels",
+        "glass_pieces"
+      ]
+    },
+    {
+      "id": "mithril_boots",
+      "name": "Mithril Boots",
+      "rarity": "epic",
+      "type": [
+        "leg"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "feather_boots",
+        "mithril"
+      ]
+    },
+    {
+      "id": "killer_heels",
+      "name": "Killer Heels",
+      "rarity": "epic",
+      "type": [
+        "leg"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "high_heels",
+        "glass_pieces"
+      ]
+    },
+    {
+      "id": "eod_boots",
+      "name": "EOD Boots",
+      "rarity": "epic",
+      "type": [
+        "leg"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "advanced_military_boots",
+        "steel_knee_pads"
+      ]
+    },
+    {
+      "id": "boots_of_hermes",
+      "name": "Boots of Hermes",
+      "rarity": "legendary",
+      "type": [
+        "leg"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arcane_stone",
+        "feather_boots"
+      ]
     }
   ],
   "areas": [

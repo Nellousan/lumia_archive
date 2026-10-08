@@ -190,7 +190,9 @@ component below that is presentational.
 
 **The image map is a real overlay.** `lumia-island.map.json` coordinates are pixel offsets into the
 PNG, so the `<img>`, the SVG `viewBox` and the dataset all use the same `1503 x 774` space — no
-scaling maths anywhere.
+scaling maths anywhere. The artwork already has every area name drawn on it, so the SVG draws none:
+the polygons only tint, outline and take clicks, and the names survive as `aria-label`s so the map
+still reads aloud.
 
 ---
 
@@ -345,8 +347,8 @@ missing from `CATEGORY_TABS` raises its own note.
 ## Verification performed
 
 - `tsc --noEmit`, `eslint .` and `next build` all pass clean; the page prerenders as static.
-- Server-rendered HTML verified against the real data: 22 polygons, all 22 area names, the map PNG,
-  sprite URLs, and the bubbles with correct anchors and quantities.
+- Server-rendered HTML verified against the real data: 22 polygons, the map PNG, sprite URLs, and the
+  bubbles with correct anchors and quantities.
 - Every `<img>` in the rendered page was checked to sit inside a sized frame — no sprite can render
   at its intrinsic 256×128 size.
 - The recipe tree was checked structurally against `gauntlet` (2 ingredients, one of which has 2 of

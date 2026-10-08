@@ -26,6 +26,9 @@ export function selectionAfterCatalogClick(
 /**
  * Owns which item is open, if any.
  *
+ * Nothing is open on load: the rail starts unselected and the island map is
+ * empty until the reader picks an item.
+ *
  * Three ways in and out:
  *  - {@link toggleFromCatalog} picks from the rail, and unpicks the same item on a
  *    second click;
@@ -41,7 +44,7 @@ export function useItemSelection(items: WikiItem[], initialItemId?: string) {
   );
 
   const [selection, setSelection] = useState<SelectionState>(() => ({
-    currentId: initialItemId ?? items[0]?.id ?? null,
+    currentId: initialItemId ?? null,
     history: [],
   }));
 

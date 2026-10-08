@@ -253,11 +253,13 @@ missing from `CATEGORY_TABS` raises its own note.
   (`Esc` releases it). It sits outside the item detail on purpose: the routes answer for the bookmarks
   as well as the open item, so they stay on screen with nothing selected at all. The list covers the
   whole plan, so its header says how many items it is answering for, and every route shows its steps:
-  which area, what gets picked up there, and **what gets built there**. A **starting-armor
-  selector** sits above the list: a survivor can pick one clothes piece before the match, starts
+  which area, what gets picked up there, and **what gets built there**. Each step keeps its actions
+  in the order they happen, because that order decides whether the pack fits: a pickup only fits
+  after the build that made room for it, and a five-deep recipe builds several links in one stop.
+  A **starting-armor selector** sits above the list: a survivor can pick one clothes piece before the match, starts
   wearing it (so it costs no bag slot), and the routes are recomputed around it. It defaults to the
-  game's own unset marker, `-`, and offers `fabric_armor`, `windbreaker`, `cassock`, `doctor_s_gown` and
-  `full_body_swimsuit` — three of which feed a recipe, so the choice is not cosmetic: wearing a
+  game's own unset marker, `-`, and offers `fabric_armor`, `windbreaker`, `cassock`, `doctor_s_gown`
+  and `full_body_swimsuit` — three of which feed a recipe, so the choice is not cosmetic: wearing a
   windbreaker takes `rocker_s_jacket` from 2 moves to 1, and a doctor's gown takes `dress` from 1
   move to 0. `data.json` carries no travel
   times, and any area can be reached from any other in the same amount of time, so a route costs
@@ -416,12 +418,15 @@ missing from `CATEGORY_TABS` raises its own note.
   pickup cards, numbered badges, "nothing built here" where a step only gathers) while an unpinned map
   still shows the plan's material cards. A plan of ten items renders the *"No route fits the pack"*
   state, and one containing `bread` names it.
-- With components assumed rather than blocking, a sweep over **318 plans × 6 starting choices**
-  (**1 908 runs, 49 278 routes**) reported no violations: every route replayed from the carried
-  components and worn clothes, nothing assumed was ever gathered or built, the pack never passed 6
-  slots and always matched its reported use, and 222 runs were plans needing no travel at all. The
-  only plans left without a route are ones the pack genuinely cannot hold — a 12-item plan carrying
-  6 rare components alongside its materials. Worst run: 144 ms.
+- With components assumed rather than blocking, a sweep over **317 plans × 6 starting choices**
+  (**1 902 runs, 64 373 routes**) reported no violations on the 629-item data: every route replayed
+  action by action from the carried components and worn clothes, nothing assumed was ever gathered
+  or built, the pack never passed 6 slots and always matched its reported use, and 228 runs were
+  plans needing no travel at all. The only plans left without a route are ones the pack genuinely
+  cannot hold — a 12-item plan carrying 6 rare components alongside its materials. Worst run 190 ms.
+  That sweep is also what found the step-order bug above: with shallow recipes the recorded order
+  inside a step never mattered, so sorting it alphabetically went unnoticed until the five-deep
+  chains arrived and 326 replayed steps failed.
 - The starting-armor option was swept over **214 plans × 6 choices** (bare plus all five clothes):
   **1 284 runs, 40 117 routes, 0 violations** — every route replayed from the picked clothes, pack
   never over 6 slots (peak 5) and always matching its reported use. It made 23 plans faster and left

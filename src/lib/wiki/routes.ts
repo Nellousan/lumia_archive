@@ -35,19 +35,52 @@ export interface RouteCraft {
   quantity: number;
 }
 
+/**
+ * One thing that happens at a stop, in the order it happens.
+ *
+ * The order is load-bearing, not decoration: with deep recipes the pack can fill
+ * up, and whether a pickup fits depends on what was built just before it. Keeping
+ * the real sequence is what lets the step be followed — and checked — exactly.
+ */
+export type StepAction =
+  | { kind: "gather"; collection: RouteCollection }
+  | { kind: "craft"; craft: RouteCraft };
+
 /** One area of a route, in visit order, with what happens there. */
 export interface RouteStep {
   /** 1-based position along the route. */
   number: number;
   area: WikiArea;
-  /** Materials picked up here. */
-  gather: RouteCollection[];
-  /** Items built here, in the order the survivor builds them. */
-  craft: RouteCraft[];
+  /** Every pickup and build at this stop, in the order they happen. */
+  actions: StepAction[];
   /** Bag slots in use when leaving this area; worn items do not count. */
   bagUsed: number;
   /** Items worn by the time the survivor leaves this area. */
   equipped: WikiItem[];
+}
+
+/** Materials picked up at a stop, one entry per item, in first-pickup order. */
+export function stepGathers(step: RouteStep): RouteCollection[] {
+  const byItem = new Map<string, RouteCollection>();
+  for (const action of step.actions) {
+    if (action.kind !== "gather") continue;
+    const existing = byItem.get(action.collection.item.id);
+    if (existing) existing.quantity += action.collection.quantity;
+    else byItem.set(action.collection.item.id, { ...action.collection });
+  }
+  return [...byItem.values()];
+}
+
+/** Items built at a stop, one entry per item, in first-build order. */
+export function stepCrafts(step: RouteStep): RouteCraft[] {
+  const byItem = new Map<string, RouteCraft>();
+  for (const action of step.actions) {
+    if (action.kind !== "craft") continue;
+    const existing = byItem.get(action.craft.item.id);
+    if (existing) existing.quantity += action.craft.quantity;
+    else byItem.set(action.craft.item.id, { ...action.craft });
+  }
+  return [...byItem.values()];
 }
 
 export interface RoutePlan {
@@ -685,8 +718,7 @@ function runRoute(
 
   for (let index = 0; index < order.length; index += 1) {
     const area = order[index];
-    const gather = new Map<string, RouteCollection>();
-    const craft = new Map<string, RouteCraft>();
+    const actions: StepAction[] = [];
 
     // What this area holds, spent down as it is picked from: a step visits the
     // area once, so a second pass must not draw the same stack again.
@@ -710,10 +742,7 @@ function runRoute(
 
         pack.craft(recipe);
         crafted.set(itemId, (crafted.get(itemId) ?? 0) + 1);
-
-        const existing = craft.get(itemId);
-        if (existing) existing.quantity += 1;
-        else craft.set(itemId, { item: recipe.item, quantity: 1 });
+        actions.push({ kind: "craft", craft: { item: recipe.item, quantity: 1 } });
         progressed = true;
       }
 
@@ -731,10 +760,10 @@ function runRoute(
         pack.add(itemId, units);
         gathered.set(itemId, collected + units);
         stock.set(itemId, available - units);
-
-        const existing = gather.get(itemId);
-        if (existing) existing.quantity += units;
-        else gather.set(itemId, { item: need.item, available, quantity: units });
+        actions.push({
+          kind: "gather",
+          collection: { item: need.item, available, quantity: units },
+        });
         progressed = true;
       }
 
@@ -744,10 +773,7 @@ function runRoute(
     steps.push({
       number: index + 1,
       area,
-      gather: [...gather.values()].sort((a, b) => a.item.name.localeCompare(b.item.name)),
-      // Insertion order, not alphabetical: it is the order they get built in, and
-      // a later build depends on an earlier one (Steel before the Gauntlet).
-      craft: [...craft.values()],
+      actions,
       bagUsed: pack.bagUsed(),
       equipped: pack.wornItems(),
     });
@@ -771,8 +797,8 @@ function toRoute(cover: WikiArea[], order: WikiArea[], steps: RouteStep[]): Rout
   const materials = new Set<string>();
   const crafts = new Set<string>();
   for (const step of steps) {
-    for (const collection of step.gather) materials.add(collection.item.id);
-    for (const built of step.craft) crafts.add(built.item.id);
+    for (const collection of stepGathers(step)) materials.add(collection.item.id);
+    for (const built of stepCrafts(step)) crafts.add(built.item.id);
   }
 
   return {

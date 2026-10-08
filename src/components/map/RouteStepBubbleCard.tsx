@@ -2,7 +2,8 @@
 
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { BUBBLE_CARD_WIDTH, toPercentPosition, type BubblePlacement } from "@/lib/map-layout";
-import type { RouteStep } from "@/lib/wiki/routes";
+import { stepCrafts, stepGathers, type RouteStep } from "@/lib/wiki/routes";
+import type { WikiItem } from "@/lib/wiki/types";
 import type { MapImage } from "@/lib/wiki/types";
 
 export interface RouteStepBubbleCardProps {
@@ -19,7 +20,7 @@ export interface RouteStepBubbleCardProps {
 interface StepCardProps {
   itemId: string;
   name: string;
-  item: RouteStep["craft"][number]["item"];
+  item: WikiItem;
   quantity: number;
   /** True for something built here, false for something picked up. */
   built: boolean;
@@ -78,7 +79,9 @@ export function RouteStepBubbleCard({
   onSelectItem,
 }: RouteStepBubbleCardProps) {
   const { left, top } = toPercentPosition(placement, map.width, map.height);
-  const total = step.gather.length + step.craft.length;
+  const gathers = stepGathers(step);
+  const crafts = stepCrafts(step);
+  const total = gathers.length + crafts.length;
 
   return (
     <div
@@ -107,7 +110,7 @@ export function RouteStepBubbleCard({
         </button>
 
         <div className="mt-1 flex flex-wrap justify-center gap-1">
-          {step.craft.map((built) => (
+          {crafts.map((built) => (
             <StepCard
               key={`build-${built.item.id}`}
               itemId={built.item.id}
@@ -118,7 +121,7 @@ export function RouteStepBubbleCard({
               onSelectItem={onSelectItem}
             />
           ))}
-          {step.gather.map((picked) => (
+          {gathers.map((picked) => (
             <StepCard
               key={`pick-${picked.item.id}`}
               itemId={picked.item.id}
@@ -131,7 +134,7 @@ export function RouteStepBubbleCard({
           ))}
         </div>
 
-        {step.craft.length === 0 && (
+        {crafts.length === 0 && (
           <p className="mt-1 px-1 text-center text-[9px] uppercase tracking-wider text-stone-500">
             nothing built here
           </p>

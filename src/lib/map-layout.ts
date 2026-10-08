@@ -1,6 +1,6 @@
 import { clamp } from "./wiki/geometry";
 import type { AreaBubble } from "./wiki/route";
-import type { RouteStep } from "./wiki/routes";
+import { stepCrafts, stepGathers, type RouteStep } from "./wiki/routes";
 
 /**
  * Bubble placement solver for the island overlay.
@@ -56,7 +56,7 @@ export function estimateBubbleSize(bubble: AreaBubble): { width: number; height:
 
 /** Same estimate for a route step, whose cards are what is gathered and built. */
 export function estimateStepBubbleSize(step: RouteStep): { width: number; height: number } {
-  return estimateCardsBubbleSize(step.gather.length + step.craft.length);
+  return estimateCardsBubbleSize(stepGathers(step).length + stepCrafts(step).length);
 }
 
 export interface BubbleAnchor {

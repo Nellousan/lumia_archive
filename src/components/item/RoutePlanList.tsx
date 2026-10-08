@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { BAG_SLOTS } from "@/lib/wiki/inventory";
-import type { RoutePlan, RouteStep } from "@/lib/wiki/routes";
+import { stepCrafts, stepGathers, type RoutePlan, type RouteStep } from "@/lib/wiki/routes";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RoutePlanListProps {
@@ -65,6 +65,9 @@ function StepRow({
   active: boolean;
   onSelectArea: (areaId: string) => void;
 }) {
+  const gathers = stepGathers(step);
+  const crafts = stepCrafts(step);
+
   return (
     <li className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
       <span className="w-3 shrink-0 font-mono text-[10px] text-stone-600">{step.number}</span>
@@ -72,9 +75,9 @@ function StepRow({
       <button
         type="button"
         title={
-          step.gather.length === 0
+          gathers.length === 0
             ? step.area.name
-            : `${step.area.name} — pick up ${step.gather
+            : `${step.area.name} — pick up ${gathers
                 .map((entry) => `${entry.item.name} ×${entry.quantity}`)
                 .join(", ")}`
         }
@@ -91,16 +94,16 @@ function StepRow({
         {step.area.name}
       </button>
 
-      {step.gather.length > 0 && (
-        <span className="text-[10px] text-stone-500">pick up {itemNames(step.gather)}</span>
+      {gathers.length > 0 && (
+        <span className="text-[10px] text-stone-500">pick up {itemNames(gathers)}</span>
       )}
 
-      {step.craft.length > 0 ? (
+      {crafts.length > 0 ? (
         <span className="text-[10px] font-semibold text-amber-200/90">
-          {step.gather.length > 0 ? "· " : ""}build {itemNames(step.craft)}
+          {gathers.length > 0 ? "· " : ""}build {itemNames(crafts)}
         </span>
       ) : (
-        step.gather.length === 0 && <span className="text-[10px] text-stone-600">nothing needed</span>
+        gathers.length === 0 && <span className="text-[10px] text-stone-600">nothing needed</span>
       )}
     </li>
   );
@@ -209,10 +212,10 @@ export function RoutePlanList({
                 tabIndex={0}
                 aria-pressed={active}
                 aria-label={`Route ${index + 1}: ${movesLabel(route)} — ${route.steps
-                  .map(
-                    (step) =>
-                      `${step.area.name}${step.craft.length > 0 ? `, build ${itemNames(step.craft)}` : ""}`,
-                  )
+                  .map((step) => {
+                    const crafts = stepCrafts(step);
+                    return `${step.area.name}${crafts.length > 0 ? `, build ${itemNames(crafts)}` : ""}`;
+                  })
                   .join(", then ")}`}
                 onMouseEnter={() => onHoverRoute(route.id)}
                 onMouseLeave={() => onHoverRoute(null)}

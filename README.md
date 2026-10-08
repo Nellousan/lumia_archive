@@ -82,7 +82,7 @@ load — the map opens empty and the rail shows a "No item selected" placeholder
 | Uncommon  | emerald                                                        |
 | Rare      | blue (`sky`)                                                   |
 | Epic      | purple                                                         |
-| Legendary | yellow lettering on a violet-tinted plate; the dot runs gold → violet |
+| Legendary | yellow lettering on a violet-tinted plate, with a solid gold dot |
 
 `data.json` currently only uses the first three tiers. The whole ladder is declared in
 `RARITY_META` anyway, so a new tier in the data renders correctly with no code change — and the

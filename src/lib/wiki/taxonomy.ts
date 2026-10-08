@@ -123,10 +123,11 @@ export const RARITY_META: Record<Rarity, RarityMeta> = {
   legendary: {
     key: "legendary",
     label: "Legendary",
-    // Yellow that leans purple: gold lettering on a violet-tinted plate, and a
-    // dot that runs gold -> violet so the tint survives at 6px.
+    // Yellow that leans purple: gold lettering on a violet-tinted plate, with a
+    // solid gold dot. The dot used to run gold -> violet, but a 6px gradient
+    // interpolates through grey and reads violet, so it is one flat colour now.
     badge: "border-violet-400/35 bg-violet-500/10 text-amber-200",
-    dot: "bg-gradient-to-br from-amber-300 to-violet-400",
+    dot: "bg-amber-300",
     text: "text-amber-200",
   },
 };

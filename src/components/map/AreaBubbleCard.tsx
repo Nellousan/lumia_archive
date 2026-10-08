@@ -13,6 +13,10 @@ export interface AreaBubbleCardProps {
   /** True when this bubble belongs to the area whose detail panel is open. */
   active: boolean;
   focus: MapFocus | null;
+  /** True while a route is highlighted on the map. */
+  routeActive: boolean;
+  /** True when this bubble's area is one of the active route's stops. */
+  inRoute: boolean;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
   onHoverMaterial: (itemId: string | null) => void;
@@ -30,6 +34,8 @@ export function AreaBubbleCard({
   map,
   active,
   focus,
+  routeActive,
+  inRoute,
   onHoverArea,
   onSelectArea,
   onHoverMaterial,
@@ -41,7 +47,9 @@ export function AreaBubbleCard({
   // focused material, not just the material itself.
   const containsSupport =
     focus !== null && bubble.cards.some((card) => focus.subtreeIds.includes(card.material.item.id));
-  const dimmed = focus !== null && !containsSupport;
+  // A highlighted route overrides the material focus: everything off the route
+  // fades back, so the path reads at a glance.
+  const dimmed = routeActive ? !inRoute : focus !== null && !containsSupport;
 
   return (
     <div
@@ -54,13 +62,15 @@ export function AreaBubbleCard({
     >
       <div
         className={`rounded-xl border p-1 shadow-[0_18px_36px_rgba(0,0,0,0.55)] backdrop-blur-md transition ${
-          active
-            ? "border-amber-300/60 bg-ink-950/90"
-            : containsFocused
-              ? "border-amber-300/45 bg-ink-950/85"
-              : containsSupport
-                ? "border-amber-300/25 bg-ink-950/82"
-                : "border-emerald-300/25 bg-ink-950/80"
+          routeActive && inRoute
+            ? "border-amber-300/75 bg-ink-950/92"
+            : active
+              ? "border-amber-300/60 bg-ink-950/90"
+              : containsFocused
+                ? "border-amber-300/45 bg-ink-950/85"
+                : containsSupport
+                  ? "border-amber-300/25 bg-ink-950/82"
+                  : "border-emerald-300/25 bg-ink-950/80"
         }`}
       >
         <button

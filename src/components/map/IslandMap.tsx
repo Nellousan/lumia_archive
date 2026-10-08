@@ -4,9 +4,11 @@ import { useMemo } from "react";
 import { AreaBubbleCard } from "./AreaBubbleCard";
 import { MapAreaShape } from "./MapAreaShape";
 import { MapTooltip } from "./MapTooltip";
+import { RouteOverlay } from "./RouteOverlay";
 import type { RegionState } from "./regionStyles";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
+import type { RoutePlan } from "@/lib/wiki/routes";
 import type { MapImage, WikiArea } from "@/lib/wiki/types";
 
 export interface IslandMapProps {
@@ -17,6 +19,8 @@ export interface IslandMapProps {
   /** Resolved bubble centres, in base-map pixels. */
   placements: Record<string, BubblePlacement>;
   focus: MapFocus | null;
+  /** Route to highlight, if one is hovered or pinned in the rail. */
+  activeRoute: RoutePlan | null;
   hoveredAreaId: string | null;
   activeAreaId: string | null;
   onHoverArea: (areaId: string | null) => void;
@@ -39,6 +43,7 @@ export function IslandMap({
   bubbles,
   placements,
   focus,
+  activeRoute,
   hoveredAreaId,
   activeAreaId,
   onHoverArea,
@@ -87,7 +92,17 @@ export function IslandMap({
       .flatMap((bubble) => bubble.cards.map((card) => card.material.item.name));
   }, [bubbles, hoveredArea]);
 
+  /** Areas on the highlighted route, if any. */
+  const routeAreaIds = useMemo(
+    () => (activeRoute ? new Set(activeRoute.areaIds) : null),
+    [activeRoute],
+  );
+
   const regionState = (area: WikiArea): RegionState => {
+    // A highlighted route takes over the island: its areas are the answer, so
+    // the recipe/material tints step aside until the route is unpinned.
+    if (routeAreaIds) return routeAreaIds.has(area.id) ? "route" : area.empty ? "empty" : "base";
+
     const bubble = bubbleByAreaId.get(area.id);
     if (!bubble) return area.empty ? "empty" : "base";
     if (!supportAreaIds) return "relevant";
@@ -96,8 +111,10 @@ export function IslandMap({
     return "relevant";
   };
 
-  const regionDimmed = (area: WikiArea) =>
-    supportAreaIds !== null && !supportAreaIds.has(area.id);
+  const regionDimmed = (area: WikiArea) => {
+    if (routeAreaIds) return !routeAreaIds.has(area.id);
+    return supportAreaIds !== null && !supportAreaIds.has(area.id);
+  };
 
   return (
     <div className="relative mx-auto w-full max-w-[1400px]">
@@ -145,6 +162,8 @@ export function IslandMap({
             map={map}
             active={activeAreaId === bubble.area.id}
             focus={focus}
+            routeActive={routeAreaIds !== null}
+            inRoute={routeAreaIds?.has(bubble.area.id) ?? false}
             onHoverArea={onHoverArea}
             onSelectArea={onSelectArea}
             onHoverMaterial={onHoverMaterial}
@@ -152,6 +171,18 @@ export function IslandMap({
           />
         );
       })}
+
+      {activeRoute && (
+        // Above the bubbles (z-30) so the numbered stops cannot be hidden behind
+        // a bubble card, and pointer-transparent so the island stays clickable.
+        <svg
+          viewBox={`0 0 ${map.width} ${map.height}`}
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 z-30 h-full w-full"
+        >
+          <RouteOverlay route={activeRoute} />
+        </svg>
+      )}
 
       {tooltipArea && (
         <MapTooltip

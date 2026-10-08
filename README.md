@@ -39,7 +39,8 @@ Two panes:
 sub-tabs, and a four-column grid of item cards. Each card shows the artwork, the name, then the
 rarity dot with the type and — when `data.json` has one — the value. The grid is ordered rarest
 first, then by highest value, then alphabetically. Selecting a card opens its detail: rarity, real
-data fields, the **crafting chain drawn as a tree**, and every area the item spawns in.
+data fields, the **crafting chain drawn as a tree**, and the **fastest routes** that gather the whole
+recipe in the fewest areas.
 
 **Right pane — Lumia Island.** The PNG artwork with the image map overlaid as clickable polygons.
 For the selected item, a **bubble is anchored over every area that holds a material from its
@@ -53,7 +54,8 @@ material itself, soft amber for its ingredients, and everything unrelated dims b
 for intermediates that spawn nowhere — `iron_sheet` is not found anywhere on the island, so without
 the widening, focusing it would highlight nothing at all.
 
-Keyboard: `/` search · `Esc` closes the area panel, then clears the material focus.
+Keyboard: `/` search · `Esc` closes the area panel, then unpins the highlighted route, then clears the
+material focus.
 
 **Clearing the map.** Two ways in, both emptying the island of bubbles while leaving all 22 areas
 drawn and clickable:
@@ -129,6 +131,7 @@ src/
       dataset.ts          # the only module that touches the JSON
       recipe.ts           # recursive recipe tree + flattened material list
       route.ts            # recipe materials x areas -> map bubbles
+      routes.ts           # minimal covering area sets -> fastest gathering routes
       catalog.ts          # pure filter/sort/search rules for the rail
       taxonomy.ts         # category tabs, sub-tabs, type labels, rarity palette
       geometry.ts         # polygon centroid/anchor/bounds helpers
@@ -144,9 +147,9 @@ src/
     layout/    AppHeader, DataNotes
     catalog/   CatalogPanel, SearchField, CategoryTabs, ItemCatalogGrid
     item/      ItemDetailPanel, UsedToCraftPanel, RarityBadge, ItemTypeBadges,
-               ItemFactsGrid, RecipeTree, RecipeBranch, SpawnAreasList
+               ItemFactsGrid, RecipeTree, RecipeBranch, RoutePlanList
     map/       IslandMapPanel, IslandMap, MapAreaShape, AreaBubbleCard,
-               BubbleMaterialCard, MapTooltip, regionStyles
+               BubbleMaterialCard, MapTooltip, RouteOverlay, regionStyles
     area/      AreaDetailPanel
     ui/        ItemCard, ItemSprite, Badge, PaneDivider, ClearSelectionButton
 public/
@@ -218,6 +221,18 @@ missing from `CATEGORY_TABS` raises its own note.
   empty map for them would be useless, so those items fall back to mapping **where the item itself
   spawns**. `MapOverlayMode` marks the distinction, and the map eyebrow reads *Item spawn map* rather
   than *Live resource map* so the mode is never ambiguous. Set by `useRoutePlan`.
+- **Fastest routes, not a spawn list.** The rail's bottom section lists the ways to gather everything
+  the active item needs, best first, and highlights the picked one on the island when hovered or
+  clicked (`Esc` releases it). `data.json` carries no travel times, and any area can be reached from
+  any other in the same amount of time, so a route costs exactly its number of hops and ranking
+  reduces to *"cover every requirement with the fewest areas"*. `lib/wiki/routes.ts` sweeps every
+  subset of the areas holding something relevant (at most 14 in this dataset), keeps only
+  inclusion-minimal covers — a route with a spare area is strictly slower, so it is never listed —
+  and orders each cover's stops nearest-neighbour + 2-opt purely so the drawn line is tidy; that
+  order cannot change the travel time. Requirements keep the recipe's OR structure: a craftable
+  material is satisfied when the route can gather it *or* craft it from what it gathers, which is why
+  `magazine` (craftable *and* gatherable) offers two 0-move routes before any crafting route. Stack
+  sizes are honoured: needing two Scrap Metal forces two areas when no single area holds both.
 - **One card everywhere.** `ui/ItemCard.tsx` renders the catalog grid and the recipe tree, so an
   item always looks the same. Its artwork uses the `fill` sprite size, which is why the card works
   both at the four-column rail width and inside a nested recipe branch.
@@ -256,7 +271,7 @@ missing from `CATEGORY_TABS` raises its own note.
   assumes a depth. Hover a material to focus it on the map, click to open it, and use `← Back` to
   walk the trail you followed through the chain.
 - **Only real fields.** `data.json` has no description or flavour text, so the detail panel shows
-  exactly what exists: rarity, type(s), value, default quantity, spawn areas and recipe. Nothing was
+  exactly what exists: rarity, type(s), value, default quantity, recipe and routes. Nothing was
   invented. Value sits with the identity (name / id / value); the facts grid below carries only
   default quantity, spawn-area count and recipe shape.
 
@@ -298,6 +313,17 @@ missing from `CATEGORY_TABS` raises its own note.
   0 violations · no duplicate material or card ids · every bubble inside the map bounds · max 10
   bubbles for a single item (`magazine`) · max 2 cards per bubble · max material depth 2.
   The bubble solver was probed separately for overlap separation and edge clamping.
+- The route solver was swept over **all 201 items** through a temporary route handler: **758 routes,
+  0 violations** — sorted by moves then walk distance, no duplicate route ids, no stop that gathers
+  nothing, no area visited twice, and no listed route containing a cheaper one. Every route was then
+  re-checked against its *own* harvest list, independently of the search: all 758 satisfy their
+  recipe. Counts were cross-checked against a separately written prototype and matched everywhere
+  except `magazine` and `long_rifle` — the two craftable items that also spawn, which is exactly
+  where the OR rule admits "just pick it up" routes. The worst item is `h_fu` (84 routes) and no item
+  took more than a few milliseconds.
+- The route UI was rendered server-side for `gauntlet` and asserted: the moves label, the fold
+  button, the per-stop "what to pick up here" tooltips, a dashed polyline through both area anchors,
+  two numbered stop markers, 2 route-tinted polygons, 20 dimmed ones and 2 emphasised bubbles.
 
 ---
 

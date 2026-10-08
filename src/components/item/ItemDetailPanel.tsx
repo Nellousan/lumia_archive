@@ -4,9 +4,10 @@ import { ItemFactsGrid, type ItemFact } from "./ItemFactsGrid";
 import { ItemTypeBadges } from "./ItemTypeBadges";
 import { RarityBadge } from "./RarityBadge";
 import { RecipeTree } from "./RecipeTree";
-import { SpawnAreasList } from "./SpawnAreasList";
+import { RoutePlanList } from "./RoutePlanList";
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { PaneDivider } from "@/components/ui/PaneDivider";
+import type { RoutePlan } from "@/lib/wiki/routes";
 import type { AreaSpawnRef, RecipeNode, WikiItem } from "@/lib/wiki/types";
 
 export interface ItemDetailPanelProps {
@@ -16,8 +17,13 @@ export interface ItemDetailPanelProps {
   materialCount: number;
   areaCount: number;
   spawnRefs: AreaSpawnRef[];
+  /** Fastest ways to gather everything the item needs, best first. */
+  routes: RoutePlan[];
+  activeRouteId: string | null;
   focusedMaterialId: string | null;
   onHoverMaterial: (itemId: string | null) => void;
+  onHoverRoute: (routeId: string | null) => void;
+  onSelectRoute: (routeId: string) => void;
   onSelectItem: (itemId: string) => void;
   onSelectArea: (areaId: string) => void;
   canGoBack: boolean;
@@ -36,8 +42,12 @@ export function ItemDetailPanel({
   materialCount,
   areaCount,
   spawnRefs,
+  routes,
+  activeRouteId,
   focusedMaterialId,
   onHoverMaterial,
+  onHoverRoute,
+  onSelectRoute,
   onSelectItem,
   onSelectArea,
   canGoBack,
@@ -156,8 +166,16 @@ export function ItemDetailPanel({
         <p className="text-xs text-stone-500">Recipe data unavailable for this item.</p>
       )}
 
-      <PaneDivider label={spawnRefs.length === 1 ? "Found in 1 area" : `Found in ${spawnRefs.length} areas`} />
-      <SpawnAreasList refs={spawnRefs} onSelectArea={onSelectArea} />
+      <PaneDivider label="Fastest routes" />
+      {/* Keyed by item so the "show all" fold resets when the selection moves on. */}
+      <RoutePlanList
+        key={item.id}
+        routes={routes}
+        activeRouteId={activeRouteId}
+        onHoverRoute={onHoverRoute}
+        onSelectRoute={onSelectRoute}
+        onSelectArea={onSelectArea}
+      />
     </div>
   );
 }

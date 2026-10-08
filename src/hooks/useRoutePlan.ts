@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { estimateBubbleSize, resolveBubblePlacements } from "@/lib/map-layout";
 import { buildRecipeTree, buildSubtreeIndex, collectRecipeMaterials } from "@/lib/wiki/recipe";
+import { buildRoutes } from "@/lib/wiki/routes";
 import { buildAreaBubbles, type MapOverlayMode } from "@/lib/wiki/route";
 import type {
   AreaSpawnRef,
@@ -82,6 +83,13 @@ export function useRoutePlan(
     return ids.size;
   }, [recipeMaterials]);
 
+  /**
+   * Routes that obtain the active item, fastest first. Built from the tree so
+   * the OR structure survives: a craftable material may be gathered instead of
+   * crafted, which is often the whole point of the fastest route.
+   */
+  const routes = useMemo(() => buildRoutes(dataset, tree), [dataset, tree]);
+
   return {
     tree,
     subtreeByItemId,
@@ -92,5 +100,6 @@ export function useRoutePlan(
     placements,
     areaCount,
     recipeAreaCount,
+    routes,
   };
 }

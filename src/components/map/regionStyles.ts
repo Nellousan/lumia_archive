@@ -18,7 +18,9 @@ export type RegionState =
   /** Contains the material currently focused. */
   | "material"
   /** Contains an ingredient needed to craft the focused material. */
-  | "support";
+  | "support"
+  /** On the highlighted route — the route overlay takes over the island. */
+  | "route";
 
 interface RegionVisual {
   fill: string;
@@ -51,6 +53,11 @@ const REGION_VISUALS: Record<RegionState, RegionVisual> = {
     fill: "rgba(252,211,77,0.11)",
     stroke: "rgba(252,211,77,0.45)",
     strokeWidth: 1.5,
+  },
+  route: {
+    fill: "rgba(252,211,77,0.30)",
+    stroke: "rgba(254,243,199,0.9)",
+    strokeWidth: 2.5,
   },
 };
 

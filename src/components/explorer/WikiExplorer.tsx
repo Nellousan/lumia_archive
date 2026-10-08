@@ -57,6 +57,12 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const [focusedMaterialId, setFocusedMaterialId] = useState<string | null>(null);
   const [hoveredAreaId, setHoveredAreaId] = useState<string | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [hoveredRouteId, setHoveredRouteId] = useState<string | null>(null);
+  /**
+   * The pinned route travels with the item it was pinned for: opening another
+   * item clears the highlight without an effect that would fight the render.
+   */
+  const [pinnedRoute, setPinnedRoute] = useState<{ itemId: string; routeId: string } | null>(null);
 
   const catalog = useCatalogQuery(dataset.items);
   const { item: activeItem, canGoBack, toggleFromCatalog, followLink, goBack, clearSelection } =
@@ -89,6 +95,26 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const selectedAreaItems = selectedAreaId
     ? (dataset.itemsByAreaId[selectedAreaId] ?? NO_ITEMS)
     : NO_ITEMS;
+
+  /** Hover wins over nothing; a pinned route outlives the pointer leaving the row. */
+  const pinnedRouteId =
+    pinnedRoute && pinnedRoute.itemId === activeItem?.id ? pinnedRoute.routeId : null;
+  const activeRouteId = pinnedRouteId ?? hoveredRouteId;
+  const activeRoute = activeRouteId
+    ? (route.routes.find((candidate) => candidate.id === activeRouteId) ?? null)
+    : null;
+
+  /** Clicking the highlight again lets it go; the pointer keeps it alive meanwhile. */
+  const handleSelectRoute = useCallback(
+    (routeId: string) => {
+      const itemId = activeItem?.id;
+      if (!itemId) return;
+      setPinnedRoute((previous) =>
+        previous?.itemId === itemId && previous.routeId === routeId ? null : { itemId, routeId },
+      );
+    },
+    [activeItem?.id],
+  );
 
   /** Changing item, from either entry point, clears the map focus. */
   const handleSelectFromCatalog = useCallback(
@@ -124,6 +150,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     onEscape: () => {
       if (selectedAreaId) {
         setSelectedAreaId(null);
+      } else if (pinnedRoute) {
+        setPinnedRoute(null);
       } else if (focusedMaterialId) {
         setFocusedMaterialId(null);
       } else if (document.activeElement instanceof HTMLElement) {
@@ -171,8 +199,12 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
             materialCount={route.recipeMaterials.length}
             areaCount={route.recipeAreaCount}
             spawnRefs={spawnRefs}
+            routes={route.routes}
+            activeRouteId={activeRoute?.id ?? null}
             focusedMaterialId={focusedMaterialId}
             onHoverMaterial={setFocusedMaterialId}
+            onHoverRoute={setHoveredRouteId}
+            onSelectRoute={handleSelectRoute}
             onSelectItem={handleFollowLink}
             onSelectArea={setSelectedAreaId}
             canGoBack={canGoBack}
@@ -189,6 +221,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           materials={route.recipeMaterials}
           overlayMode={route.overlayMode}
           focus={focus}
+          activeRoute={activeRoute}
           activeItemId={activeItem?.id ?? null}
           hoveredAreaId={hoveredAreaId}
           onHoverArea={setHoveredAreaId}

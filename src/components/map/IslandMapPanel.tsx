@@ -6,6 +6,7 @@ import { IslandMap } from "./IslandMap";
 import { ClearSelectionButton } from "@/components/ui/ClearSelectionButton";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus, MapOverlayMode } from "@/lib/wiki/route";
+import type { RoutePlan } from "@/lib/wiki/routes";
 import type { AreaItemRef, MapImage, RecipeMaterial, WikiArea } from "@/lib/wiki/types";
 
 export interface IslandMapPanelProps {
@@ -17,6 +18,8 @@ export interface IslandMapPanelProps {
   materials: RecipeMaterial[];
   overlayMode: MapOverlayMode;
   focus: MapFocus | null;
+  /** Route hovered or pinned in the rail, drawn over the island. */
+  activeRoute: RoutePlan | null;
   activeItemId: string | null;
   hoveredAreaId: string | null;
   onHoverArea: (areaId: string | null) => void;
@@ -40,6 +43,7 @@ export function IslandMapPanel({
   materials,
   overlayMode,
   focus,
+  activeRoute,
   activeItemId,
   hoveredAreaId,
   onHoverArea,
@@ -89,6 +93,7 @@ export function IslandMapPanel({
             bubbles={bubbles}
             placements={placements}
             focus={focus}
+            activeRoute={activeRoute}
             hoveredAreaId={hoveredAreaId}
             activeAreaId={selectedArea?.id ?? null}
             onHoverArea={onHoverArea}

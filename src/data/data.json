@@ -513,7 +513,10 @@
       ],
       "value": 35,
       "defaultQuantity": 1,
-      "recipe": null
+      "recipe": [
+        "oriental_grass",
+        "scrolls_of_dongyi"
+      ]
     },
     {
       "id": "egg_bun",
@@ -2337,6 +2340,2003 @@
         "jewel_sword",
         "glass_pieces"
       ]
+    },
+    {
+      "id": "1_5l_water_bottle",
+      "name": "1.5L Water Bottle",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 33,
+      "defaultQuantity": 3,
+      "recipe": [
+        "water",
+        "plastic_bottle"
+      ]
+    },
+    {
+      "id": "kaoliang_liquor",
+      "name": "Kaoliang Liquor",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 36,
+      "defaultQuantity": 4,
+      "recipe": [
+        "sorghum_wine",
+        "lighter"
+      ]
+    },
+    {
+      "id": "half_filled_glass",
+      "name": "Half-Filled Glass",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 37,
+      "defaultQuantity": 2,
+      "recipe": [
+        "water",
+        "glass_cup"
+      ]
+    },
+    {
+      "id": "honey_water",
+      "name": "Honey Water",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 42,
+      "defaultQuantity": 2,
+      "recipe": [
+        "honey",
+        "water"
+      ]
+    },
+    {
+      "id": "soju",
+      "name": "Soju",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 44,
+      "defaultQuantity": 2,
+      "recipe": [
+        "water",
+        "alcohol"
+      ]
+    },
+    {
+      "id": "oriental_raisin_tea",
+      "name": "Oriental Raisin Tea",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 46,
+      "defaultQuantity": 3,
+      "recipe": [
+        "branch",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "herbal_liquor",
+      "name": "Herbal Liquor",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 75,
+      "defaultQuantity": 3,
+      "recipe": [
+        "sorghum_wine",
+        "oriental_grass"
+      ]
+    },
+    {
+      "id": "whiskey",
+      "name": "Whiskey",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 120,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "scrambled_egg",
+      "name": "Scrambled Egg",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 22,
+      "defaultQuantity": 8,
+      "recipe": [
+        "bird_egg",
+        "frying_pan"
+      ]
+    },
+    {
+      "id": "oriental_concoction",
+      "name": "Oriental Concoction",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 35,
+      "defaultQuantity": 3,
+      "recipe": [
+        "oriental_grass",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "curry",
+      "name": "Curry",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 38,
+      "defaultQuantity": 4,
+      "recipe": [
+        "curry_powder",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "scorched_rice_soup",
+      "name": "Scorched Rice Soup",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 40,
+      "defaultQuantity": 4,
+      "recipe": null
+    },
+    {
+      "id": "hot_ramen",
+      "name": "Hot Ramen",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 40,
+      "defaultQuantity": 4,
+      "recipe": [
+        "ramen",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "fish_fillet_with_egg",
+      "name": "Fish Fillet with Egg",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 40,
+      "defaultQuantity": 2,
+      "recipe": [
+        "bird_egg",
+        "carp"
+      ]
+    },
+    {
+      "id": "honey_medicine",
+      "name": "Honey Medicine",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 48,
+      "defaultQuantity": 3,
+      "recipe": [
+        "honey",
+        "pill"
+      ]
+    },
+    {
+      "id": "bungeoppang",
+      "name": "Bungeoppang",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 48,
+      "defaultQuantity": 3,
+      "recipe": [
+        "carp",
+        "bread"
+      ]
+    },
+    {
+      "id": "first_aid_kit",
+      "name": "First Aid Kit",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 50,
+      "defaultQuantity": 2,
+      "recipe": [
+        "box",
+        "pill"
+      ]
+    },
+    {
+      "id": "acupuncture",
+      "name": "Acupuncture",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "needle",
+        "scrolls_of_dongyi"
+      ]
+    },
+    {
+      "id": "chocolate_pie",
+      "name": "Chocolate Pie",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 60,
+      "defaultQuantity": 2,
+      "recipe": [
+        "chocolate",
+        "bread"
+      ]
+    },
+    {
+      "id": "herb",
+      "name": "Herb",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 60,
+      "defaultQuantity": 2,
+      "recipe": [
+        "oriental_grass",
+        "flower"
+      ]
+    },
+    {
+      "id": "turtle_soup",
+      "name": "Turtle Soup",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 61,
+      "defaultQuantity": 2,
+      "recipe": [
+        "turtle_shell",
+        "cooking_pot"
+      ]
+    },
+    {
+      "id": "heated_oil",
+      "name": "Heated Oil",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 2,
+      "recipe": [
+        "oil",
+        "lighter"
+      ]
+    },
+    {
+      "id": "fried_egg",
+      "name": "Fried Egg",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 64,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bird_egg",
+        "heated_oil"
+      ]
+    },
+    {
+      "id": "gimbap",
+      "name": "Gimbap",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 70,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "herb_medicine",
+      "name": "Herb Medicine",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 130,
+      "defaultQuantity": 1,
+      "recipe": [
+        "turtle_shell",
+        "scrolls_of_dongyi"
+      ]
+    },
+    {
+      "id": "grilled_eel",
+      "name": "Grilled Eel",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 170,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "garlic_bread",
+      "name": "Garlic Bread",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 35,
+      "defaultQuantity": 3,
+      "recipe": [
+        "garlic",
+        "bread"
+      ]
+    },
+    {
+      "id": "french_fries",
+      "name": "French Fries",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 35,
+      "defaultQuantity": 8,
+      "recipe": [
+        "potato",
+        "heated_oil"
+      ]
+    },
+    {
+      "id": "liquor_bread",
+      "name": "Liquor Bread",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 40,
+      "defaultQuantity": 2,
+      "recipe": [
+        "soju",
+        "bread"
+      ]
+    },
+    {
+      "id": "pickled_garlic",
+      "name": "Pickled Garlic",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 42,
+      "defaultQuantity": 6,
+      "recipe": [
+        "garlic",
+        "soy_sauce"
+      ]
+    },
+    {
+      "id": "stir_fried_ramen",
+      "name": "Stir Fried Ramen",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 43,
+      "defaultQuantity": 5,
+      "recipe": [
+        "frying_pan",
+        "ramen"
+      ]
+    },
+    {
+      "id": "sashimi",
+      "name": "Sashimi",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 44,
+      "defaultQuantity": 4,
+      "recipe": [
+        "sharp_kitchen_knife",
+        "tuna"
+      ]
+    },
+    {
+      "id": "mudfish_soup",
+      "name": "Mudfish Soup",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 44,
+      "defaultQuantity": 3,
+      "recipe": [
+        "mudfish",
+        "cooking_pot"
+      ]
+    },
+    {
+      "id": "fish_stew",
+      "name": "Fish Stew",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 66,
+      "defaultQuantity": 2,
+      "recipe": [
+        "carp",
+        "cooking_pot"
+      ]
+    },
+    {
+      "id": "heated_whetstone",
+      "name": "Heated Whetstone",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 2,
+      "recipe": [
+        "lighter",
+        "whetstone"
+      ]
+    },
+    {
+      "id": "baked_sweet_potato",
+      "name": "Baked Sweet Potato",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 70,
+      "defaultQuantity": 3,
+      "recipe": [
+        "sweet_potato",
+        "heated_whetstone"
+      ]
+    },
+    {
+      "id": "chocolate_chip_cookies",
+      "name": "Chocolate Chip Cookies",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 70,
+      "defaultQuantity": 3,
+      "recipe": [
+        "chocolate",
+        "cookie"
+      ]
+    },
+    {
+      "id": "chocolate_pie_box",
+      "name": "Chocolate Pie Box",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 70,
+      "defaultQuantity": 2,
+      "recipe": [
+        "chocolate_pie",
+        "box"
+      ]
+    },
+    {
+      "id": "fish_cutlet",
+      "name": "Fish Cutlet",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 70,
+      "defaultQuantity": 2,
+      "recipe": [
+        "carp",
+        "heated_oil"
+      ]
+    },
+    {
+      "id": "baked_carp",
+      "name": "Baked Carp",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 75,
+      "defaultQuantity": 2,
+      "recipe": [
+        "carp",
+        "heated_whetstone"
+      ]
+    },
+    {
+      "id": "coffee_liqueur",
+      "name": "Coffee Liqueur",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 60,
+      "defaultQuantity": 2,
+      "recipe": [
+        "alcohol",
+        "coffee"
+      ]
+    },
+    {
+      "id": "mocha_bread",
+      "name": "Mocha Bread",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 75,
+      "defaultQuantity": 2,
+      "recipe": [
+        "coffee_liqueur",
+        "bread"
+      ]
+    },
+    {
+      "id": "tuna_can",
+      "name": "Tuna Can",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 80,
+      "defaultQuantity": 2,
+      "recipe": [
+        "tuna",
+        "can"
+      ]
+    },
+    {
+      "id": "grilled_saury",
+      "name": "Grilled Saury",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 80,
+      "defaultQuantity": 2,
+      "recipe": [
+        "heated_whetstone",
+        "saury"
+      ]
+    },
+    {
+      "id": "glazed_sweet_potato",
+      "name": "Glazed Sweet Potato",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 85,
+      "defaultQuantity": 2,
+      "recipe": [
+        "sweet_potato",
+        "honey"
+      ]
+    },
+    {
+      "id": "baked_potato",
+      "name": "Baked Potato",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 90,
+      "defaultQuantity": 2,
+      "recipe": [
+        "potato",
+        "heated_whetstone"
+      ]
+    },
+    {
+      "id": "braised_burdock",
+      "name": "Braised Burdock",
+      "rarity": "epic",
+      "type": [
+        "health"
+      ],
+      "value": 60,
+      "defaultQuantity": 3,
+      "recipe": [
+        "burdock",
+        "soy_sauce"
+      ]
+    },
+    {
+      "id": "garlic_ramen",
+      "name": "Garlic Ramen",
+      "rarity": "epic",
+      "type": [
+        "health"
+      ],
+      "value": 70,
+      "defaultQuantity": 2,
+      "recipe": [
+        "hot_ramen",
+        "garlic"
+      ]
+    },
+    {
+      "id": "ten_tonics_soup",
+      "name": "Ten Tonics Soup",
+      "rarity": "epic",
+      "type": [
+        "health"
+      ],
+      "value": 90,
+      "defaultQuantity": 2,
+      "recipe": [
+        "turtle_soup",
+        "scrolls_of_dongyi"
+      ]
+    },
+    {
+      "id": "braised_potato",
+      "name": "Braised Potato",
+      "rarity": "epic",
+      "type": [
+        "health"
+      ],
+      "value": 120,
+      "defaultQuantity": 2,
+      "recipe": [
+        "potato",
+        "soy_sauce"
+      ]
+    },
+    {
+      "id": "grilled_tuna",
+      "name": "Grilled Tuna",
+      "rarity": "epic",
+      "type": [
+        "health"
+      ],
+      "value": 150,
+      "defaultQuantity": 1,
+      "recipe": [
+        "tuna",
+        "heated_whetstone"
+      ]
+    },
+    {
+      "id": "bull_intestine",
+      "name": "Bull Intestine",
+      "rarity": "epic",
+      "type": [
+        "health"
+      ],
+      "value": 1111,
+      "defaultQuantity": 3,
+      "recipe": null
+    },
+    {
+      "id": "tree_of_life",
+      "name": "Tree of Life",
+      "rarity": "epic",
+      "type": [
+        "stamina"
+      ],
+      "value": 100,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "powder_of_life",
+      "name": "Powder of Life",
+      "rarity": "uncommon",
+      "type": [
+        "accessory"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": [
+        "tree_of_life",
+        "stone"
+      ]
+    },
+    {
+      "id": "crimson_flower",
+      "name": "Crimson Flower",
+      "rarity": "legendary",
+      "type": [
+        "health"
+      ],
+      "value": 220,
+      "defaultQuantity": 1,
+      "recipe": [
+        "powder_of_life",
+        "flower"
+      ]
+    },
+    {
+      "id": "herbal_tea",
+      "name": "Herbal Tea",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 30,
+      "defaultQuantity": 5,
+      "recipe": [
+        "herb",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "purified_water",
+      "name": "Purified Water",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 40,
+      "defaultQuantity": 4,
+      "recipe": [
+        "boiling_water",
+        "ice"
+      ]
+    },
+    {
+      "id": "hot_honey_water",
+      "name": "Hot Honey Water",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 42,
+      "defaultQuantity": 4,
+      "recipe": [
+        "honey",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "burdock_tea",
+      "name": "Burdock Tea",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 45,
+      "defaultQuantity": 3,
+      "recipe": [
+        "burdock",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "americano",
+      "name": "Americano",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 55,
+      "defaultQuantity": 3,
+      "recipe": [
+        "boiling_water",
+        "coffee"
+      ]
+    },
+    {
+      "id": "hot_chocolate",
+      "name": "Hot Chocolate",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 55,
+      "defaultQuantity": 3,
+      "recipe": [
+        "chocolate",
+        "boiling_water"
+      ]
+    },
+    {
+      "id": "ice_coffee",
+      "name": "Ice Coffee",
+      "rarity": "rare",
+      "type": [
+        "stamina"
+      ],
+      "value": 70,
+      "defaultQuantity": 4,
+      "recipe": [
+        "coffee",
+        "ice"
+      ]
+    },
+    {
+      "id": "sparkling_soju",
+      "name": "Sparkling Soju",
+      "rarity": "epic",
+      "type": [
+        "stamina"
+      ],
+      "value": 35,
+      "defaultQuantity": 5,
+      "recipe": [
+        "carbonated_water",
+        "soju"
+      ]
+    },
+    {
+      "id": "orangeade",
+      "name": "Orangeade",
+      "rarity": "epic",
+      "type": [
+        "stamina"
+      ],
+      "value": 50,
+      "defaultQuantity": 3,
+      "recipe": [
+        "orange",
+        "carbonated_water"
+      ]
+    },
+    {
+      "id": "ionized_soju",
+      "name": "Ionized Soju",
+      "rarity": "epic",
+      "type": [
+        "stamina"
+      ],
+      "value": 50,
+      "defaultQuantity": 3,
+      "recipe": [
+        "sports_drink",
+        "soju"
+      ]
+    },
+    {
+      "id": "cigarettes",
+      "name": "Cigarettes",
+      "rarity": "epic",
+      "type": [
+        "stamina"
+      ],
+      "value": 54,
+      "defaultQuantity": 10,
+      "recipe": [
+        "tobacco_leaves",
+        "lighter"
+      ]
+    },
+    {
+      "id": "flower_liquor",
+      "name": "Flower Liquor",
+      "rarity": "epic",
+      "type": [
+        "stamina"
+      ],
+      "value": 90,
+      "defaultQuantity": 3,
+      "recipe": [
+        "flower",
+        "sorghum_wine"
+      ]
+    },
+    {
+      "id": "cocktail",
+      "name": "Cocktail",
+      "rarity": "legendary",
+      "type": [
+        "stamina"
+      ],
+      "value": 90,
+      "defaultQuantity": 10,
+      "recipe": [
+        "whiskey",
+        "orange"
+      ]
+    },
+    {
+      "id": "oilcloth",
+      "name": "Oilcloth",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cloth",
+        "oil"
+      ]
+    },
+    {
+      "id": "mithril",
+      "name": "Mithril",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "flint",
+      "name": "Flint",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gunpowder",
+        "stone"
+      ]
+    },
+    {
+      "id": "meteorite",
+      "name": "Meteorite",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "ion_battery",
+      "name": "Ion Battery",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "battery",
+        "sports_drink"
+      ]
+    },
+    {
+      "id": "ash",
+      "name": "Ash",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "lighter",
+        "thick_paper"
+      ]
+    },
+    {
+      "id": "electronic_parts",
+      "name": "Electronic Parts",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "wire",
+        "battery"
+      ]
+    },
+    {
+      "id": "blueprint",
+      "name": "Blueprint",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "thick_paper",
+        "fountain_pen"
+      ]
+    },
+    {
+      "id": "lye",
+      "name": "Lye",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "ash",
+        "water"
+      ]
+    },
+    {
+      "id": "poison",
+      "name": "Poison",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "lye",
+        "fertilizer"
+      ]
+    },
+    {
+      "id": "holy_blood",
+      "name": "Holy Blood",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "arcane_stone",
+      "name": "Arcane Stone",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "holy_blood",
+        "flint"
+      ]
+    },
+    {
+      "id": "motor",
+      "name": "Motor",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel",
+        "electronic_parts"
+      ]
+    },
+    {
+      "id": "white_powder",
+      "name": "White Powder",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "white_chalk",
+        "stone"
+      ]
+    },
+    {
+      "id": "crt",
+      "name": "CRT",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "tv",
+        "hammer"
+      ]
+    },
+    {
+      "id": "adamantium",
+      "name": "Adamantium",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "mithril",
+        "iron_ore"
+      ]
+    },
+    {
+      "id": "ogre_skin",
+      "name": "Ogre Skin",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "glass_panel",
+      "name": "Glass Panel",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "glass_pieces",
+        "glue"
+      ]
+    },
+    {
+      "id": "gold",
+      "name": "Gold",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gemstone",
+        "pickaxe"
+      ]
+    },
+    {
+      "id": "cell_phone",
+      "name": "Cell Phone",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "blueprint",
+        "electronic_parts"
+      ]
+    },
+    {
+      "id": "lcd_panel",
+      "name": "LCD Panel",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "glass_panel",
+        "crt"
+      ]
+    },
+    {
+      "id": "engineered_arcane_motor",
+      "name": "Engineered Arcane Motor",
+      "rarity": "rare",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arcane_stone",
+        "motor"
+      ]
+    },
+    {
+      "id": "meteorsteel",
+      "name": "Meteorsteel",
+      "rarity": "rare",
+      "type": [
+        "enhance"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "meteorite",
+        "iron_ore"
+      ]
+    },
+    {
+      "id": "crude_silencer",
+      "name": "Crude Silencer",
+      "rarity": "common",
+      "type": [
+        "special"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "silencer",
+      "name": "Silencer",
+      "rarity": "uncommon",
+      "type": [
+        "special"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "rubber",
+        "bamboo"
+      ]
+    },
+    {
+      "id": "beret",
+      "name": "Beret",
+      "rarity": "uncommon",
+      "type": [
+        "head"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "fabric_armor",
+        "scissors"
+      ]
+    },
+    {
+      "id": "fire_helmet",
+      "name": "Fire Helmet",
+      "rarity": "uncommon",
+      "type": [
+        "head"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bike_helmet",
+        "water"
+      ]
+    },
+    {
+      "id": "tiara",
+      "name": "Tiara",
+      "rarity": "uncommon",
+      "type": [
+        "head"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "circlet",
+        "wire"
+      ]
+    },
+    {
+      "id": "ballistic_helmet",
+      "name": "Ballistic Helmet",
+      "rarity": "uncommon",
+      "type": [
+        "head"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bike_helmet",
+        "bullets"
+      ]
+    },
+    {
+      "id": "safety_helmet",
+      "name": "Safety Helmet",
+      "rarity": "uncommon",
+      "type": [
+        "head"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bike_helmet",
+        "stone"
+      ]
+    },
+    {
+      "id": "crown",
+      "name": "Crown",
+      "rarity": "rare",
+      "type": [
+        "head"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gold",
+        "ruby"
+      ]
+    },
+    {
+      "id": "racing_helmet",
+      "name": "Racing Helmet",
+      "rarity": "rare",
+      "type": [
+        "head"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "fire_helmet",
+        "blueprint"
+      ]
+    },
+    {
+      "id": "prophet_s_turban",
+      "name": "Prophet's Turban",
+      "rarity": "rare",
+      "type": [
+        "head"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "scarf",
+        "holy_water"
+      ]
+    },
+    {
+      "id": "close_helm",
+      "name": "Close Helm",
+      "rarity": "rare",
+      "type": [
+        "head"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "mask",
+        "steel_chain"
+      ]
+    },
+    {
+      "id": "crystal_tiara",
+      "name": "Crystal Tiara",
+      "rarity": "epic",
+      "type": [
+        "head"
+      ],
+      "value": 32,
+      "defaultQuantity": 1,
+      "recipe": [
+        "tiara",
+        "glass_pieces"
+      ]
+    },
+    {
+      "id": "laurel_wreath",
+      "name": "Laurel Wreath",
+      "rarity": "epic",
+      "type": [
+        "head"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "circlet",
+        "tree_of_life"
+      ]
+    },
+    {
+      "id": "helm_of_banneret",
+      "name": "Helm of Banneret",
+      "rarity": "epic",
+      "type": [
+        "head"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "close_helm",
+        "gold"
+      ]
+    },
+    {
+      "id": "imperial_burgonet",
+      "name": "Imperial Burgonet",
+      "rarity": "epic",
+      "type": [
+        "head"
+      ],
+      "value": 42,
+      "defaultQuantity": 1,
+      "recipe": [
+        "close_helm",
+        "gold"
+      ]
+    },
+    {
+      "id": "mithril_helm",
+      "name": "Mithril Helm",
+      "rarity": "epic",
+      "type": [
+        "head"
+      ],
+      "value": 45,
+      "defaultQuantity": 1,
+      "recipe": [
+        "close_helm",
+        "mithril"
+      ]
+    },
+    {
+      "id": "tactical_ops_helmet",
+      "name": "Tactical OPS Helmet",
+      "rarity": "epic",
+      "type": [
+        "head"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "ballistic_helmet",
+        "cell_phone"
+      ]
+    },
+    {
+      "id": "hero_helmet",
+      "name": "Hero Helmet",
+      "rarity": "epic",
+      "type": [
+        "head"
+      ],
+      "value": 48,
+      "defaultQuantity": 1,
+      "recipe": [
+        "racing_helmet",
+        "lcd_panel"
+      ]
+    },
+    {
+      "id": "angel_s_wing",
+      "name": "Angel's Wing",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 18,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bishop_s_cassock",
+        "feather"
+      ]
+    },
+    {
+      "id": "tiara_of_light",
+      "name": "Tiara of Light",
+      "rarity": "legendary",
+      "type": [
+        "head"
+      ],
+      "value": 52,
+      "defaultQuantity": 1,
+      "recipe": [
+        "crystal_tiara",
+        "angel_s_wing"
+      ]
+    },
+    {
+      "id": "crimson_bracelet",
+      "name": "Crimson Bracelet",
+      "rarity": "rare",
+      "type": [
+        "arm"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bracelet",
+        "ruby"
+      ]
+    },
+    {
+      "id": "imperial_crown",
+      "name": "Imperial Crown",
+      "rarity": "legendary",
+      "type": [
+        "head"
+      ],
+      "value": 52,
+      "defaultQuantity": 1,
+      "recipe": [
+        "crown",
+        "crimson_bracelet"
+      ]
+    },
+    {
+      "id": "military_suit",
+      "name": "Military Suit",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 18,
+      "defaultQuantity": 1,
+      "recipe": [
+        "windbreaker",
+        "branch"
+      ]
+    },
+    {
+      "id": "patched_robe",
+      "name": "Patched Robe",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 18,
+      "defaultQuantity": 1,
+      "recipe": [
+        "monk_s_robe",
+        "cloth"
+      ]
+    },
+    {
+      "id": "diving_suit",
+      "name": "Diving Suit",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 18,
+      "defaultQuantity": 1,
+      "recipe": [
+        "full_body_swimsuit",
+        "rubber"
+      ]
+    },
+    {
+      "id": "leather_armor",
+      "name": "Leather Armor",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "fabric_armor",
+        "leather"
+      ]
+    },
+    {
+      "id": "bikini",
+      "name": "Bikini",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "full_body_swimsuit",
+        "scissors"
+      ]
+    },
+    {
+      "id": "hanbok",
+      "name": "Hanbok",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": [
+        "doctor_s_gown",
+        "dress"
+      ]
+    },
+    {
+      "id": "bulletproof_vest",
+      "name": "Bulletproof Vest",
+      "rarity": "rare",
+      "type": [
+        "clothes"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "military_suit",
+        "iron_sheet"
+      ]
+    },
+    {
+      "id": "suit",
+      "name": "Suit",
+      "rarity": "rare",
+      "type": [
+        "clothes"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "dress_shirt",
+        "cloth"
+      ]
+    },
+    {
+      "id": "qipao",
+      "name": "Qipao",
+      "rarity": "rare",
+      "type": [
+        "clothes"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "dress",
+        "scissors"
+      ]
+    },
+    {
+      "id": "sheet_metal_armor",
+      "name": "Sheet Metal Armor",
+      "rarity": "rare",
+      "type": [
+        "clothes"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "fabric_armor",
+        "steel"
+      ]
+    },
+    {
+      "id": "chain_armor",
+      "name": "Chain Armor",
+      "rarity": "rare",
+      "type": [
+        "clothes"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_chain",
+        "leather_armor"
+      ]
+    },
+    {
+      "id": "optical_camouflage_suit",
+      "name": "Optical Camouflage Suit",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 41,
+      "defaultQuantity": 1,
+      "recipe": [
+        "diving_suit",
+        "glass_panel"
+      ]
+    },
+    {
+      "id": "sunset_armor",
+      "name": "Sunset Armor",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sheet_metal_armor",
+        "ruby"
+      ]
+    },
+    {
+      "id": "clergy_s_cassock",
+      "name": "Clergy's Cassock",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bishop_s_cassock",
+        "gold"
+      ]
+    },
+    {
+      "id": "blood_red_hood",
+      "name": "Blood Red Hood",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "patched_robe",
+        "holy_blood"
+      ]
+    },
+    {
+      "id": "tuxedo",
+      "name": "Tuxedo",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 50,
+      "defaultQuantity": 1,
+      "recipe": [
+        "suit",
+        "lace_glove"
+      ]
+    },
+    {
+      "id": "butler_s_suit",
+      "name": "Butler's Suit",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 55,
+      "defaultQuantity": 1,
+      "recipe": [
+        "suit",
+        "lace_glove"
+      ]
+    },
+    {
+      "id": "crusader_armor",
+      "name": "Crusader Armor",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 55,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sheet_metal_armor",
+        "bishop_s_cassock"
+      ]
+    },
+    {
+      "id": "dragon_dobok",
+      "name": "Dragon Dobok",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 55,
+      "defaultQuantity": 1,
+      "recipe": [
+        "qipao",
+        "herbal_liquor"
+      ]
+    },
+    {
+      "id": "chang_pao",
+      "name": "Chang Pao",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 55,
+      "defaultQuantity": 1,
+      "recipe": [
+        "qipao",
+        "herbal_liquor"
+      ]
+    },
+    {
+      "id": "eod_suit",
+      "name": "EOD Suit",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 55,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bulletproof_vest",
+        "diving_suit"
+      ]
+    },
+    {
+      "id": "dazzling_armor",
+      "name": "Dazzling Armor",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 60,
+      "defaultQuantity": 1,
+      "recipe": [
+        "hanbok",
+        "white_powder"
+      ]
+    },
+    {
+      "id": "amazoness_armor",
+      "name": "Amazoness Armor",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 60,
+      "defaultQuantity": 1,
+      "recipe": [
+        "chain_armor",
+        "bikini"
+      ]
+    },
+    {
+      "id": "covert_agent_uniform",
+      "name": "Covert Agent Uniform",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 60,
+      "defaultQuantity": 1,
+      "recipe": [
+        "hanbok",
+        "white_powder"
+      ]
+    },
+    {
+      "id": "commander_s_armor",
+      "name": "Commander's Armor",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 60,
+      "defaultQuantity": 1,
+      "recipe": [
+        "chain_armor",
+        "oilcloth"
+      ]
+    },
+    {
+      "id": "mithril_armor",
+      "name": "Mithril Armor",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 65,
+      "defaultQuantity": 1,
+      "recipe": [
+        "chain_armor",
+        "mithril"
+      ]
+    },
+    {
+      "id": "kabana",
+      "name": "Kabana",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 65,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sheet_metal_armor",
+        "adamantium"
+      ]
+    },
+    {
+      "id": "true_samadhi_fire",
+      "name": "True Samadhi Fire",
+      "rarity": "rare",
+      "type": [
+        "accessory"
+      ],
+      "value": 16,
+      "defaultQuantity": 1,
+      "recipe": [
+        "powder_of_life",
+        "lighter"
+      ]
+    },
+    {
+      "id": "passionate_dress",
+      "name": "Passionate Dress",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 70,
+      "defaultQuantity": 1,
+      "recipe": [
+        "dress",
+        "true_samadhi_fire"
+      ]
+    },
+    {
+      "id": "hellrider_s_jacket",
+      "name": "Hellrider's Jacket",
+      "rarity": "legendary",
+      "type": [
+        "clothes"
+      ],
+      "value": 80,
+      "defaultQuantity": 1,
+      "recipe": [
+        "rider_jacket",
+        "true_samadhi_fire"
+      ]
+    },
+    {
+      "id": "guardian_suit",
+      "name": "Guardian Suit",
+      "rarity": "legendary",
+      "type": [
+        "clothes"
+      ],
+      "value": 120,
+      "defaultQuantity": 1,
+      "recipe": [
+        "sheet_metal_armor",
+        "engineered_arcane_motor"
+      ]
+    },
+    {
+      "id": "queen_of_hearts",
+      "name": "Queen of Hearts",
+      "rarity": "legendary",
+      "type": [
+        "clothes"
+      ],
+      "value": 150,
+      "defaultQuantity": 1,
+      "recipe": [
+        "arcane_stone",
+        "playing_cards"
+      ]
     }
   ],
   "areas": [
@@ -3456,6 +5456,15 @@
         "trail",
         "forest"
       ]
+    },
+    {
+      "id": "crow_two",
+      "name": "Crow Two",
+      "baseHp": 0,
+      "baseAtk": 0,
+      "baseDef": 0,
+      "loot": [],
+      "areas": []
     }
   ]
 }

@@ -176,8 +176,7 @@ export function RoutePlanList({
   return (
     <div>
       <p className="mb-2.5 text-[11px] leading-relaxed text-stone-500">
-        Fewest areas to gather {target}, building each part as soon as its materials are in the pack —
-        every move between two areas costs the same, so the fastest route is the shortest list.
+        Fewest areas to gather {target}, building each part as soon as its materials are in the pack.
         {startingItem && (
           <>
             {" "}

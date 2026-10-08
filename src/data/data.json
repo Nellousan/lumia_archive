@@ -1,0 +1,3461 @@
+{
+  "items": [
+    {
+      "id": "scrap_metal",
+      "name": "Scrap Metal",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "hammer",
+      "name": "Hammer",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "iron_sheet",
+      "name": "Iron Sheet",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "scrap_metal",
+        "hammer"
+      ]
+    },
+    {
+      "id": "rubber",
+      "name": "Rubber",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "feather",
+      "name": "Feather",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "thick_paper",
+      "name": "Thick Paper",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "leather",
+      "name": "Leather",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bullets",
+      "name": "Bullets",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 20,
+      "recipe": null
+    },
+    {
+      "id": "arrows",
+      "name": "Arrows",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 20,
+      "recipe": null
+    },
+    {
+      "id": "iron_ore",
+      "name": "Iron Ore",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 3,
+      "recipe": null
+    },
+    {
+      "id": "glue",
+      "name": "Glue",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "cloth",
+      "name": "Cloth",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "alcohol",
+      "name": "Alcohol",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "fertilizer",
+      "name": "Fertilizer",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "battery",
+      "name": "Battery",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "lighter",
+      "name": "Lighter",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 3,
+      "recipe": null
+    },
+    {
+      "id": "water",
+      "name": "Water",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 10,
+      "defaultQuantity": 3,
+      "recipe": null
+    },
+    {
+      "id": "boiling_water",
+      "name": "Boiling Water",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "water",
+        "lighter"
+      ]
+    },
+    {
+      "id": "wire",
+      "name": "Wire",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "gunpowder",
+      "name": "Gunpowder",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "steel",
+      "name": "Steel",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "iron_ore",
+        "scrap_metal"
+      ]
+    },
+    {
+      "id": "oil",
+      "name": "Oil",
+      "rarity": "common",
+      "type": [
+        "enhance"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "whetstone",
+      "name": "Whetstone",
+      "rarity": "common",
+      "type": [
+        "enhance"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "nail",
+      "name": "Nail",
+      "rarity": "common",
+      "type": [
+        "enhance"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "soy_sauce",
+      "name": "Soy Sauce",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "potato",
+      "name": "Potato",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "sweet_potato",
+      "name": "Sweet Potato",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "garlic",
+      "name": "Garlic",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "burdock",
+      "name": "Burdock",
+      "rarity": "common",
+      "type": [
+        "ingredients"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "curry_powder",
+      "name": "Curry Powder",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "oriental_grass",
+      "name": "Oriental Grass",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 7,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "tuna",
+      "name": "Tuna",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "ramen",
+      "name": "Ramen",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "antiseptic",
+      "name": "Antiseptic",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "relief_patch",
+      "name": "Relief Patch",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "saury",
+      "name": "Saury",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "cookie",
+      "name": "Cookie",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bird_egg",
+      "name": "Bird Egg",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 10,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "bread",
+      "name": "Bread",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 20,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "orange",
+      "name": "Orange",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 12,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "chocolate",
+      "name": "Chocolate",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "smelt",
+      "name": "Smelt",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 20,
+      "defaultQuantity": 4,
+      "recipe": null
+    },
+    {
+      "id": "bird_meat",
+      "name": "Bird Meat",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "band_aid",
+      "name": "Band-aid",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bandage",
+      "name": "Bandage",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 30,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "pill",
+      "name": "Pill",
+      "rarity": "common",
+      "type": [
+        "health"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "egg_bun",
+      "name": "Egg Bun",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bird_egg",
+        "bread"
+      ]
+    },
+    {
+      "id": "frying_pan",
+      "name": "Frying Pan",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "ice",
+      "name": "Ice",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "sports_drink",
+      "name": "Sports Drink",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "carbonated_water",
+      "name": "Carbonated Water",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 13,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "tobacco_leaves",
+      "name": "Tobacco Leaves",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "liver_supplement_pill",
+      "name": "Liver Supplement Pill",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "coffee",
+      "name": "Coffee",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "honey",
+      "name": "Honey",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 22,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bacchus",
+      "name": "Bacchus",
+      "rarity": "common",
+      "type": [
+        "stamina"
+      ],
+      "value": 25,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "ice_water",
+      "name": "Ice Water",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 15,
+      "defaultQuantity": 8,
+      "recipe": [
+        "ice",
+        "water"
+      ]
+    },
+    {
+      "id": "sorghum_wine",
+      "name": "Sorghum Wine",
+      "rarity": "uncommon",
+      "type": [
+        "stamina"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "alcohol",
+        "lighter"
+      ]
+    },
+    {
+      "id": "glass_bottle",
+      "name": "Glass Bottle",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "glass_marble",
+      "name": "Glass Marble",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "glass_cup",
+      "name": "Glass Cup",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "plate",
+      "name": "Plate",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "dice",
+      "name": "Dice",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "can",
+      "name": "Can",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "plastic_bottle",
+      "name": "Plastic Bottle",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "white_chalk",
+      "name": "White Chalk",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "crude_ball",
+      "name": "Crude Ball",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 6,
+      "defaultQuantity": 20,
+      "recipe": null
+    },
+    {
+      "id": "mudfish",
+      "name": "Mudfish",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "carp",
+      "name": "Carp",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "gemstone",
+      "name": "Gemstone",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "holy_grail",
+      "name": "Holy Grail",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "cooking_pot",
+      "name": "Cooking Pot",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "throwing_dagger",
+      "name": "Throwing Dagger",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 10,
+      "defaultQuantity": 15,
+      "recipe": null
+    },
+    {
+      "id": "stone",
+      "name": "Stone",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 10,
+      "defaultQuantity": 3,
+      "recipe": null
+    },
+    {
+      "id": "tomahawk",
+      "name": "Tomahawk",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 10,
+      "defaultQuantity": 14,
+      "recipe": null
+    },
+    {
+      "id": "laptop_broken_screen",
+      "name": "Laptop (broken screen)",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "cd",
+      "name": "CD",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "stallion_medal",
+      "name": "Stallion Medal",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "playing_cards",
+      "name": "Playing Cards",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 5,
+      "defaultQuantity": 52,
+      "recipe": null
+    },
+    {
+      "id": "scissors",
+      "name": "Scissors",
+      "rarity": "common",
+      "type": [
+        "blade"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "razor",
+      "name": "Razor",
+      "rarity": "common",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "box_cutter",
+      "name": "Box Cutter",
+      "rarity": "common",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "crude_axe",
+      "name": "Crude Axe",
+      "rarity": "common",
+      "type": [
+        "blade"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "pickaxe",
+      "name": "Pickaxe",
+      "rarity": "common",
+      "type": [
+        "blade"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "kitchen_knife",
+      "name": "Kitchen Knife",
+      "rarity": "common",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "katana",
+      "name": "Katana",
+      "rarity": "common",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "sickle",
+      "name": "Sickle",
+      "rarity": "common",
+      "type": [
+        "blade"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "knife",
+      "name": "Knife",
+      "rarity": "common",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "long_sword",
+      "name": "Long Sword",
+      "rarity": "common",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "sharp_kitchen_knife",
+      "name": "Sharp Kitchen Knife",
+      "rarity": "uncommon",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 14,
+      "defaultQuantity": 1,
+      "recipe": [
+        "whetstone",
+        "kitchen_knife"
+      ]
+    },
+    {
+      "id": "crude_awl",
+      "name": "Crude Awl",
+      "rarity": "common",
+      "type": [
+        "stab"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "short_spear",
+      "name": "Short Spear",
+      "rarity": "common",
+      "type": [
+        "stab"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "awl",
+      "name": "Awl",
+      "rarity": "uncommon",
+      "type": [
+        "stab"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "branch",
+      "name": "Branch",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "scrolls_of_dongyi",
+      "name": "Scrolls of DongYi",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "soldering_iron",
+      "name": "Soldering Iron",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "ripped_scroll_1",
+      "name": "Ripped Scroll - 1",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "ripped_scroll_2",
+      "name": "Ripped Scroll - 2",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "crude_bat",
+      "name": "Crude Bat",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "spear_handle",
+      "name": "Spear Handle",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "fan",
+      "name": "Fan",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "harpoon",
+      "name": "Harpoon",
+      "rarity": "common",
+      "type": [
+        "stab"
+      ],
+      "value": 14,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "fountain_pen",
+      "name": "Fountain Pen",
+      "rarity": "common",
+      "type": [
+        "stab"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "needle",
+      "name": "Needle",
+      "rarity": "common",
+      "type": [
+        "stab"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "shamshir",
+      "name": "Shamshir",
+      "rarity": "common",
+      "type": [
+        "blade"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "hatchet",
+      "name": "Hatchet",
+      "rarity": "common",
+      "type": [
+        "blade"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "steel_chain",
+      "name": "Steel Chain",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "steel_pipe",
+      "name": "Steel Pipe",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "short_rod",
+      "name": "Short Rod",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bamboo",
+      "name": "Bamboo",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bat",
+      "name": "Bat",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "anatomy_model",
+      "name": "Anatomy Model",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "whip",
+      "name": "Whip",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "long_rod",
+      "name": "Long Rod",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "stone_axe",
+      "name": "Stone Axe",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": [
+        "stone",
+        "bamboo"
+      ]
+    },
+    {
+      "id": "heated_frying_pan",
+      "name": "Heated Frying Pan",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "frying_pan",
+        "lighter"
+      ]
+    },
+    {
+      "id": "goblin_bat",
+      "name": "Goblin Bat",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "short_rod",
+        "nail"
+      ]
+    },
+    {
+      "id": "heated_steel_pipe",
+      "name": "Heated Steel Pipe",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "steel_pipe",
+        "lighter"
+      ]
+    },
+    {
+      "id": "feather_duster",
+      "name": "Feather Duster",
+      "rarity": "uncommon",
+      "type": [
+        "blunt"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "feather",
+        "spear_handle"
+      ]
+    },
+    {
+      "id": "iron_ball",
+      "name": "Iron Ball",
+      "rarity": "common",
+      "type": [
+        "thrown"
+      ],
+      "value": 10,
+      "defaultQuantity": 20,
+      "recipe": null
+    },
+    {
+      "id": "crude_gun",
+      "name": "Crude Gun",
+      "rarity": "common",
+      "type": [
+        "gun"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "v_pp",
+      "name": "V-PP",
+      "rarity": "common",
+      "type": [
+        "gun"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "f92s",
+      "name": "F92S",
+      "rarity": "common",
+      "type": [
+        "gun"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "northern_revolver",
+      "name": "Northern Revolver",
+      "rarity": "common",
+      "type": [
+        "gun"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "southern_revolver",
+      "name": "Southern Revolver",
+      "rarity": "common",
+      "type": [
+        "gun"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "long_rifle",
+      "name": "Long Rifle",
+      "rarity": "common",
+      "type": [
+        "gun"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bamboo",
+        "gunpowder"
+      ]
+    },
+    {
+      "id": "im_10",
+      "name": "IM-10",
+      "rarity": "common",
+      "type": [
+        "gun"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "sgoty870",
+      "name": "SGOTY870",
+      "rarity": "uncommon",
+      "type": [
+        "gun"
+      ],
+      "value": 22,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bolt_action_rifle",
+      "name": "Bolt Action Rifle",
+      "rarity": "uncommon",
+      "type": [
+        "gun"
+      ],
+      "value": 24,
+      "defaultQuantity": 1,
+      "recipe": [
+        "long_rifle",
+        "steel_pipe"
+      ]
+    },
+    {
+      "id": "crude_bow",
+      "name": "Crude Bow",
+      "rarity": "common",
+      "type": [
+        "bow"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bow",
+      "name": "Bow",
+      "rarity": "common",
+      "type": [
+        "bow"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "short_crossbow",
+      "name": "Short Crossbow",
+      "rarity": "common",
+      "type": [
+        "bow"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "yumi_bow",
+      "name": "Yumi Bow",
+      "rarity": "common",
+      "type": [
+        "bow"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "snare",
+      "name": "Snare",
+      "rarity": "common",
+      "type": [
+        "trap"
+      ],
+      "value": 5,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "piano_wire",
+      "name": "Piano Wire",
+      "rarity": "common",
+      "type": [
+        "trap"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "mouse_trap",
+      "name": "Mouse Trap",
+      "rarity": "common",
+      "type": [
+        "trap"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "hunting_trap",
+      "name": "Hunting Trap",
+      "rarity": "uncommon",
+      "type": [
+        "trap"
+      ],
+      "value": 10,
+      "defaultQuantity": 2,
+      "recipe": null
+    },
+    {
+      "id": "wooden_bow",
+      "name": "Wooden Bow",
+      "rarity": "uncommon",
+      "type": [
+        "bow"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "branch",
+        "piano_wire"
+      ]
+    },
+    {
+      "id": "composite_bow",
+      "name": "Composite Bow",
+      "rarity": "uncommon",
+      "type": [
+        "bow"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bow",
+        "piano_wire"
+      ]
+    },
+    {
+      "id": "long_crossbow",
+      "name": "Long Crossbow",
+      "rarity": "uncommon",
+      "type": [
+        "bow"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "short_crossbow",
+        "piano_wire"
+      ]
+    },
+    {
+      "id": "pellet_bow",
+      "name": "Pellet Bow",
+      "rarity": "uncommon",
+      "type": [
+        "bow"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": [
+        "branch",
+        "wire"
+      ]
+    },
+    {
+      "id": "knuckle",
+      "name": "Knuckle",
+      "rarity": "common",
+      "type": [
+        "hand"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "claw",
+      "name": "Claw",
+      "rarity": "common",
+      "type": [
+        "hand"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "cotton_work_glove",
+      "name": "Cotton Work Glove",
+      "rarity": "common",
+      "type": [
+        "hand"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "leather_glove",
+      "name": "Leather Glove",
+      "rarity": "uncommon",
+      "type": [
+        "hand"
+      ],
+      "value": 22,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cotton_work_glove",
+        "leather"
+      ]
+    },
+    {
+      "id": "iron_knuckle",
+      "name": "Iron Knuckle",
+      "rarity": "uncommon",
+      "type": [
+        "hand"
+      ],
+      "value": 24,
+      "defaultQuantity": 1,
+      "recipe": [
+        "knuckle",
+        "iron_ore"
+      ]
+    },
+    {
+      "id": "lace_glove",
+      "name": "Lace Glove",
+      "rarity": "uncommon",
+      "type": [
+        "hand"
+      ],
+      "value": 24,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cotton_work_glove",
+        "cloth"
+      ]
+    },
+    {
+      "id": "gauntlet",
+      "name": "Gauntlet",
+      "rarity": "uncommon",
+      "type": [
+        "hand"
+      ],
+      "value": 26,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cotton_work_glove",
+        "steel"
+      ]
+    },
+    {
+      "id": "glasses",
+      "name": "Glasses",
+      "rarity": "common",
+      "type": [
+        "head"
+      ],
+      "value": 1,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "hiking_hat",
+      "name": "Hiking Hat",
+      "rarity": "common",
+      "type": [
+        "head"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "hairband",
+      "name": "Hairband",
+      "rarity": "common",
+      "type": [
+        "head"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bike_helmet",
+      "name": "Bike Helmet",
+      "rarity": "common",
+      "type": [
+        "head"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "mask",
+      "name": "Mask",
+      "rarity": "uncommon",
+      "type": [
+        "head"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": [
+        "feather",
+        "glasses"
+      ]
+    },
+    {
+      "id": "circlet",
+      "name": "Circlet",
+      "rarity": "uncommon",
+      "type": [
+        "head"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "hairband",
+        "branch"
+      ]
+    },
+    {
+      "id": "windbreaker",
+      "name": "Windbreaker",
+      "rarity": "common",
+      "type": [
+        "clothes"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "cassock",
+      "name": "Cassock",
+      "rarity": "common",
+      "type": [
+        "clothes"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "doctor_s_gown",
+      "name": "Doctor's Gown",
+      "rarity": "common",
+      "type": [
+        "clothes"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bunker_jacket",
+      "name": "Bunker Jacket",
+      "rarity": "common",
+      "type": [
+        "clothes"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "monk_s_robe",
+      "name": "Monk's Robe",
+      "rarity": "common",
+      "type": [
+        "clothes"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "full_body_swimsuit",
+      "name": "Full Body Swimsuit",
+      "rarity": "common",
+      "type": [
+        "clothes"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "fabric_armor",
+      "name": "Fabric Armor",
+      "rarity": "common",
+      "type": [
+        "clothes"
+      ],
+      "value": 8,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "flower",
+      "name": "Flower",
+      "rarity": "common",
+      "type": [
+        "accessory"
+      ],
+      "value": 2,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "ribbon",
+      "name": "Ribbon",
+      "rarity": "common",
+      "type": [
+        "accessory"
+      ],
+      "value": 2,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "binoculars",
+      "name": "Binoculars",
+      "rarity": "common",
+      "type": [
+        "accessory"
+      ],
+      "value": 2,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "box",
+      "name": "Box",
+      "rarity": "common",
+      "type": [
+        "accessory"
+      ],
+      "value": 2,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "cross",
+      "name": "Cross",
+      "rarity": "common",
+      "type": [
+        "accessory"
+      ],
+      "value": 2,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "wooden_fish",
+      "name": "Wooden Fish",
+      "rarity": "common",
+      "type": [
+        "accessory"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "buddhist_scripture",
+      "name": "Buddhist Scripture",
+      "rarity": "common",
+      "type": [
+        "accessory"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bishop_s_cassock",
+      "name": "Bishop's Cassock",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cross",
+        "cassock"
+      ]
+    },
+    {
+      "id": "dress",
+      "name": "Dress",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cloth",
+        "doctor_s_gown"
+      ]
+    },
+    {
+      "id": "dress_shirt",
+      "name": "Dress Shirt",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 15,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cloth",
+        "scissors"
+      ]
+    },
+    {
+      "id": "thimble",
+      "name": "Thimble",
+      "rarity": "common",
+      "type": [
+        "arm"
+      ],
+      "value": 1,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "watch",
+      "name": "Watch",
+      "rarity": "common",
+      "type": [
+        "arm"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "reserve_armband",
+      "name": "Reserve Armband",
+      "rarity": "common",
+      "type": [
+        "arm"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "bracelet",
+      "name": "Bracelet",
+      "rarity": "common",
+      "type": [
+        "arm"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "arm_warmers",
+      "name": "Arm Warmers",
+      "rarity": "common",
+      "type": [
+        "arm"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "slippers",
+      "name": "Slippers",
+      "rarity": "common",
+      "type": [
+        "leg"
+      ],
+      "value": 1,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "wooden_shoes",
+      "name": "Wooden Shoes",
+      "rarity": "common",
+      "type": [
+        "leg"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "hiking_shoes",
+      "name": "Hiking Shoes",
+      "rarity": "common",
+      "type": [
+        "leg"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "running_shoes",
+      "name": "Running Shoes",
+      "rarity": "common",
+      "type": [
+        "leg"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "tights",
+      "name": "Tights",
+      "rarity": "common",
+      "type": [
+        "leg"
+      ],
+      "value": 3,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "boots",
+      "name": "Boots",
+      "rarity": "common",
+      "type": [
+        "leg"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "knee_pads",
+      "name": "Knee Pads",
+      "rarity": "uncommon",
+      "type": [
+        "leg"
+      ],
+      "value": 10,
+      "defaultQuantity": 1,
+      "recipe": [
+        "cloth",
+        "leather"
+      ]
+    },
+    {
+      "id": "feather_boots",
+      "name": "Feather Boots",
+      "rarity": "uncommon",
+      "type": [
+        "leg"
+      ],
+      "value": 12,
+      "defaultQuantity": 1,
+      "recipe": [
+        "boots",
+        "feather"
+      ]
+    },
+    {
+      "id": "laser_pointer",
+      "name": "Laser Pointer",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "magazine",
+      "name": "Magazine",
+      "rarity": "uncommon",
+      "type": [
+        "accessory"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": [
+        "box",
+        "iron_sheet"
+      ]
+    },
+    {
+      "id": "fresh_sashimi",
+      "name": "Fresh Sashimi",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 120,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "turtle_shell",
+      "name": "Turtle Shell",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "tv",
+      "name": "TV",
+      "rarity": "uncommon",
+      "type": [
+        "thrown"
+      ],
+      "value": 40,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "scarf",
+      "name": "Scarf",
+      "rarity": "common",
+      "type": [
+        "blunt"
+      ],
+      "value": 5,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "quiver",
+      "name": "Quiver",
+      "rarity": "uncommon",
+      "type": [
+        "accessory"
+      ],
+      "value": 6,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bamboo",
+        "leather"
+      ]
+    },
+    {
+      "id": "magnum_python",
+      "name": "Magnum-Python",
+      "rarity": "uncommon",
+      "type": [
+        "gun"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "masamune",
+      "name": "Masamune",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 28,
+      "defaultQuantity": 1,
+      "recipe": null
+    },
+    {
+      "id": "holy_water",
+      "name": "Holy Water",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 70,
+      "defaultQuantity": 1,
+      "recipe": [
+        "holy_grail",
+        "water"
+      ]
+    },
+    {
+      "id": "leather_jacket",
+      "name": "Leather Jacket",
+      "rarity": "uncommon",
+      "type": [
+        "clothes"
+      ],
+      "value": 20,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather",
+        "windbreaker"
+      ]
+    },
+    {
+      "id": "rider_jacket",
+      "name": "Rider Jacket",
+      "rarity": "rare",
+      "type": [
+        "clothes"
+      ],
+      "value": 35,
+      "defaultQuantity": 1,
+      "recipe": [
+        "leather_jacket",
+        "steel_chain"
+      ]
+    },
+    {
+      "id": "rocker_s_jacket",
+      "name": "Rocker's Jacket",
+      "rarity": "epic",
+      "type": [
+        "clothes"
+      ],
+      "value": 55,
+      "defaultQuantity": 1,
+      "recipe": [
+        "rider_jacket",
+        "iron_sheet"
+      ]
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "gemstone",
+        "hammer"
+      ]
+    },
+    {
+      "id": "jewel_sword",
+      "name": "Jewel Sword",
+      "rarity": "rare",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 30,
+      "defaultQuantity": 1,
+      "recipe": [
+        "knife",
+        "ruby"
+      ]
+    },
+    {
+      "id": "glass_pieces",
+      "name": "Glass Pieces",
+      "rarity": "uncommon",
+      "type": [
+        "ingredients"
+      ],
+      "value": null,
+      "defaultQuantity": 1,
+      "recipe": [
+        "glass_cup",
+        "stone"
+      ]
+    },
+    {
+      "id": "h_fu",
+      "name": "Hǫfuð",
+      "rarity": "epic",
+      "type": [
+        "blade",
+        "stab"
+      ],
+      "value": 46,
+      "defaultQuantity": 1,
+      "recipe": [
+        "jewel_sword",
+        "glass_pieces"
+      ]
+    }
+  ],
+  "areas": [
+    {
+      "id": "school",
+      "items": [
+        {
+          "bat": 2
+        },
+        {
+          "scissors": 5
+        },
+        {
+          "anatomy_model": 1
+        },
+        {
+          "fountain_pen": 3
+        },
+        {
+          "white_chalk": 3
+        },
+        {
+          "razor": 6
+        },
+        {
+          "ribbon": 2
+        },
+        {
+          "box": 4
+        },
+        {
+          "bike_helmet": 4
+        },
+        {
+          "windbreaker": 6
+        },
+        {
+          "reserve_armband": 4
+        },
+        {
+          "arm_warmers": 3
+        },
+        {
+          "alcohol": 5
+        },
+        {
+          "laser_pointer": 3
+        },
+        {
+          "rubber": 3
+        },
+        {
+          "lighter": 5
+        }
+      ]
+    },
+    {
+      "id": "docks",
+      "items": [
+        {
+          "hammer": 5
+        },
+        {
+          "northern_revolver": 4
+        },
+        {
+          "southern_revolver": 2
+        },
+        {
+          "long_rifle": 5
+        },
+        {
+          "sgoty870": 2
+        },
+        {
+          "v_pp": 3
+        },
+        {
+          "f92s": 2
+        },
+        {
+          "magazine": 4
+        },
+        {
+          "full_body_swimsuit": 4
+        },
+        {
+          "water": 6
+        },
+        {
+          "tuna": 3
+        },
+        {
+          "fresh_sashimi": 1
+        },
+        {
+          "turtle_shell": 3
+        },
+        {
+          "bullets": 9
+        },
+        {
+          "whetstone": 4
+        }
+      ]
+    },
+    {
+      "id": "factory",
+      "items": [
+        {
+          "scissors": 2
+        },
+        {
+          "short_crossbow": 4
+        },
+        {
+          "steel_pipe": 5
+        },
+        {
+          "glass_marble": 3
+        },
+        {
+          "reserve_armband": 3
+        },
+        {
+          "glasses": 4
+        },
+        {
+          "soy_sauce": 2
+        },
+        {
+          "wire": 5
+        },
+        {
+          "scrap_metal": 8
+        },
+        {
+          "laser_pointer": 5
+        },
+        {
+          "nail": 4
+        }
+      ]
+    },
+    {
+      "id": "slums",
+      "items": [
+        {
+          "cooking_pot": 4
+        },
+        {
+          "steel_chain": 5
+        },
+        {
+          "glass_cup": 3
+        },
+        {
+          "ripped_scroll_1": 1
+        },
+        {
+          "frying_pan": 3
+        },
+        {
+          "cd": 2
+        },
+        {
+          "needle": 4
+        },
+        {
+          "kitchen_knife": 3
+        },
+        {
+          "tv": 2
+        },
+        {
+          "arm_warmers": 3
+        },
+        {
+          "bracelet": 3
+        },
+        {
+          "ramen": 2
+        },
+        {
+          "bacchus": 2
+        },
+        {
+          "cloth": 4
+        },
+        {
+          "scrap_metal": 6
+        },
+        {
+          "lighter": 7
+        },
+        {
+          "oil": 5
+        }
+      ]
+    },
+    {
+      "id": "town_hall",
+      "items": [
+        {
+          "playing_cards": 1
+        },
+        {
+          "hammer": 6
+        },
+        {
+          "fan": 4
+        },
+        {
+          "dice": 3
+        },
+        {
+          "tv": 1
+        },
+        {
+          "slippers": 3
+        },
+        {
+          "hairband": 4
+        },
+        {
+          "bird_meat": 2
+        },
+        {
+          "honey": 6
+        },
+        {
+          "relief_patch": 3
+        },
+        {
+          "fertilizer": 2
+        },
+        {
+          "cloth": 4
+        },
+        {
+          "arrows": 12
+        },
+        {
+          "thick_paper": 3
+        },
+        {
+          "piano_wire": 4
+        }
+      ]
+    },
+    {
+      "id": "fire_station",
+      "items": [
+        {
+          "hammer": 6
+        },
+        {
+          "hatchet": 3
+        },
+        {
+          "tomahawk": 3
+        },
+        {
+          "boots": 4
+        },
+        {
+          "bunker_jacket": 3
+        },
+        {
+          "watch": 3
+        },
+        {
+          "pill": 3
+        },
+        {
+          "water": 16
+        },
+        {
+          "bandage": 3
+        },
+        {
+          "battery": 8
+        },
+        {
+          "leather": 3
+        },
+        {
+          "nail": 3
+        },
+        {
+          "oil": 5
+        },
+        {
+          "mouse_trap": 6
+        }
+      ]
+    },
+    {
+      "id": "alley",
+      "items": [
+        {
+          "cooking_pot": 2
+        },
+        {
+          "steel_chain": 3
+        },
+        {
+          "glass_cup": 4
+        },
+        {
+          "plate": 2
+        },
+        {
+          "needle": 5
+        },
+        {
+          "cotton_work_glove": 7
+        },
+        {
+          "kitchen_knife": 3
+        },
+        {
+          "box_cutter": 6
+        },
+        {
+          "tv": 2
+        },
+        {
+          "running_shoes": 3
+        },
+        {
+          "ramen": 2
+        },
+        {
+          "cloth": 5
+        },
+        {
+          "scrap_metal": 2
+        },
+        {
+          "bracelet": 4
+        }
+      ]
+    },
+    {
+      "id": "trail",
+      "items": [
+        {
+          "branch": 5
+        },
+        {
+          "long_rod": 5
+        },
+        {
+          "bamboo": 4
+        },
+        {
+          "stone": 7
+        },
+        {
+          "gemstone": 5
+        },
+        {
+          "shamshir": 4
+        },
+        {
+          "scarf": 2
+        },
+        {
+          "hatchet": 2
+        },
+        {
+          "tomahawk": 2
+        },
+        {
+          "hiking_shoes": 2
+        },
+        {
+          "boots": 3
+        },
+        {
+          "hiking_hat": 2
+        },
+        {
+          "bike_helmet": 2
+        },
+        {
+          "oriental_grass": 10
+        },
+        {
+          "iron_ore": 7
+        },
+        {
+          "feather": 2
+        }
+      ]
+    },
+    {
+      "id": "archery_range",
+      "items": [
+        {
+          "bow": 5
+        },
+        {
+          "pickaxe": 2
+        },
+        {
+          "yumi_bow": 6
+        },
+        {
+          "flower": 1
+        },
+        {
+          "binoculars": 4
+        },
+        {
+          "glasses": 3
+        },
+        {
+          "quiver": 4
+        },
+        {
+          "fabric_armor": 3
+        },
+        {
+          "sports_drink": 1
+        },
+        {
+          "gunpowder": 2
+        },
+        {
+          "arrows": 10
+        },
+        {
+          "thick_paper": 4
+        },
+        {
+          "oil": 5
+        },
+        {
+          "snare": 2
+        },
+        {
+          "piano_wire": 6
+        }
+      ]
+    },
+    {
+      "id": "hospital",
+      "items": [
+        {
+          "alcohol": 3
+        },
+        {
+          "anatomy_model": 1
+        },
+        {
+          "antiseptic": 4
+        },
+        {
+          "band_aid": 3
+        },
+        {
+          "bandage": 4
+        },
+        {
+          "doctor_s_gown": 8
+        },
+        {
+          "fountain_pen": 2
+        },
+        {
+          "glue": 5
+        },
+        {
+          "hammer": 4
+        },
+        {
+          "liver_supplement_pill": 2
+        },
+        {
+          "pill": 5
+        },
+        {
+          "scrolls_of_dongyi": 4
+        },
+        {
+          "scissors": 5
+        },
+        {
+          "slippers": 3
+        }
+      ]
+    },
+    {
+      "id": "forest",
+      "items": [
+        {
+          "bamboo": 6
+        },
+        {
+          "branch": 3
+        },
+        {
+          "hatchet": 4
+        },
+        {
+          "sickle": 2
+        },
+        {
+          "tomahawk": 3
+        },
+        {
+          "claw": 4
+        },
+        {
+          "harpoon": 5
+        },
+        {
+          "short_spear": 4
+        },
+        {
+          "flower": 2
+        },
+        {
+          "hiking_hat": 2
+        },
+        {
+          "oriental_grass": 7
+        },
+        {
+          "water": 7
+        },
+        {
+          "feather": 3
+        },
+        {
+          "iron_ore": 4
+        },
+        {
+          "leather": 6
+        },
+        {
+          "snare": 2
+        }
+      ]
+    },
+    {
+      "id": "beach",
+      "items": [
+        {
+          "can": 4
+        },
+        {
+          "im_10": 5
+        },
+        {
+          "long_rifle": 4
+        },
+        {
+          "magnum_python": 3
+        },
+        {
+          "bike_helmet": 4
+        },
+        {
+          "full_body_swimsuit": 5
+        },
+        {
+          "magazine": 4
+        },
+        {
+          "fresh_sashimi": 1
+        },
+        {
+          "saury": 4
+        },
+        {
+          "water": 8
+        },
+        {
+          "bullets": 8
+        },
+        {
+          "scrap_metal": 6
+        },
+        {
+          "turtle_shell": 4
+        },
+        {
+          "mouse_trap": 4
+        },
+        {
+          "snare": 2
+        }
+      ]
+    },
+    {
+      "id": "cemetery",
+      "items": [
+        {
+          "bamboo": 5
+        },
+        {
+          "branch": 5
+        },
+        {
+          "pickaxe": 6
+        },
+        {
+          "stone": 4
+        },
+        {
+          "throwing_dagger": 5
+        },
+        {
+          "long_sword": 2
+        },
+        {
+          "shamshir": 4
+        },
+        {
+          "whip": 4
+        },
+        {
+          "cross": 2
+        },
+        {
+          "flower": 2
+        },
+        {
+          "hairband": 4
+        },
+        {
+          "bird_egg": 2
+        },
+        {
+          "potato": 2
+        },
+        {
+          "feather": 4
+        },
+        {
+          "iron_ore": 5
+        },
+        {
+          "rubber": 2
+        },
+        {
+          "arrows": 7
+        },
+        {
+          "piano_wire": 5
+        }
+      ]
+    },
+    {
+      "id": "well",
+      "items": [
+        {
+          "iron_ball": 5
+        },
+        {
+          "knife": 5
+        },
+        {
+          "knuckle": 4
+        },
+        {
+          "mudfish": 3
+        },
+        {
+          "short_crossbow": 5
+        },
+        {
+          "claw": 4
+        },
+        {
+          "bike_helmet": 3
+        },
+        {
+          "quiver": 2
+        },
+        {
+          "carbonated_water": 8
+        },
+        {
+          "water": 15
+        },
+        {
+          "ice": 5
+        },
+        {
+          "arrows": 5
+        },
+        {
+          "bullets": 5
+        },
+        {
+          "leather": 4
+        },
+        {
+          "turtle_shell": 3
+        },
+        {
+          "snare": 2
+        }
+      ]
+    },
+    {
+      "id": "temple",
+      "items": [
+        {
+          "masamune": 1
+        },
+        {
+          "spear_handle": 4
+        },
+        {
+          "stone": 5
+        },
+        {
+          "yumi_bow": 6
+        },
+        {
+          "katana": 5
+        },
+        {
+          "knuckle": 4
+        },
+        {
+          "short_spear": 6
+        },
+        {
+          "stallion_medal": 2
+        },
+        {
+          "buddhist_scripture": 6
+        },
+        {
+          "fabric_armor": 4
+        },
+        {
+          "hairband": 2
+        },
+        {
+          "monk_s_robe": 6
+        },
+        {
+          "wooden_fish": 3
+        },
+        {
+          "cloth": 4
+        },
+        {
+          "thick_paper": 4
+        }
+      ]
+    },
+    {
+      "id": "tunnel",
+      "items": [
+        {
+          "gemstone": 4
+        },
+        {
+          "glass_bottle": 5
+        },
+        {
+          "iron_ball": 3
+        },
+        {
+          "pickaxe": 2
+        },
+        {
+          "stone": 8
+        },
+        {
+          "can": 5
+        },
+        {
+          "cotton_work_glove": 7
+        },
+        {
+          "box": 5
+        },
+        {
+          "tights": 3
+        },
+        {
+          "sweet_potato": 2
+        },
+        {
+          "gunpowder": 3
+        },
+        {
+          "wire": 6
+        },
+        {
+          "nail": 5
+        },
+        {
+          "whetstone": 6
+        }
+      ]
+    },
+    {
+      "id": "pond",
+      "items": [
+        {
+          "carp": 3
+        },
+        {
+          "gemstone": 2
+        },
+        {
+          "long_rod": 4
+        },
+        {
+          "plastic_bottle": 5
+        },
+        {
+          "short_rod": 4
+        },
+        {
+          "knife": 4
+        },
+        {
+          "tights": 3
+        },
+        {
+          "flower": 3
+        },
+        {
+          "water": 17
+        },
+        {
+          "fertilizer": 7
+        },
+        {
+          "turtle_shell": 5
+        },
+        {
+          "snare": 3
+        },
+        {
+          "mouse_trap": 4
+        }
+      ]
+    },
+    {
+      "id": "hotel",
+      "items": [
+        {
+          "glass_cup": 4
+        },
+        {
+          "laptop_broken_screen": 1
+        },
+        {
+          "stone": 3
+        },
+        {
+          "steel_chain": 4
+        },
+        {
+          "cooking_pot": 2
+        },
+        {
+          "frying_pan": 2
+        },
+        {
+          "plate": 2
+        },
+        {
+          "razor": 4
+        },
+        {
+          "ripped_scroll_1": 1
+        },
+        {
+          "whip": 4
+        },
+        {
+          "kitchen_knife": 3
+        },
+        {
+          "box_cutter": 2
+        },
+        {
+          "thimble": 4
+        },
+        {
+          "watch": 2
+        },
+        {
+          "burdock": 1
+        },
+        {
+          "cookie": 1
+        },
+        {
+          "honey": 3
+        },
+        {
+          "ice": 2
+        },
+        {
+          "potato": 1
+        },
+        {
+          "garlic": 2
+        },
+        {
+          "fertilizer": 3
+        },
+        {
+          "whetstone": 5
+        }
+      ]
+    },
+    {
+      "id": "chapel",
+      "items": [
+        {
+          "bow": 4
+        },
+        {
+          "holy_grail": 1
+        },
+        {
+          "short_crossbow": 3
+        },
+        {
+          "short_rod": 4
+        },
+        {
+          "throwing_dagger": 4
+        },
+        {
+          "cd": 3
+        },
+        {
+          "glass_marble": 2
+        },
+        {
+          "northern_revolver": 1
+        },
+        {
+          "southern_revolver": 3
+        },
+        {
+          "white_chalk": 3
+        },
+        {
+          "long_sword": 3
+        },
+        {
+          "f92s": 4
+        },
+        {
+          "wooden_shoes": 2
+        },
+        {
+          "cross": 5
+        },
+        {
+          "cassock": 5
+        },
+        {
+          "holy_water": 3
+        },
+        {
+          "snare": 3
+        }
+      ]
+    },
+    {
+      "id": "uptown",
+      "items": [
+        {
+          "katana": 2
+        },
+        {
+          "laptop_broken_screen": 1
+        },
+        {
+          "steel_chain": 5
+        },
+        {
+          "cooking_pot": 2
+        },
+        {
+          "glass_cup": 4
+        },
+        {
+          "kitchen_knife": 4
+        },
+        {
+          "needle": 3
+        },
+        {
+          "plate": 1
+        },
+        {
+          "tv": 1
+        },
+        {
+          "arm_warmers": 1
+        },
+        {
+          "ribbon": 3
+        },
+        {
+          "running_shoes": 3
+        },
+        {
+          "watch": 3
+        },
+        {
+          "windbreaker": 4
+        },
+        {
+          "bracelet": 2
+        },
+        {
+          "chocolate": 3
+        },
+        {
+          "coffee": 3
+        },
+        {
+          "curry_powder": 2
+        },
+        {
+          "orange": 2
+        },
+        {
+          "soy_sauce": 3
+        },
+        {
+          "whetstone": 5
+        }
+      ]
+    },
+    {
+      "id": "lighthouse",
+      "items": [
+        {
+          "knuckle": 6
+        },
+        {
+          "sickle": 2
+        },
+        {
+          "spear_handle": 4
+        },
+        {
+          "whip": 3
+        },
+        {
+          "binoculars": 5
+        },
+        {
+          "boots": 4
+        },
+        {
+          "glasses": 2
+        },
+        {
+          "bird_egg": 2
+        },
+        {
+          "burdock": 2
+        },
+        {
+          "sports_drink": 5
+        },
+        {
+          "battery": 4
+        },
+        {
+          "bullets": 9
+        },
+        {
+          "gunpowder": 5
+        },
+        {
+          "iron_ore": 3
+        },
+        {
+          "rubber": 5
+        },
+        {
+          "lighter": 6
+        }
+      ]
+    },
+    {
+      "id": "research_center",
+      "items": []
+    }
+  ],
+  "animals": [
+    {
+      "id": "crow",
+      "name": "Crow",
+      "baseHp": 40,
+      "baseAtk": 15,
+      "baseDef": 20,
+      "loot": [
+        "bird_meat",
+        "feather"
+      ],
+      "areas": [
+        "pond",
+        "trail",
+        "forest"
+      ]
+    }
+  ]
+}

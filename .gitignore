@@ -34,3 +34,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local reference material (original Figma export; not part of the app)
+/_reference_figma/
+
+# npm cache used when the default cache directory is read-only
+/.npm-cache/

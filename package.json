@@ -1,0 +1,31 @@
+{
+  "name": "lumia-archive",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Interactive wiki PoC for the game Black Survival — Lumia Island resource explorer.",
+  "scripts": {
+    "assets:manifest": "node scripts/generate-item-asset-manifest.mjs",
+    "predev": "npm run assets:manifest",
+    "dev": "next dev",
+    "prebuild": "npm run assets:manifest",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}

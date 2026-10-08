@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* -------------------------------------------------------------------------- */
+/* Design tokens                                                               */
+/* -------------------------------------------------------------------------- */
+
+@theme {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow-condensed), var(--font-manrope), ui-sans-serif, system-ui,
+    sans-serif;
+
+  /* Surfaces, darkest to lightest. */
+  --color-ink-950: #0b100e;
+  --color-ink-900: #0d1311;
+  --color-ink-850: #111816;
+  --color-ink-800: #16201c;
+  --color-ink-700: #1d2a25;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Base                                                                        */
+/* -------------------------------------------------------------------------- */
+
+html {
+  background: var(--color-ink-950);
+  /* Reserve the scrollbar so the two-column shell does not shift when panels
+     overflow by a pixel. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--color-ink-950);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+* {
+  scrollbar-color: rgba(120, 136, 128, 0.35) transparent;
+  scrollbar-width: thin;
+}
+
+::selection {
+  color: var(--color-ink-950);
+  background: #fcd34d;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(52, 211, 153, 0.6);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Map                                                                         */
+/* -------------------------------------------------------------------------- */
+
+/* Faint survey grid behind the island. */
+.map-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(circle at 65% 45%, rgba(52, 211, 153, 0.07), transparent 42%);
+  background-size: 32px 32px, 32px 32px, 100% 100%;
+}
+
+/* Area polygons: keep the stroke weight constant even though the SVG scales. */
+.map-region {
+  vector-effect: non-scaling-stroke;
+  transition:
+    fill 200ms ease,
+    stroke 200ms ease,
+    opacity 200ms ease;
+}
+
+.map-region:hover {
+  filter: brightness(1.2);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Utilities                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/* Vertical guide drawn to the left of a nested recipe step. */
+.recipe-branch {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.12)
+  );
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

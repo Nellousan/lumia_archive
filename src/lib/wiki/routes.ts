@@ -88,6 +88,14 @@ export interface RoutePlanSet {
    * every candidate route runs out of bag slots. Nothing to show but the reason.
    */
   inventoryBlocked: boolean;
+  /**
+   * Items the plan takes as already carried because nothing on the island can
+   * supply them — no area holds them and no recipe makes them (Mithril, Meteorite,
+   * creature drops, the rare finds). They walk in with the survivor.
+   */
+  assumed: WikiItem[];
+  /** True when every requirement is one of those: there is nowhere to walk. */
+  nothingToGather: boolean;
 }
 
 /** A requirement node: gather the item, or craft it from `children`. */
@@ -137,6 +145,36 @@ function collectItemIds(requirements: Requirement[], ids: Set<string>): void {
     for (const child of requirement.children ?? []) walk(child);
   };
   for (const requirement of requirements) walk(requirement);
+}
+
+/**
+ * True when the island can supply the item at all: some mapped area holds it.
+ * Used to spot the components the dataset simply has no location for — creature
+ * drops and random spawns — which a route takes as already in the pack.
+ */
+function gatherableOnMap(dataset: WikiDataset, itemId: string): boolean {
+  return (dataset.spawnsByItemId[itemId] ?? []).some(
+    (ref) => dataset.areasById[ref.areaId]?.mapped === true,
+  );
+}
+
+/**
+ * The items a plan has to be handed rather than find: nothing on the map holds
+ * them and no recipe produces them, so the only honest reading is that the
+ * survivor already carries them. Craftable items are never assumed — their
+ * recipe is known, so they are made from their ingredients instead.
+ */
+function assumedItems(dataset: WikiDataset, requirements: Requirement[]): Map<string, WikiItem> {
+  const assumed = new Map<string, WikiItem>();
+
+  const walk = (requirement: Requirement) => {
+    const { item } = requirement;
+    if (!item.craftable && !gatherableOnMap(dataset, item.id)) assumed.set(item.id, item);
+    for (const child of requirement.children ?? []) walk(child);
+  };
+
+  for (const requirement of requirements) walk(requirement);
+  return assumed;
 }
 
 /** Mapped areas holding at least one item the trees can ask for. */
@@ -228,6 +266,7 @@ function compileRequirement(
   dataset: WikiDataset,
   indexByAreaId: Map<string, number>,
   startingClothes: string | null,
+  assumed: ReadonlySet<string>,
 ): CompiledRequirement {
   const stock: Array<[number, number]> = [];
   for (const ref of dataset.spawnsByItemId[requirement.item.id] ?? []) {
@@ -237,11 +276,12 @@ function compileRequirement(
 
   return {
     quantity: requirement.quantity,
-    provided: requirement.item.id === startingClothes ? 1 : 0,
+    provided:
+      requirement.item.id === startingClothes || assumed.has(requirement.item.id) ? 1 : 0,
     stock,
     children:
       requirement.children?.map((child) =>
-        compileRequirement(child, dataset, indexByAreaId, startingClothes),
+        compileRequirement(child, dataset, indexByAreaId, startingClothes, assumed),
       ) ?? null,
   };
 }
@@ -454,13 +494,16 @@ function compilePlan(
   chosen: Set<string>,
   dataset: WikiDataset,
   startingClothes: string | null,
+  assumed: ReadonlyMap<string, WikiItem>,
 ): SimPlan {
   const plan: SimPlan = { gather: new Map(), craftNeed: new Map(), recipes: new Map() };
 
-  // Units the survivor walks in with; spent once, the first time that item is
-  // asked for, so a plan wanting two of them still has to find the second.
+  // Units the survivor walks in with — the worn clothes and every component the
+  // island cannot supply; each spent once, the first time that item is asked
+  // for, so a plan wanting two of them still has to find the second.
   const inHand = new Map<string, number>();
   if (startingClothes) inHand.set(startingClothes, 1);
+  for (const itemId of assumed.keys()) inHand.set(itemId, 1);
 
   const walk = (requirement: Requirement) => {
     const itemId = requirement.item.id;
@@ -510,6 +553,11 @@ class Pack {
   private readonly worn = new Map<EquipmentSlot, string>();
 
   constructor(private readonly dataset: WikiDataset) {}
+
+  /** Walks in carrying one of these: bagged for now, worn later if it fits. */
+  startHolding(itemId: string): void {
+    this.held.set(itemId, (this.held.get(itemId) ?? 0) + 1);
+  }
 
   /** Walks in already wearing the chosen clothes: one item, no bag slot. */
   startWearing(itemId: string): void {
@@ -624,9 +672,13 @@ function runRoute(
   plan: SimPlan,
   order: WikiArea[],
   startingClothes: string | null,
+  assumed: ReadonlyMap<string, WikiItem>,
 ): RouteStep[] | null {
   const pack = new Pack(dataset);
   if (startingClothes && dataset.itemsById[startingClothes]) pack.startWearing(startingClothes);
+  // Rare components are carried from the first move; they take bag slots like
+  // anything else, and get worn at the first stop if they are equipment.
+  for (const itemId of assumed.keys()) pack.startHolding(itemId);
   const gathered = new Map<string, number>();
   const crafted = new Map<string, number>();
   const steps: RouteStep[] = [];
@@ -817,7 +869,14 @@ export function buildRoutes(
   trees: RecipeNode[],
   options: RouteOptions = {},
 ): RoutePlanSet {
-  if (trees.length === 0) return { routes: [], truncated: false, inventoryBlocked: false };
+  const empty: RoutePlanSet = {
+    routes: [],
+    truncated: false,
+    inventoryBlocked: false,
+    assumed: [],
+    nothingToGather: false,
+  };
+  if (trees.length === 0) return empty;
 
   const startingClothes =
     options.startingClothes && dataset.itemsById[options.startingClothes]
@@ -825,19 +884,27 @@ export function buildRoutes(
       : null;
 
   const requirements = trees.map(toRequirement);
-  let candidates = candidateAreas(dataset, requirements);
-  if (candidates.length === 0) return { routes: [], truncated: false, inventoryBlocked: false };
+  const assumed = assumedItems(dataset, requirements);
+  const candidates = candidateAreas(dataset, requirements);
+
+  // Nothing on the island is worth visiting: the whole plan is either worn or
+  // carried already, so there is no walk to plan.
+  if (candidates.length === 0) {
+    return { ...empty, assumed: [...assumed.values()], nothingToGather: assumed.size > 0 };
+  }
 
   // Only when the sweep would be expensive: dropping areas another one beats
   // removes options that could never appear in a fastest route anyway.
-  if (candidates.length > MAX_EXHAUSTIVE_AREAS) {
-    const pruned = pruneDominated(dataset, candidates);
-    if (pruned.length > 0) candidates = pruned;
+  let visited = candidates;
+  if (visited.length > MAX_EXHAUSTIVE_AREAS) {
+    const pruned = pruneDominated(dataset, visited);
+    if (pruned.length > 0) visited = pruned;
   }
 
-  const indexByAreaId = new Map(candidates.map((area, index) => [area.id, index]));
+  const assumedIds = new Set(assumed.keys());
+  const indexByAreaId = new Map(visited.map((area, index) => [area.id, index]));
   const compiled = requirements.map((requirement) =>
-    compileRequirement(requirement, dataset, indexByAreaId, startingClothes),
+    compileRequirement(requirement, dataset, indexByAreaId, startingClothes, assumedIds),
   );
 
   const isCover = (mask: number) => compiled.every((requirement) => satisfiesMask(requirement, mask));
@@ -845,19 +912,19 @@ export function buildRoutes(
     compiled.reduce((total, requirement) => total + missingMask(requirement, mask), 0);
 
   const { masks, truncated } =
-    candidates.length <= MAX_EXHAUSTIVE_AREAS
-      ? sweepCovers(candidates.length, isCover)
-      : { masks: greedyCovers(candidates.length, missing), truncated: false };
+    visited.length <= MAX_EXHAUSTIVE_AREAS
+      ? sweepCovers(visited.length, isCover)
+      : { masks: greedyCovers(visited.length, missing), truncated: false };
 
   const routes: RoutePlan[] = [];
   const budget = { left: RUN_BUDGET };
   for (const mask of masks) {
-    const cover = candidates.filter((_, index) => mask & (1 << index));
+    const cover = visited.filter((_, index) => mask & (1 << index));
     const chosen = new Set(cover.map((area) => area.id));
-    const plan = compilePlan(requirements, chosen, dataset, startingClothes);
+    const plan = compilePlan(requirements, chosen, dataset, startingClothes, assumed);
 
     for (const order of orderings(cover, budget)) {
-      const steps = runRoute(dataset, plan, order, startingClothes);
+      const steps = runRoute(dataset, plan, order, startingClothes, assumed);
       if (!steps) continue;
       routes.push(toRoute(cover, order, steps));
       break;
@@ -877,5 +944,7 @@ export function buildRoutes(
     truncated: truncated || routes.length >= MAX_ROUTES,
     // Covers exist but none of them can be walked with six bag slots.
     inventoryBlocked: routes.length === 0 && masks.length > 0,
+    assumed: [...assumed.values()].sort((a, b) => a.name.localeCompare(b.name)),
+    nothingToGather: false,
   };
 }

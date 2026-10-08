@@ -17,6 +17,10 @@ export interface RoutePlanPanelProps {
   unobtainableNames: string[];
   /** True when no route fits the six bag slots. */
   inventoryBlocked: boolean;
+  /** Components carried from the start because no area holds them. */
+  assumed: WikiItem[];
+  /** True when the whole plan is already in the pack: nowhere to walk. */
+  nothingToGather: boolean;
   activeRouteId: string | null;
   /** Resets the "show all" fold when the plan changes. */
   planKey: string;
@@ -43,6 +47,8 @@ export function RoutePlanPanel({
   truncated,
   unobtainableNames,
   inventoryBlocked,
+  assumed,
+  nothingToGather,
   activeRouteId,
   planKey,
   startingClothes,
@@ -93,6 +99,8 @@ export function RoutePlanPanel({
         truncated={truncated}
         unobtainableNames={unobtainableNames}
         inventoryBlocked={inventoryBlocked}
+        assumed={assumed}
+        nothingToGather={nothingToGather}
         activeRouteId={activeRouteId}
         startingItem={startingItem}
         onHoverRoute={onHoverRoute}

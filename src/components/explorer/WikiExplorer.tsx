@@ -277,6 +277,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
               truncated={route.routesTruncated}
               unobtainableNames={route.unobtainable.map((planned) => planned.name)}
               inventoryBlocked={route.inventoryBlocked}
+              assumed={route.assumed}
+              nothingToGather={route.nothingToGather}
               activeRouteId={activeRoute?.id ?? null}
               planKey={planKey}
               startingClothes={startingClothes}

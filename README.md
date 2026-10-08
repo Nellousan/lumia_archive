@@ -206,7 +206,9 @@ scaling maths anywhere.
 
 ### Derived facts about the current dataset
 
-- 194 items, **32 craftable** (max recipe depth 2), 22 areas, `research_center` has no loot.
+- 346 items, **174 craftable**, 22 areas, `research_center` has no loot.
+- 153 items appear in an area; the other 193 do not, and 24 of those have no recipe either — those
+  are the components a route assumes are already carried (see below).
 - 331 loot slots collapse to **330 distinct area/item pairs** — Alley lists Scrap Metal twice
   (×2 and ×9); the loader sums them to ×11 and reports it as a data note.
 - 644 sprites shipped; **192/194 items have one** (`egg_bun` and `bat` do not), 452 sprites are
@@ -270,8 +272,16 @@ missing from `CATEGORY_TABS` raises its own note.
   gather it *or* craft it from what it gathers, which is why `magazine` (craftable *and* gatherable)
   offers two 0-move routes before any crafting route. Stack sizes are honoured: needing two Scrap
   Metal forces two areas when no single area holds both. Several planned items just stack their
-  requirements, and a plan holding something unobtainable — `bread` — has no route at all, which the
-  empty state names.
+  requirements.
+- **Components the island cannot supply are carried, not searched for.** Some materials have no
+  location in `data.json` at all — creature drops, random spawns, the rare finds (`mithril`,
+  `meteorite`, `tree_of_life`, `holy_blood`, `ogre_skin`, `bread`, the `crude_*` weapons). A route
+  takes those as already in the pack rather than declaring the plan impossible: each is spent once,
+  walks in with the survivor (taking its bag slot like anything else, and getting worn at the first
+  stop if it is equipment), and is never gathered or built. Only items with **no area and no recipe**
+  qualify — a craftable intermediate such as `iron_sheet` spawns nowhere but its recipe is known, so
+  it is still made from its ingredients. The route panel names what it is assuming, and a plan that
+  is entirely carried (`mithril` on its own) says *"Nothing to gather"* instead of showing a walk.
 - **The pack decides what is possible.** Six bag slots hold everything that is not worn, and each
   worn slot (`weapon`, `head`, `clothes`, `arm`, `leg`, `accessory`) takes one item — see
   `lib/wiki/inventory.ts`. The eight weapon types share the single weapon slot, gear spilling into the
@@ -325,8 +335,9 @@ missing from `CATEGORY_TABS` raises its own note.
   walk the trail you followed through the chain.
 - **Only real fields.** `data.json` has no description or flavour text, so the detail panel shows
   exactly what exists: rarity, type(s), value, default quantity, recipe and routes. Nothing was
-  invented. An item nothing can obtain — `bread` has no recipe and spawns nowhere — makes the route
-  list name it outright instead of showing an empty list. Value sits with the identity (name / id / value); the facts grid below carries only
+  invented. An item nothing can obtain is reported instead of
+  silently dropped — though components the island has no location for are assumed to be carried
+  rather than blocking a plan. Value sits with the identity (name / id / value); the facts grid below carries only
   default quantity, spawn-area count and recipe shape.
 
 ---
@@ -402,6 +413,12 @@ missing from `CATEGORY_TABS` raises its own note.
   pickup cards, numbered badges, "nothing built here" where a step only gathers) while an unpinned map
   still shows the plan's material cards. A plan of ten items renders the *"No route fits the pack"*
   state, and one containing `bread` names it.
+- With components assumed rather than blocking, a sweep over **318 plans × 6 starting choices**
+  (**1 908 runs, 49 278 routes**) reported no violations: every route replayed from the carried
+  components and worn clothes, nothing assumed was ever gathered or built, the pack never passed 6
+  slots and always matched its reported use, and 222 runs were plans needing no travel at all. The
+  only plans left without a route are ones the pack genuinely cannot hold — a 12-item plan carrying
+  6 rare components alongside its materials. Worst run: 144 ms.
 - The starting-armor option was swept over **214 plans × 6 choices** (bare plus all five clothes):
   **1 284 runs, 40 117 routes, 0 violations** — every route replayed from the picked clothes, pack
   never over 6 slots (peak 5) and always matching its reported use. It made 23 plans faster and left

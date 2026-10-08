@@ -135,11 +135,10 @@ export function useRoutePlan(
   );
 
   /**
-   * Planned items nothing can obtain — an item that spawns nowhere and has no
-   * recipe, or whose ingredients hit the same dead end. Only resolved when the
-   * plan has no route at all, so the rail can name the culprit instead of
-   * leaving the reader to guess. Skipped when the failure was the pack, not the
-   * island: everything in that plan is obtainable, just not carriable.
+   * Planned items nothing can obtain. Components the island has no location for
+   * are assumed to be carried rather than blocking the plan, so this now only
+   * catches genuinely broken data (an item the loader could not resolve). Kept as
+   * a safety net so a future dataset cannot produce a silently empty route list.
    */
   const unobtainable = useMemo(() => {
     if (routePlans.routes.length > 0 || routePlans.inventoryBlocked) return [];
@@ -165,6 +164,8 @@ export function useRoutePlan(
     routes: routePlans.routes,
     routesTruncated: routePlans.truncated,
     inventoryBlocked: routePlans.inventoryBlocked,
+    assumed: routePlans.assumed,
+    nothingToGather: routePlans.nothingToGather,
     unobtainable,
   };
 }

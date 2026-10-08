@@ -15,6 +15,10 @@ export interface RoutePlanListProps {
   unobtainableNames: string[];
   /** True when covers exist but the pack cannot hold the job. */
   inventoryBlocked: boolean;
+  /** Components the plan is handed instead of finding: no area holds them. */
+  assumed: WikiItem[];
+  /** True when the plan needs no walking at all. */
+  nothingToGather: boolean;
   /** Route currently highlighted on the map — hovered, or pinned by a click. */
   activeRouteId: string | null;
   /** Clothes worn from the first move, when one was picked. */
@@ -117,6 +121,8 @@ export function RoutePlanList({
   truncated,
   unobtainableNames,
   inventoryBlocked,
+  assumed,
+  nothingToGather,
   activeRouteId,
   startingItem,
   onHoverRoute,
@@ -124,6 +130,17 @@ export function RoutePlanList({
   onSelectArea,
 }: RoutePlanListProps) {
   const [expanded, setExpanded] = useState(false);
+
+  if (routes.length === 0 && nothingToGather) {
+    return (
+      <p className="rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
+        Nothing to gather: {assumed.map((item) => item.name).join(", ")}{" "}
+        {assumed.length > 1 ? "are" : "is"} assumed to be in the pack already — no area on Lumia
+        Island holds {assumed.length > 1 ? "them" : "it"} and no recipe makes{" "}
+        {assumed.length > 1 ? "them" : "it"}.
+      </p>
+    );
+  }
 
   if (routes.length === 0) {
     return (
@@ -163,6 +180,14 @@ export function RoutePlanList({
             {" "}
             <span className="text-stone-400">{startingItem.name}</span> is worn from the start, so no
             route has to find it.
+          </>
+        )}
+        {assumed.length > 0 && (
+          <>
+            {" "}
+            <span className="text-stone-400">{assumed.map((item) => item.name).join(", ")}</span>{" "}
+            {assumed.length > 1 ? "are" : "is"} assumed to be carried — nothing on the island holds{" "}
+            {assumed.length > 1 ? "them" : "it"}.
           </>
         )}{" "}
         <span className="text-stone-400">

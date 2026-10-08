@@ -1,5 +1,6 @@
 import { clamp } from "./wiki/geometry";
 import type { AreaBubble } from "./wiki/route";
+import type { RouteStep } from "./wiki/routes";
 
 /**
  * Bubble placement solver for the island overlay.
@@ -33,16 +34,29 @@ const CARDS_PER_ROW = Math.max(
   ),
 );
 
+/** Estimated rendered size of a bubble holding `cardCount` cards. */
+export function estimateCardsBubbleSize(cardCount: number): {
+  width: number;
+  height: number;
+} {
+  const rows = Math.max(1, Math.ceil(cardCount / CARDS_PER_ROW));
+  return {
+    width: BUBBLE_WIDTH,
+    height: BUBBLE_CHROME_HEIGHT + rows * BUBBLE_CARD_HEIGHT,
+  };
+}
+
 /**
  * Estimated rendered size of a bubble, in base-map pixels — used to spread
  * overlapping bubbles apart before drawing them.
  */
 export function estimateBubbleSize(bubble: AreaBubble): { width: number; height: number } {
-  const rows = Math.max(1, Math.ceil(bubble.cards.length / CARDS_PER_ROW));
-  return {
-    width: BUBBLE_WIDTH,
-    height: BUBBLE_CHROME_HEIGHT + rows * BUBBLE_CARD_HEIGHT,
-  };
+  return estimateCardsBubbleSize(bubble.cards.length);
+}
+
+/** Same estimate for a route step, whose cards are what is gathered and built. */
+export function estimateStepBubbleSize(step: RouteStep): { width: number; height: number } {
+  return estimateCardsBubbleSize(step.gather.length + step.craft.length);
 }
 
 export interface BubbleAnchor {

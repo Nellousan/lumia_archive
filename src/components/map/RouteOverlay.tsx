@@ -17,13 +17,13 @@ const STOP_RADIUS = 14;
  * pointer-transparent — the polygons underneath stay clickable.
  */
 export function RouteOverlay({ route }: RouteOverlayProps) {
-  const points = route.stops
-    .map((stop) => `${stop.area.anchor.x},${stop.area.anchor.y}`)
+  const points = route.steps
+    .map((step) => `${step.area.anchor.x},${step.area.anchor.y}`)
     .join(" ");
 
   return (
     <g className="pointer-events-none" aria-hidden="true">
-      {route.stops.length > 1 && (
+      {route.steps.length > 1 && (
         <polyline
           points={points}
           fill="none"
@@ -35,19 +35,19 @@ export function RouteOverlay({ route }: RouteOverlayProps) {
         />
       )}
 
-      {route.stops.map((stop, index) => (
-        <g key={stop.area.id}>
+      {route.steps.map((step, index) => (
+        <g key={step.area.id}>
           <circle
-            cx={stop.area.anchor.x}
-            cy={stop.area.anchor.y}
+            cx={step.area.anchor.x}
+            cy={step.area.anchor.y}
             r={STOP_RADIUS}
             fill="rgba(8,13,11,0.88)"
             stroke="rgba(252,211,77,0.95)"
             strokeWidth={2.25}
           />
           <text
-            x={stop.area.anchor.x}
-            y={stop.area.anchor.y}
+            x={step.area.anchor.x}
+            y={step.area.anchor.y}
             textAnchor="middle"
             dominantBaseline="central"
             fill="#fde68a"

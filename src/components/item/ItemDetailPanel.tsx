@@ -4,10 +4,9 @@ import { ItemFactsGrid, type ItemFact } from "./ItemFactsGrid";
 import { ItemTypeBadges } from "./ItemTypeBadges";
 import { RarityBadge } from "./RarityBadge";
 import { RecipeTree } from "./RecipeTree";
-import { RoutePlanList } from "./RoutePlanList";
+import { BookmarkButton } from "@/components/ui/BookmarkButton";
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { PaneDivider } from "@/components/ui/PaneDivider";
-import type { RoutePlan } from "@/lib/wiki/routes";
 import type { AreaSpawnRef, RecipeNode, WikiItem } from "@/lib/wiki/types";
 
 export interface ItemDetailPanelProps {
@@ -17,15 +16,13 @@ export interface ItemDetailPanelProps {
   materialCount: number;
   areaCount: number;
   spawnRefs: AreaSpawnRef[];
-  /** Fastest ways to gather everything the item needs, best first. */
-  routes: RoutePlan[];
-  activeRouteId: string | null;
+  /** True when the open item is part of the plan. */
+  bookmarked: boolean;
   focusedMaterialId: string | null;
   onHoverMaterial: (itemId: string | null) => void;
-  onHoverRoute: (routeId: string | null) => void;
-  onSelectRoute: (routeId: string) => void;
   onSelectItem: (itemId: string) => void;
   onSelectArea: (areaId: string) => void;
+  onToggleBookmark: (itemId: string) => void;
   canGoBack: boolean;
   onGoBack: () => void;
   /** Drops the selection so the map is emptied of bubbles. */
@@ -42,14 +39,12 @@ export function ItemDetailPanel({
   materialCount,
   areaCount,
   spawnRefs,
-  routes,
-  activeRouteId,
+  bookmarked,
   focusedMaterialId,
   onHoverMaterial,
-  onHoverRoute,
-  onSelectRoute,
   onSelectItem,
   onSelectArea,
+  onToggleBookmark,
   canGoBack,
   onGoBack,
   onClearSelection,
@@ -129,25 +124,33 @@ export function ItemDetailPanel({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onClearSelection}
-          aria-label="Unselect item"
-          title="Deselect the item and empty the island map"
-          className="grid size-7 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03] text-stone-400 transition hover:border-amber-300/50 hover:bg-amber-300/10 hover:text-amber-200"
-        >
-          <svg
-            aria-hidden="true"
-            className="size-3.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
+        <div className="flex shrink-0 flex-col gap-1">
+          <BookmarkButton
+            itemName={item.name}
+            bookmarked={bookmarked}
+            onToggle={() => onToggleBookmark(item.id)}
+          />
+
+          <button
+            type="button"
+            onClick={onClearSelection}
+            aria-label="Unselect item"
+            title="Deselect the item and empty the island map"
+            className="grid size-7 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03] text-stone-400 transition hover:border-amber-300/50 hover:bg-amber-300/10 hover:text-amber-200"
           >
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
+            <svg
+              aria-hidden="true"
+              className="size-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <ItemFactsGrid facts={facts} />
@@ -166,16 +169,6 @@ export function ItemDetailPanel({
         <p className="text-xs text-stone-500">Recipe data unavailable for this item.</p>
       )}
 
-      <PaneDivider label="Fastest routes" />
-      {/* Keyed by item so the "show all" fold resets when the selection moves on. */}
-      <RoutePlanList
-        key={item.id}
-        routes={routes}
-        activeRouteId={activeRouteId}
-        onHoverRoute={onHoverRoute}
-        onSelectRoute={onSelectRoute}
-        onSelectArea={onSelectArea}
-      />
     </div>
   );
 }

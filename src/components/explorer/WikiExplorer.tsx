@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { CatalogPanel } from "@/components/catalog/CatalogPanel";
 import { ItemDetailPanel } from "@/components/item/ItemDetailPanel";
+import { RoutePlanPanel } from "@/components/item/RoutePlanPanel";
 import { UsedToCraftPanel } from "@/components/item/UsedToCraftPanel";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { IslandMapPanel } from "@/components/map/IslandMapPanel";
+import { useBookmarks } from "@/hooks/useBookmarks";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { useRoutePlan } from "@/hooks/useRoutePlan";
+import { useStepOverlay } from "@/hooks/useStepOverlay";
+import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
 import type { AreaItemRef, AreaSpawnRef, WikiDataset, WikiItem } from "@/lib/wiki/types";
 
@@ -58,15 +62,35 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const [hoveredAreaId, setHoveredAreaId] = useState<string | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [hoveredRouteId, setHoveredRouteId] = useState<string | null>(null);
+  /** Clothes picked before the match; empty means the survivor starts bare. */
+  const [startingClothes, setStartingClothes] = useState<string | null>(null);
   /**
-   * The pinned route travels with the item it was pinned for: opening another
-   * item clears the highlight without an effect that would fight the render.
+   * The pinned route travels with the plan it was pinned for: bookmarking or
+   * selecting something else changes the routes, so the highlight lets go
+   * without an effect that would fight the render.
    */
-  const [pinnedRoute, setPinnedRoute] = useState<{ itemId: string; routeId: string } | null>(null);
+  const [pinnedRoute, setPinnedRoute] = useState<{ planKey: string; routeId: string } | null>(null);
 
   const catalog = useCatalogQuery(dataset.items);
   const { item: activeItem, canGoBack, toggleFromCatalog, followLink, goBack, clearSelection } =
     useItemSelection(dataset.items);
+
+  const bookmarks = useBookmarks();
+
+  /**
+   * What the island and the routes cover: the selected item first — so it heads
+   * the bookmark bar — then every bookmark in the order it was added.
+   */
+  const plannedItems = useMemo(() => {
+    const planned: WikiItem[] = [];
+    if (activeItem) planned.push(activeItem);
+    for (const id of bookmarks.ids) {
+      if (id === activeItem?.id) continue;
+      const item = dataset.itemsById[id];
+      if (item) planned.push(item);
+    }
+    return planned;
+  }, [activeItem, bookmarks.ids, dataset.itemsById]);
 
   const spawnRefs = activeItem
     ? (dataset.spawnsByItemId[activeItem.id] ?? NO_SPAWNS)
@@ -74,7 +98,32 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const usedToCraft = activeItem
     ? (dataset.usedToCraftByItemId[activeItem.id] ?? NO_CRAFTABLES)
     : NO_CRAFTABLES;
-  const route = useRoutePlan(dataset, activeItem, spawnRefs);
+  const route = useRoutePlan(dataset, activeItem, plannedItems, startingClothes);
+
+  /** The clothes on offer, resolved once so the selector can show artwork. */
+  const startingOptions = useMemo(
+    () =>
+      STARTING_CLOTHES_IDS.map((id) => dataset.itemsById[id]).filter(
+        (item): item is WikiItem => item !== undefined,
+      ),
+    [dataset.itemsById],
+  );
+
+  /**
+   * Identity of the current plan, so a pin never outlives what it pointed at.
+   * The starting clothes are part of it: changing them changes the routes.
+   */
+  const planKey = `${plannedItems.map((planned) => planned.id).join("|")}#${startingClothes ?? ""}`;
+
+  const bookmarkEntries = useMemo(
+    () =>
+      plannedItems.map((planned) => ({
+        item: planned,
+        selected: planned.id === activeItem?.id,
+        bookmarked: bookmarks.ids.includes(planned.id),
+      })),
+    [activeItem?.id, bookmarks.ids, plannedItems],
+  );
 
   /**
    * Focusing a material also lights up everything needed to craft it, so the
@@ -98,22 +147,25 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
 
   /** Hover wins over nothing; a pinned route outlives the pointer leaving the row. */
   const pinnedRouteId =
-    pinnedRoute && pinnedRoute.itemId === activeItem?.id ? pinnedRoute.routeId : null;
+    pinnedRoute && pinnedRoute.planKey === planKey ? pinnedRoute.routeId : null;
   const activeRouteId = pinnedRouteId ?? hoveredRouteId;
   const activeRoute = activeRouteId
     ? (route.routes.find((candidate) => candidate.id === activeRouteId) ?? null)
     : null;
 
+  /** Bubbles for a highlighted route: what is picked up and built at each step. */
+  const stepOverlay = useStepOverlay(activeRoute, dataset.map);
+
   /** Clicking the highlight again lets it go; the pointer keeps it alive meanwhile. */
   const handleSelectRoute = useCallback(
     (routeId: string) => {
-      const itemId = activeItem?.id;
-      if (!itemId) return;
       setPinnedRoute((previous) =>
-        previous?.itemId === itemId && previous.routeId === routeId ? null : { itemId, routeId },
+        previous?.planKey === planKey && previous.routeId === routeId
+          ? null
+          : { planKey, routeId },
       );
     },
-    [activeItem?.id],
+    [planKey],
   );
 
   /** Changing item, from either entry point, clears the map focus. */
@@ -145,6 +197,19 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     setSelectedAreaId(null);
   }, [clearSelection]);
 
+  /**
+   * A click in the plan bar means "take this out": the selected item closes, a
+   * bookmark is dropped. An item that is both closes first and stays bookmarked,
+   * so the plan never loses an entry the reader did not point at.
+   */
+  const handleBookmarkEntryClick = useCallback(
+    (itemId: string) => {
+      if (itemId === activeItem?.id) handleClearSelection();
+      else bookmarks.toggleBookmark(itemId);
+    },
+    [activeItem?.id, bookmarks, handleClearSelection],
+  );
+
   useHotkeys({
     onSearchShortcut: () => searchInputRef.current?.focus(),
     onEscape: () => {
@@ -160,13 +225,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     },
   });
 
-  // Surface loader warnings for contributors instead of failing silently.
-  useEffect(() => {
-    if (process.env.NODE_ENV === "production" || dataset.warnings.length === 0) return;
-    console.warn(`[lumia-archive] ${dataset.warnings.length} data note(s):`);
-    for (const warning of dataset.warnings) console.warn(`  • ${warning}`);
-  }, [dataset.warnings]);
-
   return (
     <main className="min-h-screen bg-ink-950 text-stone-100">
       <AppHeader stats={dataset.stats} />
@@ -181,7 +239,9 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
             groupCounts={catalog.groupCounts}
             typeCounts={catalog.typeCounts}
             activeItemId={activeItem?.id ?? null}
+            bookmarkedIds={bookmarks.ids}
             onSelectItem={handleSelectFromCatalog}
+            onToggleBookmark={bookmarks.toggleBookmark}
             searchInputRef={searchInputRef}
           />
 
@@ -199,18 +259,34 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
             materialCount={route.recipeMaterials.length}
             areaCount={route.recipeAreaCount}
             spawnRefs={spawnRefs}
-            routes={route.routes}
-            activeRouteId={activeRoute?.id ?? null}
+            bookmarked={activeItem ? bookmarks.isBookmarked(activeItem.id) : false}
             focusedMaterialId={focusedMaterialId}
             onHoverMaterial={setFocusedMaterialId}
-            onHoverRoute={setHoveredRouteId}
-            onSelectRoute={handleSelectRoute}
             onSelectItem={handleFollowLink}
             onSelectArea={setSelectedAreaId}
+            onToggleBookmark={bookmarks.toggleBookmark}
             canGoBack={canGoBack}
             onGoBack={handleGoBack}
             onClearSelection={handleClearSelection}
           />
+
+          {plannedItems.length > 0 && (
+            <RoutePlanPanel
+              routes={route.routes}
+              plannedCount={plannedItems.length}
+              truncated={route.routesTruncated}
+              unobtainableNames={route.unobtainable.map((planned) => planned.name)}
+              inventoryBlocked={route.inventoryBlocked}
+              activeRouteId={activeRoute?.id ?? null}
+              planKey={planKey}
+              startingClothes={startingClothes}
+              startingOptions={startingOptions}
+              onStartingClothesChange={setStartingClothes}
+              onHoverRoute={setHoveredRouteId}
+              onSelectRoute={handleSelectRoute}
+              onSelectArea={setSelectedAreaId}
+            />
+          )}
         </aside>
 
         <IslandMapPanel
@@ -218,11 +294,16 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           areas={dataset.areas}
           bubbles={route.bubbles}
           placements={route.placements}
-          materials={route.recipeMaterials}
+          materials={route.materials}
           overlayMode={route.overlayMode}
+          hasPlan={plannedItems.length > 0}
           focus={focus}
           activeRoute={activeRoute}
+          stepOverlay={stepOverlay}
           activeItemId={activeItem?.id ?? null}
+          bookmarks={bookmarkEntries}
+          onBookmarkEntryClick={handleBookmarkEntryClick}
+          onClearBookmarks={bookmarks.clearBookmarks}
           hoveredAreaId={hoveredAreaId}
           onHoverArea={setHoveredAreaId}
           onHoverMaterial={setFocusedMaterialId}
@@ -232,7 +313,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           selectedArea={selectedArea}
           selectedAreaItems={selectedAreaItems}
           onCloseArea={() => setSelectedAreaId(null)}
-          warnings={dataset.warnings}
         />
       </div>
     </main>

@@ -1,38 +1,124 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import type { RoutePlan } from "@/lib/wiki/routes";
+import { BAG_SLOTS } from "@/lib/wiki/inventory";
+import type { RoutePlan, RouteStep } from "@/lib/wiki/routes";
+import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RoutePlanListProps {
   routes: RoutePlan[];
+  /** How many items the routes must cover — the selection plus the bookmarks. */
+  plannedCount: number;
+  /** True when only the fastest {@link RoutePlan} slice is shown. */
+  truncated: boolean;
+  /** Names of planned items nothing can obtain; only used by the empty state. */
+  unobtainableNames: string[];
+  /** True when covers exist but the pack cannot hold the job. */
+  inventoryBlocked: boolean;
   /** Route currently highlighted on the map — hovered, or pinned by a click. */
   activeRouteId: string | null;
+  /** Clothes worn from the first move, when one was picked. */
+  startingItem: WikiItem | null;
   onHoverRoute: (routeId: string | null) => void;
   /** Pins a route, or unpins it when clicked again. */
   onSelectRoute: (routeId: string) => void;
   onSelectArea: (areaId: string) => void;
 }
 
-/** Routes shown before the "show all" fold; the tail is usually near-identical. */
-const COLLAPSED_COUNT = 6;
+/** Routes shown before the "show all" fold; steps make each row tall. */
+const COLLAPSED_COUNT = 4;
+
+function itemNames(items: { item: { name: string }; quantity: number }[]): string {
+  return items
+    .map((entry) => (entry.quantity > 1 ? `${entry.item.name} ×${entry.quantity}` : entry.item.name))
+    .join(", ");
+}
 
 function movesLabel(route: RoutePlan): string {
-  const areas = `${route.stops.length} area${route.stops.length === 1 ? "" : "s"}`;
+  const areas = `${route.steps.length} area${route.steps.length === 1 ? "" : "s"}`;
   if (route.moves === 0) return `${areas} · no travel`;
   return `${route.moves} move${route.moves === 1 ? "" : "s"} · ${areas}`;
 }
 
+/** Highest number of bag slots the route ever has filled. */
+function peakBagUse(route: RoutePlan): number {
+  return route.steps.reduce((peak, step) => Math.max(peak, step.bagUsed), 0);
+}
+
 /**
- * Every fastest way to gather the active item, best first.
+ * One step of a route: where it happens, what is picked up, what gets built.
  *
- * A route is a set of areas to visit; because any hop between two areas costs
- * the same, rank order is purely the number of hops (`stops - 1`), and only
- * routes with no spare area are listed. Hovering a row highlights its path on
- * the island, clicking pins it.
+ * The build column is the point of the list — intermediates appear at the first
+ * stop whose materials complete them, which is also what keeps the pack inside
+ * its six bag slots.
+ */
+function StepRow({
+  step,
+  active,
+  onSelectArea,
+}: {
+  step: RouteStep;
+  active: boolean;
+  onSelectArea: (areaId: string) => void;
+}) {
+  return (
+    <li className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+      <span className="w-3 shrink-0 font-mono text-[10px] text-stone-600">{step.number}</span>
+
+      <button
+        type="button"
+        title={
+          step.gather.length === 0
+            ? step.area.name
+            : `${step.area.name} — pick up ${step.gather
+                .map((entry) => `${entry.item.name} ×${entry.quantity}`)
+                .join(", ")}`
+        }
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelectArea(step.area.id);
+        }}
+        className={`rounded-md border px-1.5 py-0.5 text-[11px] font-semibold transition ${
+          active
+            ? "border-amber-300/40 text-amber-100 hover:bg-amber-300/15"
+            : "border-white/10 text-stone-300 hover:border-emerald-400/40 hover:text-white"
+        }`}
+      >
+        {step.area.name}
+      </button>
+
+      {step.gather.length > 0 && (
+        <span className="text-[10px] text-stone-500">pick up {itemNames(step.gather)}</span>
+      )}
+
+      {step.craft.length > 0 ? (
+        <span className="text-[10px] font-semibold text-amber-200/90">
+          {step.gather.length > 0 ? "· " : ""}build {itemNames(step.craft)}
+        </span>
+      ) : (
+        step.gather.length === 0 && <span className="text-[10px] text-stone-600">nothing needed</span>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Every fastest way to gather the active plan, best first.
+ *
+ * A route is an ordered set of areas; because any hop between two areas costs the
+ * same, rank order is purely the number of hops, and only routes with no spare
+ * area are listed. Each step shows what is picked up there and what can be built
+ * once those materials are in the pack. Hovering a row highlights its path on the
+ * island, clicking pins it.
  */
 export function RoutePlanList({
   routes,
+  plannedCount,
+  truncated,
+  unobtainableNames,
+  inventoryBlocked,
   activeRouteId,
+  startingItem,
   onHoverRoute,
   onSelectRoute,
   onSelectArea,
@@ -42,22 +128,47 @@ export function RoutePlanList({
   if (routes.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
-        No route can gather this item — nothing on Lumia Island holds it, so it only exists as the
-        result of a craft.
+        {unobtainableNames.length > 0 ? (
+          <>
+            <span className="text-stone-400">{unobtainableNames.join(", ")}</span> cannot be obtained
+            on Lumia Island — nothing holds {unobtainableNames.length > 1 ? "them" : "it"} and no
+            recipe leads there. Remove {unobtainableNames.length > 1 ? "them" : "it"} from the plan to
+            get a route.
+          </>
+        ) : inventoryBlocked ? (
+          <>
+            No route fits the pack. Every way of covering this plan needs more than the{" "}
+            {BAG_SLOTS} bag slots at once, in any order — drop an item from the plan, or aim for
+            something less greedy.
+          </>
+        ) : (
+          <>No route gathers everything in the plan.</>
+        )}
       </p>
     );
   }
 
   const visible = expanded ? routes : routes.slice(0, COLLAPSED_COUNT);
   const fastest = routes[0];
+  const target =
+    plannedCount > 1 ? `all ${plannedCount} items in the plan` : "everything this item needs";
 
   return (
     <div>
       <p className="mb-2.5 text-[11px] leading-relaxed text-stone-500">
-        Fewest areas to gather everything — every move between two areas costs the same, so the
-        fastest route is the shortest list.{" "}
+        Fewest areas to gather {target}, building each part as soon as its materials are in the pack —
+        every move between two areas costs the same, so the fastest route is the shortest list.
+        {startingItem && (
+          <>
+            {" "}
+            <span className="text-stone-400">{startingItem.name}</span> is worn from the start, so no
+            route has to find it.
+          </>
+        )}{" "}
         <span className="text-stone-400">
-          {routes.length} route{routes.length === 1 ? "" : "s"}
+          {truncated
+            ? `fastest ${routes.length} routes`
+            : `${routes.length} route${routes.length === 1 ? "" : "s"}`}
           {routes.length > 1 && ` · from ${fastest.moves} move${fastest.moves === 1 ? "" : "s"}`}
         </span>
       </p>
@@ -65,14 +176,18 @@ export function RoutePlanList({
       <ul className="space-y-1.5">
         {visible.map((route, index) => {
           const active = route.id === activeRouteId;
+          const peak = peakBagUse(route);
           return (
             <li key={route.id}>
               <div
                 role="button"
                 tabIndex={0}
                 aria-pressed={active}
-                aria-label={`Route ${index + 1}: ${movesLabel(route)} — ${route.stops
-                  .map((stop) => stop.area.name)
+                aria-label={`Route ${index + 1}: ${movesLabel(route)} — ${route.steps
+                  .map(
+                    (step) =>
+                      `${step.area.name}${step.craft.length > 0 ? `, build ${itemNames(step.craft)}` : ""}`,
+                  )
                   .join(", then ")}`}
                 onMouseEnter={() => onHoverRoute(route.id)}
                 onMouseLeave={() => onHoverRoute(null)}
@@ -104,43 +219,21 @@ export function RoutePlanList({
                   >
                     {movesLabel(route)}
                   </span>
-                  <span className="ml-auto shrink-0 font-mono text-[10px] text-stone-600">
-                    {route.materialCount} item{route.materialCount === 1 ? "" : "s"}
+                  <span
+                    className="ml-auto shrink-0 font-mono text-[10px] text-stone-600"
+                    title={`Builds ${route.craftCount} distinct item${route.craftCount === 1 ? "" : "s"} · pack peaks at ${peak} of ${BAG_SLOTS} bag slots`}
+                  >
+                    {route.craftCount} built · pack {peak}/{BAG_SLOTS}
                   </span>
                 </div>
 
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-1 pl-7">
-                  {route.stops.map((stop, stopIndex) => (
-                    <Fragment key={stop.area.id}>
-                      {stopIndex > 0 && (
-                        <span aria-hidden="true" className="text-[10px] text-stone-600">
-                          →
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        title={
-                          stop.collects.length === 0
-                            ? stop.area.name
-                            : `${stop.area.name} — ${stop.collects
-                                .map((collect) => `${collect.item.name} ×${collect.quantity}`)
-                                .join(", ")}`
-                        }
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onSelectArea(stop.area.id);
-                        }}
-                        className={`rounded-md border px-1.5 py-0.5 text-[11px] font-semibold transition ${
-                          active
-                            ? "border-amber-300/40 text-amber-100 hover:bg-amber-300/15"
-                            : "border-white/10 text-stone-300 hover:border-emerald-400/40 hover:text-white"
-                        }`}
-                      >
-                        {stop.area.name}
-                      </button>
+                <ol className="mt-1.5 space-y-1 border-l border-white/[0.07] pl-1.5">
+                  {route.steps.map((step) => (
+                    <Fragment key={step.area.id}>
+                      <StepRow step={step} active={active} onSelectArea={onSelectArea} />
                     </Fragment>
                   ))}
-                </div>
+                </ol>
               </div>
             </li>
           );
@@ -153,7 +246,11 @@ export function RoutePlanList({
           onClick={() => setExpanded((previous) => !previous)}
           className="mt-2 w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[11px] font-semibold text-stone-400 transition hover:border-white/20 hover:text-stone-100"
         >
-          {expanded ? "Show fewer routes" : `Show all ${routes.length} routes`}
+          {expanded
+            ? "Show fewer routes"
+            : truncated
+              ? `Show the fastest ${routes.length}`
+              : `Show all ${routes.length} routes`}
         </button>
       )}
     </div>

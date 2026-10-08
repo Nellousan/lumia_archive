@@ -298,8 +298,31 @@ export function buildWikiDataset(): WikiDataset {
 
 let cached: WikiDataset | null = null;
 
+/**
+ * Prints what the loader had to work around, once per process.
+ *
+ * The data notes used to be a collapsible strip at the bottom of the island
+ * pane; they are a build/startup concern rather than something a reader of the
+ * wiki needs, so they now land in stdout as a single line.
+ */
+export function reportDataset(dataset: WikiDataset): void {
+  const scope = globalThis as typeof globalThis & { __lumiaArchiveReported?: boolean };
+  if (scope.__lumiaArchiveReported) return;
+  scope.__lumiaArchiveReported = true;
+
+  const { stats, warnings } = dataset;
+  const notes =
+    warnings.length === 0 ? "no data notes" : `${warnings.length} data note(s): ${warnings.join(" | ")}`;
+
+  console.log(
+    `[lumia-archive] data ready — ${stats.itemCount} items · ${stats.areaCount} areas ` +
+      `(${stats.mappedAreaCount} mapped) · ${stats.craftableCount} craftable — ${notes}`,
+  );
+}
+
 /** Process-wide singleton; the dataset is immutable so this is safe. */
 export function getWikiDataset(): WikiDataset {
   cached ??= buildWikiDataset();
+  reportDataset(cached);
   return cached;
 }

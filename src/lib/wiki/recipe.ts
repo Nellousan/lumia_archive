@@ -112,6 +112,31 @@ export function collectRecipeMaterials(
 }
 
 /**
+ * Merges the material lists of several planned items (a selection plus its
+ * bookmarks) into one, summing quantities for anything shared and keeping the
+ * shallowest depth. Used by the island overlay, which maps the union.
+ */
+export function mergeMaterials(lists: RecipeMaterial[][]): RecipeMaterial[] {
+  const merged = new Map<string, RecipeMaterial>();
+
+  for (const list of lists) {
+    for (const material of list) {
+      const existing = merged.get(material.item.id);
+      if (existing) {
+        existing.quantity += material.quantity;
+        existing.depth = Math.min(existing.depth, material.depth);
+        continue;
+      }
+      merged.set(material.item.id, { ...material });
+    }
+  }
+
+  return [...merged.values()].sort(
+    (a, b) => a.depth - b.depth || a.item.name.localeCompare(b.item.name),
+  );
+}
+
+/**
  * Materials that are obtainable somewhere on the island, i.e. the ones worth
  * drawing a bubble for. Sorted by the number of areas, most spread out first.
  */

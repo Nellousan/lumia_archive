@@ -5,9 +5,11 @@ import { AreaBubbleCard } from "./AreaBubbleCard";
 import { MapAreaShape } from "./MapAreaShape";
 import { MapTooltip } from "./MapTooltip";
 import { RouteOverlay } from "./RouteOverlay";
+import { RouteStepBubbleCard } from "./RouteStepBubbleCard";
 import type { RegionState } from "./regionStyles";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
+import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { RoutePlan } from "@/lib/wiki/routes";
 import type { MapImage, WikiArea } from "@/lib/wiki/types";
 
@@ -21,6 +23,11 @@ export interface IslandMapProps {
   focus: MapFocus | null;
   /** Route to highlight, if one is hovered or pinned in the rail. */
   activeRoute: RoutePlan | null;
+  /**
+   * The highlighted route's steps, which replace the material bubbles while a
+   * route is active. `null` keeps the island on its "where things are" view.
+   */
+  stepOverlay: StepOverlay | null;
   hoveredAreaId: string | null;
   activeAreaId: string | null;
   onHoverArea: (areaId: string | null) => void;
@@ -44,6 +51,7 @@ export function IslandMap({
   placements,
   focus,
   activeRoute,
+  stepOverlay,
   hoveredAreaId,
   activeAreaId,
   onHoverArea,
@@ -56,6 +64,12 @@ export function IslandMap({
     () => new Map(bubbles.map((bubble) => [bubble.area.id, bubble])),
     [bubbles],
   );
+
+  /** Areas the island is currently drawing a bubble over. */
+  const bubbledAreaIds = useMemo(() => {
+    if (stepOverlay) return new Set(stepOverlay.route.steps.map((step) => step.area.id));
+    return new Set(bubbles.map((bubble) => bubble.area.id));
+  }, [bubbles, stepOverlay]);
 
   /** Areas holding the focused material itself. */
   const primaryAreaIds = useMemo(() => {
@@ -81,7 +95,7 @@ export function IslandMap({
   const hoveredArea = hoveredAreaId ? (areaById.get(hoveredAreaId) ?? null) : null;
   // Areas with a bubble already explain their contents, so no tooltip there.
   const tooltipArea =
-    hoveredArea && !bubbleByAreaId.has(hoveredArea.id) && placements[hoveredArea.id]
+    hoveredArea && !bubbledAreaIds.has(hoveredArea.id) && placements[hoveredArea.id]
       ? hoveredArea
       : null;
 
@@ -144,14 +158,31 @@ export function IslandMap({
               state={regionState(area)}
               dimmed={regionDimmed(area)}
               hovered={hoveredAreaId === area.id}
-              showLabel={!bubbleByAreaId.has(area.id)}
+              showLabel={!bubbledAreaIds.has(area.id)}
               onHover={onHoverArea}
               onSelect={onSelectArea}
             />
           ))}
       </svg>
 
-      {bubbles.map((bubble) => {
+      {stepOverlay
+        ? stepOverlay.route.steps.map((step) => {
+            const placement = stepOverlay.placements[step.area.id];
+            if (!placement) return null;
+            return (
+              <RouteStepBubbleCard
+                key={step.area.id}
+                step={step}
+                placement={placement}
+                map={map}
+                active={activeAreaId === step.area.id}
+                onHoverArea={onHoverArea}
+                onSelectArea={onSelectArea}
+                onSelectItem={onSelectItem}
+              />
+            );
+          })
+        : bubbles.map((bubble) => {
         const placement = placements[bubble.area.id];
         if (!placement) return null;
         return (

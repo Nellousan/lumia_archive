@@ -3,18 +3,22 @@
 export interface ClearSelectionButtonProps {
   label: string;
   disabled?: boolean;
+  /** Tooltip; the default assumes clearing the selection empties the island. */
+  hint?: string;
   onClear: () => void;
 }
 
 /**
- * Deselects the active item so the island map drops every bubble.
+ * Deselects the active item.
  *
  * Used in two places — the item detail panel and the map header (where the legend
- * used to sit) — with a label suited to each context.
+ * used to sit) — with a label suited to each context. Bookmarks are part of the
+ * plan too, so the map header's hint says whether any of them survive the click.
  */
 export function ClearSelectionButton({
   label,
   disabled = false,
+  hint = "Deselect the item, dropping its bubbles from the island",
   onClear,
 }: ClearSelectionButtonProps) {
   return (
@@ -22,7 +26,7 @@ export function ClearSelectionButton({
       type="button"
       onClick={onClear}
       disabled={disabled}
-      title="Deselect the item and empty the island map"
+      title={hint}
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
         disabled
           ? "cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-stone-600"

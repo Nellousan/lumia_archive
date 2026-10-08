@@ -18,7 +18,10 @@ export interface CatalogPanelProps {
   typeCounts: Record<string, number>;
   /** `null` while nothing is selected, so no card reads as active. */
   activeItemId: string | null;
+  /** Items in the plan, so their cards can show a filled star. */
+  bookmarkedIds: string[];
   onSelectItem: (itemId: string) => void;
+  onToggleBookmark: (itemId: string) => void;
   searchInputRef: RefObject<HTMLInputElement | null>;
 }
 
@@ -31,7 +34,9 @@ export function CatalogPanel({
   groupCounts,
   typeCounts,
   activeItemId,
+  bookmarkedIds,
   onSelectItem,
+  onToggleBookmark,
   searchInputRef,
 }: CatalogPanelProps) {
   return (
@@ -69,7 +74,13 @@ export function CatalogPanel({
           </span>
         </div>
 
-        <ItemCatalogGrid items={items} activeItemId={activeItemId} onSelect={onSelectItem} />
+        <ItemCatalogGrid
+          items={items}
+          activeItemId={activeItemId}
+          bookmarkedIds={bookmarkedIds}
+          onSelect={onSelectItem}
+          onToggleBookmark={onToggleBookmark}
+        />
       </div>
     </div>
   );

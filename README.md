@@ -62,8 +62,8 @@ drawn and clickable:
 - the *Clear map* button where the legend used to be, which disables when there is nothing to clear.
 
 Clicking the item that is already open in the rail also closes it (`selectionAfterCatalogClick` in
-`hooks/useItemSelection.ts`), so the picker itself acts as a toggle. With nothing selected the rail
-shows a "No item selected" placeholder.
+`hooks/useItemSelection.ts`), so the picker itself acts as a toggle. Nothing is selected on first
+load — the map opens empty and the rail shows a "No item selected" placeholder.
 
 ### Rarity palette
 

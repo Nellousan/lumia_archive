@@ -237,10 +237,13 @@ function buildAnimals(
       if (!areas.some((known) => known.id === area.id)) areas.push(area);
     }
 
+    // Not a defect: some animals roam rather than belonging to one area, so the
+    // data gives them none. Worth a note all the same — it is the reason their
+    // loot never shows up on the island.
     if (areas.length === 0 && loot.length > 0) {
       warnings.push(
-        `Animal "${raw.id}" has no area on the map; its loot ` +
-          `(${loot.map((item) => item.id).join(", ")}) cannot be shown.`,
+        `Animal "${raw.id}" has no fixed area; its loot ` +
+          `(${loot.map((item) => item.id).join(", ")}) is not placed on the island.`,
       );
     }
 

@@ -3,6 +3,7 @@
 import { AreaDetailPanel } from "@/components/area/AreaDetailPanel";
 import type { BookmarkEntry } from "@/components/bookmarks/BookmarkBar";
 import { BookmarkBar } from "@/components/bookmarks/BookmarkBar";
+import { AnimalDropToggle } from "./AnimalDropToggle";
 import { IslandMap } from "./IslandMap";
 import { ClearSelectionButton } from "@/components/ui/ClearSelectionButton";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
@@ -17,6 +18,9 @@ export interface IslandMapPanelProps {
    * the mobile tabs; laid out on its own it is simply a flex column.
    */
   className?: string;
+  /** True when the island is also showing what wild animals can drop. */
+  animalDrops: boolean;
+  onToggleAnimalDrops: () => void;
   /** Rendered width of the island, in CSS pixels; null before it is measured. */
   renderWidth: number | null;
   onRenderWidthChange: (width: number) => void;
@@ -54,6 +58,8 @@ export interface IslandMapPanelProps {
 /** Right-hand pane: island artwork, area overlay and bubbles. */
 export function IslandMapPanel({
   className = "flex",
+  animalDrops,
+  onToggleAnimalDrops,
   renderWidth,
   onRenderWidthChange,
   map,
@@ -129,6 +135,12 @@ export function IslandMapPanel({
        * bottom of the map would be clipped with no way to reach it.
        */}
       <div className="relative z-10 flex min-h-0 flex-1 px-3 pb-3 pt-2 sm:px-4">
+        {/* Anchored to the pane rather than to the map, so panning an island
+            wider than the screen cannot scroll the control away. */}
+        <div className="absolute left-3 top-2 z-30 sm:left-4">
+          <AnimalDropToggle active={animalDrops} onToggle={onToggleAnimalDrops} />
+        </div>
+
         <div className="m-auto max-h-full w-full overflow-auto">
           <IslandMap
             renderWidth={renderWidth}

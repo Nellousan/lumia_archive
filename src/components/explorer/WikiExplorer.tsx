@@ -74,6 +74,9 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    */
   const [islandWidth, setIslandWidth] = useState<number | null>(null);
 
+  /** Wild-animal drops are opt-in: a maybe is not what the island is for. */
+  const [showAnimalDrops, setShowAnimalDrops] = useState(false);
+
   const [focusedMaterialId, setFocusedMaterialId] = useState<string | null>(null);
   const [hoveredAreaId, setHoveredAreaId] = useState<string | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
@@ -122,6 +125,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     mode: routeMode,
     lookAhead,
     islandWidth,
+    showAnimalDrops,
   });
 
   /** The clothes on offer, resolved once so the selector can show artwork. */
@@ -346,6 +350,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
 
         <IslandMapPanel
           className={`${paneDisplay("map")} lg:flex`}
+          animalDrops={showAnimalDrops}
+          onToggleAnimalDrops={() => setShowAnimalDrops((shown) => !shown)}
           renderWidth={islandWidth}
           onRenderWidthChange={setIslandWidth}
           map={dataset.map}

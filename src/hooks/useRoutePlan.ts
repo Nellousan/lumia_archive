@@ -36,6 +36,11 @@ export interface RoutePlanOptions {
    * screen, which only costs one layout pass.
    */
   islandWidth?: number | null;
+  /**
+   * Whether the island also shows what wild animals can drop. Off by default;
+   * the routes ignore animal loot either way.
+   */
+  showAnimalDrops?: boolean;
 }
 
 export function useRoutePlan(
@@ -49,6 +54,7 @@ export function useRoutePlan(
     mode = "fastest",
     lookAhead = DEFAULT_LOOK_AHEAD,
     islandWidth = null,
+    showAnimalDrops = false,
   } = options;
   // `item` is null while nothing is selected: the detail-panel values collapse
   // to empty, which is what empties that half of the rail.
@@ -113,7 +119,10 @@ export function useRoutePlan(
     ? "recipe"
     : "spawn";
 
-  const bubbles = useMemo(() => buildAreaBubbles(dataset, materials), [dataset, materials]);
+  const bubbles = useMemo(
+    () => buildAreaBubbles(dataset, materials, { includeAnimalDrops: showAnimalDrops }),
+    [dataset, materials, showAnimalDrops],
+  );
 
   const placements = useMemo(() => {
     const bubbleScale = bubbleScaleFor(islandWidth, dataset.map.width);

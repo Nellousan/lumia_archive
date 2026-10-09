@@ -136,10 +136,18 @@ export function mergeMaterials(lists: RecipeMaterial[][]): RecipeMaterial[] {
   );
 }
 
+export interface GatherableOptions {
+  /**
+   * Count a wild animal's loot as a place to get the material. Off by default:
+   * the island's default answer to "where do I get this" is the sourcing the
+   * survivor can count on, and a drop is a maybe.
+   */
+  includeAnimalDrops?: boolean;
+}
+
 /**
  * Materials that are obtainable somewhere on the island, i.e. the ones worth
- * drawing a bubble for — either from a loot slot or off a wild animal. Sorted by
- * the number of areas, most spread out first.
+ * drawing a bubble for. Sorted by the number of areas, most spread out first.
  *
  * Animal drops count here even though they never reach the routes: a material
  * only a Bat drops still has somewhere to be shown, and the bubble is where the
@@ -148,12 +156,16 @@ export function mergeMaterials(lists: RecipeMaterial[][]): RecipeMaterial[] {
 export function gatherableMaterials(
   dataset: WikiDataset,
   materials: RecipeMaterial[],
+  options: GatherableOptions = {},
 ): RecipeMaterial[] {
+  const { includeAnimalDrops = false } = options;
+
   return materials
     .filter(
       (material) =>
         material.areas.length > 0 ||
-        (dataset.animalDropsByItemId[material.item.id]?.length ?? 0) > 0,
+        (includeAnimalDrops &&
+          (dataset.animalDropsByItemId[material.item.id]?.length ?? 0) > 0),
     )
     .sort((a, b) => b.areas.length - a.areas.length || a.item.name.localeCompare(b.item.name));
 }

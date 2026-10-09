@@ -1,4 +1,4 @@
-import { gatherableMaterials } from "./recipe";
+import { gatherableMaterials, type GatherableOptions } from "./recipe";
 import type { RecipeMaterial, WikiArea, WikiDataset } from "./types";
 
 /**
@@ -66,11 +66,17 @@ export interface AreaBubble {
  * a spawn. A guaranteed spawn of the same item in the same area wins — the card
  * answers "where does this come from here", and "maybe" beside "certainly" is
  * noise — but the animal is still named if it also drops it there.
+ *
+ * Those cards are opt-in (`includeAnimalDrops`), because they answer a different
+ * question from the rest of the island: not "what does this plan need from here"
+ * but "what could this area hand me besides that".
  */
 export function buildAreaBubbles(
   dataset: WikiDataset,
   materials: RecipeMaterial[],
+  options: GatherableOptions = {},
 ): AreaBubble[] {
+  const { includeAnimalDrops = false } = options;
   const buckets = new Map<
     string,
     { area: WikiArea; cards: Map<string, BubbleCard>; totalQuantity: number }
@@ -85,7 +91,7 @@ export function buildAreaBubbles(
     return bucket;
   };
 
-  for (const material of gatherableMaterials(dataset, materials)) {
+  for (const material of gatherableMaterials(dataset, materials, options)) {
     for (const spawnRef of material.areas) {
       const area = dataset.areasById[spawnRef.areaId];
       if (!area || !area.mapped) continue;
@@ -104,6 +110,8 @@ export function buildAreaBubbles(
       }
       bucket.totalQuantity += spawnRef.quantity;
     }
+
+    if (!includeAnimalDrops) continue;
 
     for (const drop of dataset.animalDropsByItemId[material.item.id] ?? []) {
       const area = dataset.areasById[drop.areaId];

@@ -918,17 +918,45 @@ function compareProfiles(a: number[], b: number[]): number {
 }
 
 /**
- * Greedy ordering: the better look-ahead profile first, then the shorter walk.
+ * The greedy key of a walk: the profile at the chosen window, then the profiles
+ * that narrower windows would have produced, widest first.
+ *
+ * One window cannot break its own ties, and those ties are not draws. Of two walks
+ * worth the same after two areas — "0 then 35" against "5 then 35" — the second is
+ * plainly the greedier, and the second area is exactly what hides it: inside a
+ * two-area window both peak at 35. Asking the one-area question settles it, which
+ * is what makes a wider look-ahead *refine* a narrower one rather than contradict
+ * it: the same walk that a one-area look-ahead would have chosen keeps winning,
+ * because there is nothing in the extra patience to prefer the other one.
+ */
+function greedyKey(steps: RouteStep[], lookAhead: number): number[][] {
+  const windows: number[][] = [];
+  for (let window = lookAhead; window >= 1; window -= 1) {
+    windows.push(greedyProfile(steps, window));
+  }
+  return windows;
+}
+
+/** Positive when `a` is the greedier walk: widest window first, then narrower ones. */
+function compareKeys(a: number[][], b: number[][]): number {
+  for (let index = 0; index < Math.min(a.length, b.length); index += 1) {
+    const difference = compareProfiles(a[index], b[index]);
+    if (difference !== 0) return difference;
+  }
+  return 0;
+}
+
+/**
+ * Greedy ordering: the better greedy key first, then the shorter walk.
  *
  * Profiles are compared from the first step, so strength at the start outranks
  * strength later, and the window decides how much patience each step is allowed.
+ * The key's narrower windows are the tie-break — see {@link greedyKey} — and only
+ * a walk that is as greedy at *every* window falls through to distance.
  */
 function compareGreedy(a: RoutePlan, b: RoutePlan, lookAhead: number): number {
-  const profiles = compareProfiles(
-    greedyProfile(a.steps, lookAhead),
-    greedyProfile(b.steps, lookAhead),
-  );
-  if (profiles !== 0) return -profiles;
+  const keys = compareKeys(greedyKey(a.steps, lookAhead), greedyKey(b.steps, lookAhead));
+  if (keys !== 0) return -keys;
 
   return (
     a.moves - b.moves ||
@@ -1107,7 +1135,7 @@ export function buildRoutes(
     // Fastest stops at the first order that works. Greedy keeps looking, because
     // the order decides how early each part gets built and therefore how early
     // the survivor is worth anything.
-    let best: { order: WikiArea[]; steps: RouteStep[]; profile: number[] } | null = null;
+    let best: { order: WikiArea[]; steps: RouteStep[]; key: number[][] } | null = null;
     let tried = 0;
 
     for (const order of orderings(cover, budget)) {
@@ -1115,12 +1143,12 @@ export function buildRoutes(
       if (!steps) continue;
 
       if (!greedy) {
-        best = { order, steps, profile: [] };
+        best = { order, steps, key: [] };
         break;
       }
 
-      const profile = greedyProfile(steps, lookAhead);
-      if (!best || compareProfiles(profile, best.profile) > 0) best = { order, steps, profile };
+      const key = greedyKey(steps, lookAhead);
+      if (!best || compareKeys(key, best.key) > 0) best = { order, steps, key };
       tried += 1;
       if (tried >= GREEDY_ORDERS_PER_COVER) break;
     }

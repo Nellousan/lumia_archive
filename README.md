@@ -29,6 +29,22 @@ npm run dev          # http://localhost:3000
 > If you install inside a sandbox where `~/.npm` is read-only, point the cache somewhere writable:
 > `npm_config_cache=$PWD/.npm-cache npm install`. `.npm-cache/` is already git-ignored.
 
+### Sharing links
+
+A link posted to Discord, Slack or anywhere else unfurls into a card carrying the site's mark: the
+page serves `og:*` and `twitter:*` tags, and `public/og.png` is the square the card shows. Unfurlers
+fetch the page from their own servers and cannot resolve relative URLs, so the origin is baked in at
+build time:
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://your-origin.example npm run build
+```
+
+Without it the tags fall back to `http://localhost:3000` — well-formed, but nothing outside this
+machine can fetch the card, so a link preview will stay blank until the app is reachable publicly.
+Discord caches an embed for as long as the message lives, which is why re-posting (or adding
+`?v=2` to the URL) is what makes it read the tags again.
+
 ---
 
 ## What it does
@@ -138,6 +154,7 @@ scripts/
 src/
   app/
     layout.tsx            # html shell, fonts (Manrope + Barlow Condensed), metadata
+    icon.png              # favicon; Next's metadata file convention serves it
     page.tsx              # server component: builds the dataset, renders the explorer
     globals.css           # Tailwind v4 import, design tokens, map + base styles
   data/
@@ -172,15 +189,17 @@ src/
     bookmarks/ BookmarkBar
     catalog/   CatalogPanel, SearchField, CategoryTabs, ItemCatalogGrid
     item/      ItemDetailPanel, UsedToCraftPanel, RarityBadge, ItemTypeBadges,
-               ItemFactsGrid, RecipeTree, RecipeBranch, RoutePlanPanel, RoutePlanList
+               RecipeTree, RecipeBranch, RoutePlanPanel, RoutePlanList
     map/       IslandMapPanel, IslandMap, MapAreaShape, AreaBubbleCard,
                BubbleMaterialCard, RouteStepBubbleCard, MapTooltip, RouteOverlay,
                regionStyles
     area/      AreaDetailPanel
-    ui/        ItemCard, ItemSprite, BookmarkButton, Badge, PaneDivider, ClearSelectionButton
+    ui/        ItemCard, ItemSprite, BookmarkButton, Badge, PaneDivider
 public/
   lumia_island.png        # base map (1503 x 774)
   items/*.png             # 644 item sprites, served as /items/<itemId>.png
+  aglaia.png              # header mark (644 x 644, served whole)
+  og.png                  # link-preview card image (256 x 256)
 _reference_figma/         # the original Figma Make export + zip, kept for reference
 ```
 
@@ -482,6 +501,15 @@ missing from `CATEGORY_TABS` raises its own note.
   nothing slower than starting bare. `rocker_s_jacket` drops from 2 moves/3 areas to 1 move/2 areas
   with a windbreaker (which stops appearing in the pickups), `dress` drops from 1 move to 0 with a
   doctor's gown, and `bishop_s_cassock` switches which single area it needs. Worst run: 130 ms.
+- The social card was read the way an unfurler reads it — from the served HTML, with no JavaScript
+  run — and every URL in it was then fetched: `og:title`, `og:description`, `og:site_name`,
+  `og:image` (absolute, `200 image/png`, 256×256 and matching its own `og:image:width/height`,
+  PNG signature intact), `og:url`, and `twitter:card=summary`, which is the shape that puts a
+  square mark in the corner of the card.
+- The brand mark was checked in the browser at 390, 1512 and 1920 px: the header image loads and
+  paints at 36×36 from `public/aglaia.png` (still 644×644 on disk), no trace of the amber "L" it
+  replaced, and the tab icon is the single `link[rel=icon]` Next emits — 126×126, served with a
+  content hash, byte-identical to `src/app/icon.png`.
 - The startup line was verified on a real `next start`: it prints once, before the first request —
   `[lumia-archive] data ready — 201 items · 22 areas (22 mapped) · 39 craftable — 2 data note(s): …` —
   and the island pane no longer renders any data-notes strip.

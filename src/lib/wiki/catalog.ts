@@ -119,17 +119,38 @@ export function groupByCategoryTab(items: WikiItem[]): CategoryBucket[] {
   return ordered;
 }
 
-/** Applies group, type and search filters, then sorts for display. */
+/**
+ * True while the search box is what is doing the filtering.
+ *
+ * The rail shows this: the tabs stop applying, so it has to be visible that they
+ * have, and a whitespace-only term is not a search.
+ */
+export function isCatalogSearching(query: CatalogQuery): boolean {
+  return query.search.trim().length > 0;
+}
+
+/**
+ * Applies group, type and search filters, then sorts for display.
+ *
+ * The tabs browse and the box finds, so a term switches the browsing filters off
+ * rather than narrowing inside them: searching "leather" from the weapon shelf
+ * turns up the gear that needs it, which is the whole point of typing it. The
+ * shelf the reader was on stays in the query untouched, so clearing the box puts
+ * them back exactly where they were.
+ */
 export function filterCatalog(items: WikiItem[], query: CatalogQuery): WikiItem[] {
-  const tab = getCategoryTab(query.groupId);
+  const searching = isCatalogSearching(query);
   const term = query.search.trim();
+  const tab = getCategoryTab(query.groupId);
 
   return items
     .filter((item) => {
-      if (tab.types.length > 0 && !item.types.some((type) => tab.types.includes(type))) {
-        return false;
+      if (!searching) {
+        if (tab.types.length > 0 && !item.types.some((type) => tab.types.includes(type))) {
+          return false;
+        }
+        if (query.typeKey && !item.types.includes(query.typeKey)) return false;
       }
-      if (query.typeKey && !item.types.includes(query.typeKey)) return false;
       return matchesSearch(item, term);
     })
     .sort(compareForCatalog);

@@ -4,7 +4,8 @@ import type { RefObject } from "react";
 import { CategoryTabs } from "./CategoryTabs";
 import { ItemCatalogGrid } from "./ItemCatalogGrid";
 import { SearchField } from "./SearchField";
-import type { CatalogQuery } from "@/lib/wiki/catalog";
+import { isCatalogSearching, type CatalogQuery } from "@/lib/wiki/catalog";
+import { ALL_GROUP_ID } from "@/lib/wiki/taxonomy";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface CatalogPanelProps {
@@ -48,6 +49,18 @@ export function CatalogPanel({
   onToggleBookmark,
   searchInputRef,
 }: CatalogPanelProps) {
+  /**
+   * A search reads the whole compendium, so the tabs are not applied while there
+   * is a term. Showing "All" as the active one is the honest picture of that, and
+   * picking any tab ends the search: the reader has chosen a shelf to browse
+   * instead of a word to find.
+   */
+  const searching = isCatalogSearching(query);
+
+  /** Picking a shelf is leaving the search: the box empties as the tab opens. */
+  const selectGroup = (groupId: string) =>
+    onQueryChange(searching ? { groupId, typeKey: null, search: "" } : { groupId, typeKey: null });
+
   return (
     <div className="border-b border-white/[0.07]">
       <div className="border-b border-white/[0.07] p-4 sm:px-6 sm:py-5">
@@ -63,13 +76,19 @@ export function CatalogPanel({
 
         <div className="mt-3">
           <CategoryTabs
-            activeGroupId={query.groupId}
-            activeTypeKey={query.typeKey}
+            activeGroupId={searching ? ALL_GROUP_ID : query.groupId}
+            activeTypeKey={searching ? null : query.typeKey}
             groupCounts={groupCounts}
             typeCounts={typeCounts}
-            onSelectGroup={(groupId) => onQueryChange({ groupId, typeKey: null })}
+            onSelectGroup={selectGroup}
             onSelectType={(typeKey) => onQueryChange({ typeKey })}
           />
+
+          {searching && (
+            <p className="mt-2 text-[10px] leading-relaxed text-stone-600">
+              Searching every category · a tab clears the search and opens that shelf
+            </p>
+          )}
         </div>
       </div>
 

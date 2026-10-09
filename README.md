@@ -32,18 +32,21 @@ npm run dev          # http://localhost:3000
 ### Sharing links
 
 A link posted to Discord, Slack or anywhere else unfurls into a card carrying the site's mark: the
-page serves `og:*` and `twitter:*` tags, and `public/og.png` is the square the card shows. Unfurlers
-fetch the page from their own servers and cannot resolve relative URLs, so the origin is baked in at
-build time:
+page serves `og:*` and `twitter:*` tags, and `public/og.png` is the square the card shows.
+
+Unfurlers fetch the page from their own servers, so those URLs have to be absolute and publicly
+reachable — a loopback origin in the tags is a card nobody can render. They resolve against
+`https://lumia-archive.vercel.app`; on Vercel the project's own production domain
+(`VERCEL_PROJECT_PRODUCTION_URL`) takes precedence, so a custom domain later needs no code change.
+`NEXT_PUBLIC_SITE_URL` overrides both:
 
 ```bash
-NEXT_PUBLIC_SITE_URL=https://your-origin.example npm run build
+NEXT_PUBLIC_SITE_URL=https://lumia.example npm run build
 ```
 
-Without it the tags fall back to `http://localhost:3000` — well-formed, but nothing outside this
-machine can fetch the card, so a link preview will stay blank until the app is reachable publicly.
-Discord caches an embed for as long as the message lives, which is why re-posting (or adding
-`?v=2` to the URL) is what makes it read the tags again.
+Discord caches an embed for as long as the message lives, which is why re-posting it (or appending
+`?v=2` to the URL) is what makes it read the tags again — and why a link posted before the tags
+shipped keeps its blank card.
 
 ---
 
@@ -505,7 +508,10 @@ missing from `CATEGORY_TABS` raises its own note.
   run — and every URL in it was then fetched: `og:title`, `og:description`, `og:site_name`,
   `og:image` (absolute, `200 image/png`, 256×256 and matching its own `og:image:width/height`,
   PNG signature intact), `og:url`, and `twitter:card=summary`, which is the shape that puts a
-  square mark in the corner of the card.
+  square mark in the corner of the card. Every social URL was asserted to share one origin and that
+  origin to be non-loopback: before this, the tags fell back to `http://localhost:3000`, which no
+  unfurler can reach. The deployed copy of `/og.png` answered `404` at the time of the check — the
+  tags ship with the next push.
 - The brand mark was checked in the browser at 390, 1512 and 1920 px: the header image loads and
   paints at 36×36 from `public/aglaia.png` (still 644×644 on disk), no trace of the amber "L" it
   replaced, and the tab icon is the single `link[rel=icon]` Next emits — 126×126, served with a

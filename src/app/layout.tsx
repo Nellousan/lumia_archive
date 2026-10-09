@@ -18,12 +18,20 @@ const barlowCondensed = Barlow_Condensed({
 
 /**
  * Where the app is published. Link unfurlers — Discord, Slack, the rest — fetch
- * the card from their own servers and do not resolve relative paths, so every
- * social URL has to be absolute: this is the origin they are resolved against.
- * Set `NEXT_PUBLIC_SITE_URL` to the deployed origin at build time; the localhost
- * fallback keeps the tags well-formed in development.
+ * the card from their own servers, so every social URL has to be absolute and
+ * publicly reachable; this is the origin they are resolved against.
+ *
+ * The production origin is the default, because a card is only ever fetched from
+ * the deployed site: a localhost base would put a URL in the tags that nobody
+ * outside this machine can open. `NEXT_PUBLIC_SITE_URL` overrides it, and on
+ * Vercel the project's own production domain wins over the literal below, so
+ * pointing a custom domain at the deployment needs no change here.
  */
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://lumia-archive.vercel.app");
 
 const TITLE = "Lumia Archive — Black Survival Wiki";
 const DESCRIPTION = "Interactive item and resource map for Black Survival Project Lumia";

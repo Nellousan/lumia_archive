@@ -234,7 +234,7 @@
         "ingredients"
       ],
       "value": null,
-      "defaultQuantity": 1,
+      "defaultQuantity": 2,
       "recipe": [
         "iron_ore",
         "scrap_metal"

@@ -37,7 +37,7 @@ export function BookmarkBar({ entries, onEntryClick, onClearBookmarks }: Bookmar
   const bookmarks = entries.filter((entry) => entry.bookmarked).length;
 
   return (
-    <div className="relative z-10 flex items-center gap-3 border-b border-white/[0.06] px-4 py-2 sm:px-6">
+    <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-4 py-2 sm:px-6">
       <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-600">
         Plan
       </span>

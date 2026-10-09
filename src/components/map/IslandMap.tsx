@@ -1,19 +1,36 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { AreaBubbleCard } from "./AreaBubbleCard";
 import { MapAreaShape } from "./MapAreaShape";
 import { MapTooltip } from "./MapTooltip";
 import { RouteOverlay } from "./RouteOverlay";
 import { RouteStepBubbleCard } from "./RouteStepBubbleCard";
 import type { RegionState } from "./regionStyles";
-import type { BubblePlacement } from "@/lib/map-layout";
+import { useElementWidth } from "@/hooks/useElementWidth";
+import { bubbleScaleFor, type BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { RoutePlan } from "@/lib/wiki/routes";
 import type { MapImage, WikiArea } from "@/lib/wiki/types";
 
+/**
+ * Narrowest the island is ever drawn, in CSS pixels — `min-w-[880px]` on the map
+ * box, released on two-column layouts (`lg:min-w-0`) where the pane fits it.
+ *
+ * Below 880px the map pans instead of shrinking further: that is where a bubble
+ * lands around 135px wide, the point at which its label stops being readable.
+ */
+const MIN_ISLAND_WIDTH_CLASS = "min-w-[880px] lg:min-w-0";
+
 export interface IslandMapProps {
+  /**
+   * Rendered width of the map box, in CSS pixels, owned by the explorer because
+   * the route solver needs it too. `null` until the first measurement.
+   */
+  renderWidth: number | null;
+  /** Reports the measured width back up, rounded to whole pixels. */
+  onRenderWidthChange: (width: number) => void;
   map: MapImage;
   areas: WikiArea[];
   /** Areas holding at least one material of the active recipe. */
@@ -42,9 +59,17 @@ export interface IslandMapProps {
  *
  * Coordinates come straight from `lumia-island.map.json`, which uses the pixel
  * space of the PNG, so the overlay viewBox and the image dimensions are the same
- * numbers — no scaling maths anywhere.
+ * numbers. The bubbles get the same treatment as the polygons: they live in a
+ * layer as wide as the island and scaled to it, so they can follow a small map
+ * down instead of swallowing a phone screen. Past full size they stop growing —
+ * see {@link bubbleScaleFor} — because a wide monitor has room to spare and a
+ * bubble that fills it only hides the island. Below
+ * {@link MIN_ISLAND_WIDTH_CLASS} the map pans rather than shrinking further, so
+ * those bubbles stay legible.
  */
 export function IslandMap({
+  renderWidth,
+  onRenderWidthChange,
   map,
   areas,
   bubbles,
@@ -59,6 +84,23 @@ export function IslandMap({
   onHoverMaterial,
   onSelectItem,
 }: IslandMapProps) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const measuredWidth = useElementWidth(boxRef);
+
+  // Whole pixels only: the observer reports fractions, and re-solving the bubble
+  // layout for a third of a pixel is work nobody can see.
+  useEffect(() => {
+    if (measuredWidth !== null) onRenderWidthChange(Math.round(measuredWidth));
+  }, [measuredWidth, onRenderWidthChange]);
+
+  /** Scale that maps the island's own pixels onto the rendered map. */
+  const overlayScale = renderWidth === null ? null : renderWidth / map.width;
+  /**
+   * Extra factor on the bubbles: they follow the map down to a phone, and hold
+   * their size once the island is wide enough to draw them at full size.
+   */
+  const bubbleScale = bubbleScaleFor(renderWidth, map.width);
+
   const areaById = useMemo(() => new Map(areas.map((area) => [area.id, area])), [areas]);
   const bubbleByAreaId = useMemo(
     () => new Map(bubbles.map((bubble) => [bubble.area.id, bubble])),
@@ -131,7 +173,10 @@ export function IslandMap({
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[1400px]">
+    <div
+      ref={boxRef}
+      className={`relative mx-auto w-full max-w-[1400px] ${MIN_ISLAND_WIDTH_CLASS}`}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size static map, the SVG
           overlay must align with the exact rendered box, so no optimiser transform. */}
       <img
@@ -164,43 +209,69 @@ export function IslandMap({
           ))}
       </svg>
 
-      {stepOverlay
-        ? stepOverlay.route.steps.map((step) => {
-            const placement = stepOverlay.placements[step.area.id];
-            if (!placement) return null;
-            return (
-              <RouteStepBubbleCard
-                key={step.area.id}
-                step={step}
-                placement={placement}
-                map={map}
-                active={activeAreaId === step.area.id}
-                onHoverArea={onHoverArea}
-                onSelectArea={onSelectArea}
-                onSelectItem={onSelectItem}
-              />
-            );
-          })
-        : bubbles.map((bubble) => {
-        const placement = placements[bubble.area.id];
-        if (!placement) return null;
-        return (
-          <AreaBubbleCard
-            key={bubble.area.id}
-            bubble={bubble}
-            placement={placement}
-            map={map}
-            active={activeAreaId === bubble.area.id}
-            focus={focus}
-            routeActive={routeAreaIds !== null}
-            inRoute={routeAreaIds?.has(bubble.area.id) ?? false}
-            onHoverArea={onHoverArea}
-            onSelectArea={onSelectArea}
-            onHoverMaterial={onHoverMaterial}
-            onSelectItem={onSelectItem}
+      {/*
+       * The bubbles, in the island's own pixels: sized like the PNG, then scaled
+       * to whatever the map is rendered at. Held back until the width is measured
+       * so nothing is drawn at the wrong scale for a frame. Clipped to the island
+       * so a bubble's pointer dot at the edge cannot add phantom panning to the
+       * scroll container.
+       */}
+      <div
+        className="pointer-events-none absolute left-0 top-0 z-20 overflow-hidden"
+        style={{
+          width: map.width,
+          height: map.height,
+          transform: `scale(${overlayScale ?? 1})`,
+          transformOrigin: "top left",
+          visibility: overlayScale === null ? "hidden" : "visible",
+          // Read by the bubbles below; see `BUBBLE_WIDTH` for the units.
+          ["--map-bubble-scale" as string]: bubbleScale,
+        }}
+      >
+        {stepOverlay
+          ? stepOverlay.route.steps.map((step) => {
+              const placement = stepOverlay.placements[step.area.id];
+              if (!placement) return null;
+              return (
+                <RouteStepBubbleCard
+                  key={step.area.id}
+                  step={step}
+                  placement={placement}
+                  active={activeAreaId === step.area.id}
+                  onHoverArea={onHoverArea}
+                  onSelectArea={onSelectArea}
+                  onSelectItem={onSelectItem}
+                />
+              );
+            })
+          : bubbles.map((bubble) => {
+              const placement = placements[bubble.area.id];
+              if (!placement) return null;
+              return (
+                <AreaBubbleCard
+                  key={bubble.area.id}
+                  bubble={bubble}
+                  placement={placement}
+                  active={activeAreaId === bubble.area.id}
+                  focus={focus}
+                  routeActive={routeAreaIds !== null}
+                  inRoute={routeAreaIds?.has(bubble.area.id) ?? false}
+                  onHoverArea={onHoverArea}
+                  onSelectArea={onSelectArea}
+                  onHoverMaterial={onHoverMaterial}
+                  onSelectItem={onSelectItem}
+                />
+              );
+            })}
+
+        {tooltipArea && (
+          <MapTooltip
+            area={tooltipArea}
+            anchor={placements[tooltipArea.id]}
+            materialNames={tooltipMaterialNames}
           />
-        );
-      })}
+        )}
+      </div>
 
       {activeRoute && (
         // Above the bubbles (z-30) so the numbered stops cannot be hidden behind
@@ -212,15 +283,6 @@ export function IslandMap({
         >
           <RouteOverlay route={activeRoute} />
         </svg>
-      )}
-
-      {tooltipArea && (
-        <MapTooltip
-          area={tooltipArea}
-          anchor={placements[tooltipArea.id]}
-          map={map}
-          materialNames={tooltipMaterialNames}
-        />
       )}
     </div>
   );

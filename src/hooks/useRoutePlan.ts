@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { estimateBubbleSize, resolveBubblePlacements } from "@/lib/map-layout";
+import { bubbleScaleFor, estimateBubbleSize, resolveBubblePlacements } from "@/lib/map-layout";
 import {
   buildRecipeTree,
   buildSubtreeIndex,
@@ -24,14 +24,32 @@ import type { RecipeMaterial, RecipeNode, WikiDataset, WikiItem } from "@/lib/wi
  * The selected item's own tree is kept separately for the detail panel, which
  * still shows that one item's crafting chain and facts.
  */
+export interface RoutePlanOptions {
+  /** Clothes picked before the match; null means the survivor starts bare. */
+  startingClothes?: string | null;
+  mode?: RouteMode;
+  lookAhead?: number;
+  /**
+   * Rendered width of the island, in CSS pixels, measured by the map. The bubble
+   * sizes below depend on it, so the boxes the layout solver spaces apart are the
+   * boxes the browser actually draws. Unknown (`null`) until the map is on
+   * screen, which only costs one layout pass.
+   */
+  islandWidth?: number | null;
+}
+
 export function useRoutePlan(
   dataset: WikiDataset,
   item: WikiItem | null,
   plannedItems: WikiItem[],
-  startingClothes: string | null = null,
-  mode: RouteMode = "fastest",
-  lookAhead: number = DEFAULT_LOOK_AHEAD,
+  options: RoutePlanOptions = {},
 ) {
+  const {
+    startingClothes = null,
+    mode = "fastest",
+    lookAhead = DEFAULT_LOOK_AHEAD,
+    islandWidth = null,
+  } = options;
   // `item` is null while nothing is selected: the detail-panel values collapse
   // to empty, which is what empties that half of the rail.
   const tree = useMemo(() => (item ? buildRecipeTree(dataset, item.id) : null), [dataset, item]);
@@ -94,19 +112,18 @@ export function useRoutePlan(
 
   const bubbles = useMemo(() => buildAreaBubbles(dataset, materials), [dataset, materials]);
 
-  const placements = useMemo(
-    () =>
-      resolveBubblePlacements(
-        bubbles.map((bubble) => ({
-          id: bubble.area.id,
-          x: bubble.area.anchor.x,
-          y: bubble.area.anchor.y,
-          ...estimateBubbleSize(bubble),
-        })),
-        { mapWidth: dataset.map.width, mapHeight: dataset.map.height },
-      ),
-    [bubbles, dataset.map.height, dataset.map.width],
-  );
+  const placements = useMemo(() => {
+    const bubbleScale = bubbleScaleFor(islandWidth, dataset.map.width);
+    return resolveBubblePlacements(
+      bubbles.map((bubble) => ({
+        id: bubble.area.id,
+        x: bubble.area.anchor.x,
+        y: bubble.area.anchor.y,
+        ...estimateBubbleSize(bubble, bubbleScale),
+      })),
+      { mapWidth: dataset.map.width, mapHeight: dataset.map.height },
+    );
+  }, [bubbles, dataset.map.height, dataset.map.width, islandWidth]);
 
   /** Distinct areas that hold at least one material. */
   const areaCount = useMemo(() => {

@@ -12,19 +12,51 @@ import { stepCrafts, stepGathers, type RouteStep } from "./wiki/routes";
  */
 
 /**
- * Bubble geometry, in base-map pixels.
+ * Bubble geometry, in island pixels — the same 1503×774 space as the PNG and the
+ * area polygons.
+ *
+ * Bubbles are drawn inside an overlay layer the size of the island itself (see
+ * `IslandMap`), so writing them in these units makes them scale *with the map*:
+ * the same bubble covers the same patch of Lumia whether the pane is a phone or
+ * a 4K monitor. That also makes the numbers here honest — the boxes below and the
+ * boxes the browser lays out are the same boxes, which they were not while the
+ * overlay was measured in island pixels but drawn in CSS ones.
  *
  * The card and bubble numbers are shared with the components (`AreaBubbleCard`
  * and `BubbleMaterialCard` read them) so the estimates below cannot drift away
  * from what is actually rendered.
  */
-export const BUBBLE_WIDTH = 140;
-export const BUBBLE_CARD_WIDTH = 44;
+export const BUBBLE_WIDTH = 230;
+export const BUBBLE_CARD_WIDTH = 72;
 
-const BUBBLE_PADDING = 4; // bubble `p-1`
-const BUBBLE_CARD_GAP = 6; // card row `gap-1.5`
-const BUBBLE_CARD_HEIGHT = 60; // square artwork + the quantity underneath
-const BUBBLE_CHROME_HEIGHT = 34; // bubble padding + area header
+/**
+ * Widest a bubble is drawn on screen, in CSS pixels — the size the overlay used
+ * before it started scaling with the island.
+ */
+const BUBBLE_DESIGN_CSS_WIDTH = 140;
+
+const BUBBLE_PADDING = 6; // bubble `p-[6px]`
+const BUBBLE_CARD_GAP = 8; // card row `gap-[8px]`
+const BUBBLE_CARD_HEIGHT = 98; // square artwork + the quantity underneath
+const BUBBLE_CHROME_HEIGHT = 56; // bubble padding + area header
+
+/**
+ * How much the bubbles shrink or grow with the island, as a multiplier on top of
+ * the layer that already scales them to it.
+ *
+ * Scaling with the map is what keeps a phone's labels readable, but there is no
+ * reason for a bubble to keep growing once it is back at
+ * {@link BUBBLE_DESIGN_CSS_WIDTH}: a 27" monitor has room to spare, and a bubble
+ * that fills it only covers the island it is describing. So the factor is capped
+ * at 1 — bubbles track the map on the way down and hold their size on the way up.
+ *
+ * The placement solver and the renderer both derive it from the same measured
+ * width, so the boxes it reserves and the boxes on screen stay the same boxes.
+ */
+export function bubbleScaleFor(islandWidth: number | null, mapWidth: number): number {
+  if (islandWidth === null || islandWidth <= 0) return 1;
+  return Math.min(1, (BUBBLE_DESIGN_CSS_WIDTH * mapWidth) / (BUBBLE_WIDTH * islandWidth));
+}
 
 /** How many cards fit on one row before they wrap. */
 const CARDS_PER_ROW = Math.max(
@@ -34,15 +66,22 @@ const CARDS_PER_ROW = Math.max(
   ),
 );
 
-/** Estimated rendered size of a bubble holding `cardCount` cards. */
-export function estimateCardsBubbleSize(cardCount: number): {
+/**
+ * Estimated rendered size of a bubble holding `cardCount` cards, in island
+ * pixels at the given bubble scale. Wrapping does not depend on the scale, so
+ * only the final numbers are multiplied.
+ */
+export function estimateCardsBubbleSize(
+  cardCount: number,
+  scale = 1,
+): {
   width: number;
   height: number;
 } {
   const rows = Math.max(1, Math.ceil(cardCount / CARDS_PER_ROW));
   return {
-    width: BUBBLE_WIDTH,
-    height: BUBBLE_CHROME_HEIGHT + rows * BUBBLE_CARD_HEIGHT,
+    width: BUBBLE_WIDTH * scale,
+    height: (BUBBLE_CHROME_HEIGHT + rows * BUBBLE_CARD_HEIGHT) * scale,
   };
 }
 
@@ -50,13 +89,19 @@ export function estimateCardsBubbleSize(cardCount: number): {
  * Estimated rendered size of a bubble, in base-map pixels — used to spread
  * overlapping bubbles apart before drawing them.
  */
-export function estimateBubbleSize(bubble: AreaBubble): { width: number; height: number } {
-  return estimateCardsBubbleSize(bubble.cards.length);
+export function estimateBubbleSize(
+  bubble: AreaBubble,
+  scale = 1,
+): { width: number; height: number } {
+  return estimateCardsBubbleSize(bubble.cards.length, scale);
 }
 
 /** Same estimate for a route step, whose cards are what is gathered and built. */
-export function estimateStepBubbleSize(step: RouteStep): { width: number; height: number } {
-  return estimateCardsBubbleSize(stepGathers(step).length + stepCrafts(step).length);
+export function estimateStepBubbleSize(
+  step: RouteStep,
+  scale = 1,
+): { width: number; height: number } {
+  return estimateCardsBubbleSize(stepGathers(step).length + stepCrafts(step).length, scale);
 }
 
 export interface BubbleAnchor {
@@ -160,13 +205,16 @@ export function resolveBubblePlacements(
   return Object.fromEntries(boxes.map((box) => [box.id, { x: box.x, y: box.y }]));
 }
 
-export function toPercentPosition(
-  placement: BubblePlacement,
-  mapWidth: number,
-  mapHeight: number,
-): { left: string; top: string } {
-  return {
-    left: `${(placement.x / mapWidth) * 100}%`,
-    top: `${(placement.y / mapHeight) * 100}%`,
-  };
+/**
+ * Style that drops a bubble centre onto the island.
+ *
+ * Both numbers are already in island pixels and the overlay layer is scaled to
+ * the rendered map, so they go on verbatim — no percentage conversion, which is
+ * what used to let a bubble drift away from the area it belongs to.
+ */
+export function toIslandPosition(placement: BubblePlacement): {
+  left: number;
+  top: number;
+} {
+  return { left: placement.x, top: placement.y };
 }

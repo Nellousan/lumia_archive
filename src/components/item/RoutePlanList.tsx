@@ -49,8 +49,12 @@ const COLLAPSED_COUNT = 4;
  * line-height plus padding plus border, which nothing else can match by
  * accident. One constant keeps the strip even, and square cards mean only the
  * height is ever written down.
+ *
+ * Taller on the stacked layout, where the rail is the whole screen: the artwork
+ * on a step is how one pickup is told from another, and at 28px on a phone it is
+ * a smudge.
  */
-const STEP_CONTROL_HEIGHT = "h-7";
+const STEP_CONTROL_HEIGHT = "h-10 lg:h-7";
 
 function itemNames(items: { item: { name: string }; quantity: number }[]): string {
   return items
@@ -83,12 +87,12 @@ function BagSlots({ used }: { used: number }) {
       role="img"
       aria-label={label}
       title={label}
-      className="ml-auto flex shrink-0 items-center gap-0.5 pl-2"
+      className="ml-auto flex shrink-0 items-center gap-1 pl-2 lg:gap-0.5"
     >
       {Array.from({ length: BAG_SLOTS }, (_, slot) => (
         <span
           key={slot}
-          className={`size-1.5 rounded-full ${
+          className={`size-2 rounded-full lg:size-1.5 ${
             slot < used ? "bg-amber-300" : "border border-white/20"
           }`}
         />
@@ -162,7 +166,9 @@ function StepRow({
   return (
     <li className="space-y-1">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="w-3 shrink-0 font-mono text-[11px] text-stone-600">{step.number}</span>
+        <span className="w-4 shrink-0 font-mono text-[13px] text-stone-600 lg:w-3 lg:text-[11px]">
+          {step.number}
+        </span>
 
         <button
           type="button"
@@ -177,7 +183,7 @@ function StepRow({
             event.stopPropagation();
             onSelectArea(step.area.id);
           }}
-          className={`inline-flex ${STEP_CONTROL_HEIGHT} shrink-0 items-center rounded-md border px-2 text-[13px] font-semibold transition ${
+          className={`inline-flex ${STEP_CONTROL_HEIGHT} shrink-0 items-center rounded-md border px-2 text-[15px] font-semibold transition lg:text-[13px] ${
             active
               ? "border-amber-300/40 text-amber-100 hover:bg-amber-300/15"
               : "border-white/10 text-stone-300 hover:border-emerald-400/40 hover:text-white"
@@ -200,7 +206,7 @@ function StepRow({
           {/* What the survivor is worth when leaving here — the curve greedy ranks. */}
           <span
             title={`value worn when leaving: ${wornValue}`}
-            className={`font-mono text-[10px] ${
+            className={`font-mono text-[12px] lg:text-[10px] ${
               wornValue > 0 ? "text-amber-300/80" : "text-stone-600"
             }`}
           >
@@ -212,7 +218,7 @@ function StepRow({
 
       {crafts.length > 0 && (
         // Indented to sit under the area chip rather than under the step number.
-        <div className="flex flex-wrap items-center gap-1 pl-[18px]">
+        <div className="flex flex-wrap items-center gap-1 pl-[22px] lg:pl-[18px]">
           {crafts.map((entry) => (
             <StepItemCard key={entry.item.id} item={entry.item} quantity={entry.quantity} built />
           ))}

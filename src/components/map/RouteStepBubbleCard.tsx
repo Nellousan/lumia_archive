@@ -1,15 +1,13 @@
 "use client";
 
 import { ItemSprite } from "@/components/ui/ItemSprite";
-import { BUBBLE_CARD_WIDTH, toPercentPosition, type BubblePlacement } from "@/lib/map-layout";
+import { BUBBLE_CARD_WIDTH, toIslandPosition, type BubblePlacement } from "@/lib/map-layout";
 import { stepCrafts, stepGathers, type RouteStep } from "@/lib/wiki/routes";
 import type { WikiItem } from "@/lib/wiki/types";
-import type { MapImage } from "@/lib/wiki/types";
 
 export interface RouteStepBubbleCardProps {
   step: RouteStep;
   placement: BubblePlacement;
-  map: MapImage;
   /** True when this step's area panel is open. */
   active: boolean;
   onHoverArea: (areaId: string | null) => void;
@@ -42,7 +40,7 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
         onSelectItem(item.id);
       }}
       style={{ width: BUBBLE_CARD_WIDTH }}
-      className={`flex shrink-0 flex-col items-center gap-px rounded-lg border px-0.5 pb-0.5 pt-1 transition ${
+      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] border px-[3px] pb-[3px] pt-[6px] transition ${
         built
           ? "border-amber-300/50 bg-amber-300/10 hover:border-amber-200/70 hover:bg-amber-300/20"
           : "border-white/[0.08] bg-black/30 hover:border-emerald-300/40 hover:bg-black/45"
@@ -51,11 +49,11 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
       <ItemSprite item={item} size="tile" bare />
       {built ? (
         // Same marker as the route list: a build, not a pickup.
-        <span aria-hidden="true" className="text-[13px] leading-none text-amber-300">
+        <span aria-hidden="true" className="text-[21px] leading-none text-amber-300">
           ✦
         </span>
       ) : (
-        <span className="font-mono text-[12px] font-bold leading-none text-emerald-300">
+        <span className="font-mono text-[20px] font-bold leading-none text-emerald-300">
           ×{quantity}
         </span>
       )}
@@ -74,44 +72,48 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
 export function RouteStepBubbleCard({
   step,
   placement,
-  map,
   active,
   onHoverArea,
   onSelectArea,
   onSelectItem,
 }: RouteStepBubbleCardProps) {
-  const { left, top } = toPercentPosition(placement, map.width, map.height);
+  const { left, top } = toIslandPosition(placement);
   const gathers = stepGathers(step);
   const crafts = stepCrafts(step);
   const total = gathers.length + crafts.length;
 
   return (
     <div
-      className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
-      style={{ left, top }}
+      className="pointer-events-auto absolute z-20"
+      style={{
+        left,
+        top,
+        // Centred on the area, then scaled to the size the map can afford.
+        transform: "translate(-50%, -50%) scale(var(--map-bubble-scale, 1))",
+      }}
       onMouseEnter={() => onHoverArea(step.area.id)}
       onMouseLeave={() => onHoverArea(null)}
     >
       <div
-        className={`rounded-xl border p-1 shadow-[0_18px_36px_rgba(0,0,0,0.55)] backdrop-blur-md transition ${
+        className={`rounded-[20px] border p-[6px] shadow-[0_18px_36px_rgba(0,0,0,0.55)] backdrop-blur-md transition ${
           active ? "border-amber-300/70 bg-ink-950/92" : "border-amber-300/45 bg-ink-950/88"
         }`}
       >
         <button
           type="button"
           onClick={() => onSelectArea(step.area.id)}
-          className="flex w-full items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-left transition hover:bg-white/[0.06]"
+          className="flex w-full items-center gap-[10px] rounded-[13px] px-[10px] py-[3px] text-left transition hover:bg-white/[0.06]"
         >
-          <span className="grid size-4 shrink-0 place-items-center rounded bg-amber-300/90 font-mono text-[10px] font-bold text-ink-950">
+          <span className="grid size-[26px] shrink-0 place-items-center rounded-[7px] bg-amber-300/90 font-mono text-[16px] font-bold text-ink-950">
             {step.number}
           </span>
-          <span className="min-w-0 flex-1 truncate font-display text-[13px] font-bold uppercase tracking-[0.1em] text-stone-100">
+          <span className="min-w-0 flex-1 truncate font-display text-[21px] font-bold uppercase tracking-[0.1em] text-stone-100">
             {step.area.name}
           </span>
-          <span className="shrink-0 font-mono text-[11px] text-emerald-300/90">{total}</span>
+          <span className="shrink-0 font-mono text-[18px] text-emerald-300/90">{total}</span>
         </button>
 
-        <div className="mt-1 flex flex-wrap justify-center gap-1">
+        <div className="mt-[6px] flex flex-wrap justify-center gap-[8px]">
           {crafts.map((built) => (
             <StepCard
               key={`build-${built.item.id}`}
@@ -137,7 +139,7 @@ export function RouteStepBubbleCard({
         </div>
 
         {crafts.length === 0 && (
-          <p className="mt-1 px-1 text-center text-[9px] uppercase tracking-wider text-stone-500">
+          <p className="mt-[6px] px-[6px] text-center text-[15px] uppercase tracking-wider text-stone-500">
             nothing built here
           </p>
         )}
@@ -145,7 +147,7 @@ export function RouteStepBubbleCard({
 
       <span
         aria-hidden="true"
-        className="absolute left-1/2 top-full size-1.5 -translate-x-1/2 rounded-full bg-amber-300/70"
+        className="absolute left-1/2 top-full size-[10px] -translate-x-1/2 rounded-full bg-amber-300/70"
       />
     </div>
   );

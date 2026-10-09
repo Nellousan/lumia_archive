@@ -20,6 +20,10 @@ export interface AreaDetailPanelProps {
  * Slide-over listing everything that spawns in the clicked area — the "what is
  * actually here" counterpart to the recipe-driven map bubbles.
  *
+ * It covers the whole pane where there is no room to spare (a phone, where a
+ * three-quarter panel would leave a useless sliver of map) and three quarters of
+ * it on the wider two-column layouts.
+ *
  * Items use the same card as the rail, with the quantity found in this area
  * standing in for the rarity/type/value line. They are grouped under the named
  * top-level categories — most actionable first, Weapon → Gear → Food → Normal —
@@ -53,7 +57,7 @@ export function AreaDetailPanel({
   return (
     <aside
       aria-label={`${area.name} area details`}
-      className="absolute right-0 top-0 z-40 flex h-full w-3/4 min-w-[320px] max-w-[900px] flex-col border-l border-white/10 bg-ink-900/95 shadow-[-20px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+      className="absolute inset-y-0 right-0 z-40 flex w-full flex-col border-l border-white/10 bg-ink-900/95 shadow-[-20px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:w-3/4 lg:min-w-[320px] lg:max-w-[900px]"
     >
       <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] p-4">
         <div className="min-w-0">

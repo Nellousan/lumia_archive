@@ -12,6 +12,14 @@ import type { RoutePlan } from "@/lib/wiki/routes";
 import type { AreaItemRef, MapImage, RecipeMaterial, WikiArea } from "@/lib/wiki/types";
 
 export interface IslandMapPanelProps {
+  /**
+   * Display classes for the pane. The explorer swaps them to hide the map behind
+   * the mobile tabs; laid out on its own it is simply a flex column.
+   */
+  className?: string;
+  /** Rendered width of the island, in CSS pixels; null before it is measured. */
+  renderWidth: number | null;
+  onRenderWidthChange: (width: number) => void;
   map: MapImage;
   areas: WikiArea[];
   bubbles: AreaBubble[];
@@ -45,6 +53,9 @@ export interface IslandMapPanelProps {
 
 /** Right-hand pane: island artwork, area overlay and bubbles. */
 export function IslandMapPanel({
+  className = "flex",
+  renderWidth,
+  onRenderWidthChange,
   map,
   areas,
   bubbles,
@@ -70,10 +81,15 @@ export function IslandMapPanel({
   onCloseArea,
 }: IslandMapPanelProps) {
   return (
-    <section className="relative flex min-h-[560px] flex-1 flex-col bg-ink-850">
+    <section
+      id="pane-map"
+      role="tabpanel"
+      aria-labelledby="tab-map"
+      className={`relative min-h-0 flex-1 flex-col bg-ink-850 ${className}`}
+    >
       <div className="pointer-events-none absolute inset-0 map-grid opacity-30" />
 
-      <div className="relative z-10 flex flex-col gap-3 px-4 pb-1 pt-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:pt-5">
+      <div className="relative z-10 flex shrink-0 flex-col gap-3 px-4 pb-1 pt-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:pt-5">
         <div>
           <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-400">
             <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]" />
@@ -105,9 +121,18 @@ export function IslandMapPanel({
         onClearBookmarks={onClearBookmarks}
       />
 
+      {/*
+       * Pans when the island cannot fit at a legible size; `IslandMap` sets the
+       * minimum width, so the map is never squeezed into unreadable bubbles.
+       * `max-h-full` keeps the scroller inside the pane on a short screen —
+       * `m-auto` alone would let it grow to the island's height instead, and the
+       * bottom of the map would be clipped with no way to reach it.
+       */}
       <div className="relative z-10 flex min-h-0 flex-1 px-3 pb-3 pt-2 sm:px-4">
-        <div className="m-auto w-full">
+        <div className="m-auto max-h-full w-full overflow-auto">
           <IslandMap
+            renderWidth={renderWidth}
+            onRenderWidthChange={onRenderWidthChange}
             map={map}
             areas={areas}
             bubbles={bubbles}

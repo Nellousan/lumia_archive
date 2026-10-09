@@ -22,7 +22,8 @@ export interface BubbleMaterialCardProps {
  * The bubble header already names the area, the artwork carries the identity and
  * `title`/`aria-label` spell out the item name — so the card stays square and the
  * sprite gets the full width instead of sharing it with a label. The card width
- * lives in `lib/map-layout.ts` so the bubble placement estimates stay in sync.
+ * and the text sizes live in island pixels, matching `lib/map-layout.ts` so the
+ * bubble placement estimates stay in sync.
  */
 export function BubbleMaterialCard({
   material,
@@ -48,7 +49,7 @@ export function BubbleMaterialCard({
         onSelect(material.item.id);
       }}
       style={{ width: BUBBLE_CARD_WIDTH }}
-      className={`flex shrink-0 flex-col items-center gap-px rounded-lg border px-0.5 pb-0.5 pt-1 transition ${
+      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] border px-[3px] pb-[3px] pt-[6px] transition ${
         focused
           ? "border-amber-300/60 bg-amber-300/15"
           : related
@@ -57,7 +58,7 @@ export function BubbleMaterialCard({
       }`}
     >
       <ItemSprite item={material.item} size="tile" bare />
-      <span className="font-mono text-[14px] font-bold leading-none text-emerald-300">
+      <span className="font-mono text-[23px] font-bold leading-none text-emerald-300">
         ×{quantityInArea}
       </span>
     </button>

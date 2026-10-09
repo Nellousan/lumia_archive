@@ -6,6 +6,7 @@ import { ItemDetailPanel } from "@/components/item/ItemDetailPanel";
 import { RoutePlanPanel } from "@/components/item/RoutePlanPanel";
 import { UsedToCraftPanel } from "@/components/item/UsedToCraftPanel";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { MobilePaneTabs, PANE_BOTTOM_INSET, type MobilePane } from "@/components/layout/MobilePaneTabs";
 import { IslandMapPanel } from "@/components/map/IslandMapPanel";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
@@ -59,6 +60,20 @@ export function WikiExplorer({ dataset }: WikiExplorerProps) {
 function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * Which pane the stacked layout shows. One column cannot hold both, and the
+   * map used to be a long scroll below the catalogue; from `lg` up both are
+   * visible at once and this is ignored.
+   */
+  const [mobilePane, setMobilePane] = useState<MobilePane>("items");
+
+  /**
+   * How wide the island ended up, reported by the map itself. The bubble sizes
+   * the route solver reserves depend on it, so this is what keeps the layout
+   * solver and the drawn bubbles in the same units.
+   */
+  const [islandWidth, setIslandWidth] = useState<number | null>(null);
+
   const [focusedMaterialId, setFocusedMaterialId] = useState<string | null>(null);
   const [hoveredAreaId, setHoveredAreaId] = useState<string | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
@@ -102,14 +117,12 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const usedToCraft = activeItem
     ? (dataset.usedToCraftByItemId[activeItem.id] ?? NO_CRAFTABLES)
     : NO_CRAFTABLES;
-  const route = useRoutePlan(
-    dataset,
-    activeItem,
-    plannedItems,
+  const route = useRoutePlan(dataset, activeItem, plannedItems, {
     startingClothes,
-    routeMode,
+    mode: routeMode,
     lookAhead,
-  );
+    islandWidth,
+  });
 
   /** The clothes on offer, resolved once so the selector can show artwork. */
   const startingOptions = useMemo(
@@ -165,7 +178,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     : null;
 
   /** Bubbles for a highlighted route: what is picked up and built at each step. */
-  const stepOverlay = useStepOverlay(activeRoute, dataset.map);
+  const stepOverlay = useStepOverlay(activeRoute, dataset.map, islandWidth);
 
   /** Clicking the highlight again lets it go; the pointer keeps it alive meanwhile. */
   const handleSelectRoute = useCallback(
@@ -236,12 +249,33 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     },
   });
 
+  /** Both panes occupy the same slot: one is shown, the other is display:none. */
+  const paneDisplay = (pane: MobilePane) => (mobilePane === pane ? "flex" : "hidden");
+
   return (
-    <main className="min-h-screen bg-ink-950 text-stone-100">
+    // `100dvh` where it is understood, `100vh` everywhere else: the switcher is
+    // pinned either way, but a stale viewport height would leave the panes sized
+    // for a screen that is not there.
+    <main
+      className="flex h-screen flex-col overflow-hidden bg-ink-950 text-stone-100"
+      style={{ height: "100dvh" }}
+    >
       <AppHeader stats={dataset.stats} />
 
-      <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:h-[calc(100vh-4rem)] lg:flex-row lg:overflow-hidden">
-        <aside className="flex w-full shrink-0 flex-col border-b border-white/[0.08] bg-ink-900 lg:w-[38%] lg:max-w-[560px] lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+      {/*
+       * Each pane scrolls on its own, so switching tabs never lands mid-list, and
+       * the bottom inset keeps the last row of either pane clear of the pinned
+       * switcher.
+       */}
+      <div
+        className={`flex min-h-0 flex-1 flex-col lg:flex-row lg:pb-0 ${PANE_BOTTOM_INSET}`}
+      >
+        <aside
+          id="pane-items"
+          role="tabpanel"
+          aria-labelledby="tab-items"
+          className={`${paneDisplay("items")} min-h-0 w-full flex-1 flex-col overflow-y-auto border-b border-white/[0.08] bg-ink-900 lg:flex lg:flex-none lg:w-[38%] lg:max-w-[560px] lg:border-b-0 lg:border-r`}
+        >
           <CatalogPanel
             items={catalog.pageItems}
             matchedCount={catalog.visibleItems.length}
@@ -311,6 +345,9 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
         </aside>
 
         <IslandMapPanel
+          className={`${paneDisplay("map")} lg:flex`}
+          renderWidth={islandWidth}
+          onRenderWidthChange={setIslandWidth}
           map={dataset.map}
           areas={dataset.areas}
           bubbles={route.bubbles}
@@ -336,6 +373,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           onCloseArea={() => setSelectedAreaId(null)}
         />
       </div>
+
+      <MobilePaneTabs pane={mobilePane} onPaneChange={setMobilePane} />
     </main>
   );
 }

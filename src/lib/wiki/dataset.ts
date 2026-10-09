@@ -1,4 +1,4 @@
-import { ITEM_SPRITE_BASE_PATH, LUMIA_ISLAND_MAP } from "./map-image";
+import { ANIMAL_PORTRAIT_BASE_PATH, ITEM_SPRITE_BASE_PATH, LUMIA_ISLAND_MAP } from "./map-image";
 import { coordsToPolygon, polygonAnchor, polygonBounds } from "./geometry";
 import { KNOWN_RARITIES, allCategoryTypes } from "./taxonomy";
 import type {
@@ -19,6 +19,7 @@ import type {
 import rawData from "@/data/data.json";
 import rawMap from "@/data/lumia-island.map.json";
 import spriteManifest from "@/data/item-assets.json";
+import portraitManifest from "@/data/animal-assets.json";
 
 /**
  * The single place that knows about the raw JSON on disk.
@@ -50,6 +51,7 @@ const spriteManifestTyped = spriteManifest as unknown as {
   trim?: Record<string, { sw: number; sh: number; x: number; y: number; w: number; h: number }>;
 };
 const spriteFiles = spriteManifestTyped.files;
+const portraitFiles = (portraitManifest as unknown as { files: string[] }).files;
 
 /**
  * Items that spawn in random loot spots rather than in any one place.
@@ -231,11 +233,14 @@ function buildAreas(warnings: string[]): WikiArea[] {
  *
  * The loot is resolved to items (an unknown id is a data note, not a crash) and
  * the areas to mapped ones, because the only thing animals are used for is
- * annotating a bubble, and a bubble belongs to an area.
+ * annotating a bubble, and a bubble belongs to an area. The portrait is looked up
+ * in `public/animals` the same way an item looks up its sprite: a missing file
+ * costs the artwork, never the entry.
  */
 function buildAnimals(
   itemsById: Record<string, WikiItem>,
   areasById: Record<string, WikiArea>,
+  availablePortraits: Set<string>,
   warnings: string[],
 ): WikiAnimal[] {
   return rawDataset.animals.map((raw): WikiAnimal => {
@@ -271,6 +276,13 @@ function buildAnimals(
 
     areas.sort((a, b) => a.name.localeCompare(b.name));
 
+    const hasPortrait = availablePortraits.has(raw.id);
+    if (!hasPortrait) {
+      warnings.push(
+        `No portrait found for animal "${raw.id}" (public/animals/${raw.id}.png).`,
+      );
+    }
+
     return {
       id: raw.id,
       name: raw.name || raw.id,
@@ -281,6 +293,7 @@ function buildAnimals(
       respawnTime: raw.respawnTime ?? null,
       loot,
       areas,
+      portrait: hasPortrait ? `${ANIMAL_PORTRAIT_BASE_PATH}/${raw.id}.png` : null,
     };
   });
 }
@@ -355,7 +368,7 @@ export function buildWikiDataset(): WikiDataset {
     randomSpawnItems.push(item);
   }
 
-  const animals = buildAnimals(itemsById, areasById, warnings);
+  const animals = buildAnimals(itemsById, areasById, new Set(portraitFiles), warnings);
   const animalsById: Record<string, WikiAnimal> = Object.fromEntries(
     animals.map((animal) => [animal.id, animal]),
   );

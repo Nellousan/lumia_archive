@@ -15,3 +15,6 @@ export const LUMIA_ISLAND_MAP: MapImage = {
 
 /** Sprite files live under `public/items/<itemId>.png`. */
 export const ITEM_SPRITE_BASE_PATH = "/items";
+
+/** Animal portraits live under `public/animals/<animalId>.png`. */
+export const ANIMAL_PORTRAIT_BASE_PATH = "/animals";

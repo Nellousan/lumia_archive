@@ -4,7 +4,7 @@
   "private": true,
   "description": "Interactive wiki PoC for the game Black Survival — Lumia Island resource explorer.",
   "scripts": {
-    "assets:manifest": "node scripts/generate-item-asset-manifest.mjs",
+    "assets:manifest": "node scripts/generate-item-asset-manifest.mjs && node scripts/generate-animal-asset-manifest.mjs",
     "predev": "npm run assets:manifest",
     "dev": "next dev",
     "prebuild": "npm run assets:manifest",

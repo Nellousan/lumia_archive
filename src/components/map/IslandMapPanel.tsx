@@ -12,7 +12,14 @@ import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus, MapOverlayMode } from "@/lib/wiki/route";
 import type { RoutePlan } from "@/lib/wiki/routes";
-import type { AreaItemRef, MapImage, RecipeMaterial, WikiArea, WikiItem } from "@/lib/wiki/types";
+import type {
+  AreaItemRef,
+  MapImage,
+  RecipeMaterial,
+  WikiAnimal,
+  WikiArea,
+  WikiItem,
+} from "@/lib/wiki/types";
 
 export interface IslandMapPanelProps {
   /**
@@ -57,6 +64,8 @@ export interface IslandMapPanelProps {
   /** Drops the selection so the map is emptied of bubbles. */
   selectedArea: WikiArea | null;
   selectedAreaItems: AreaItemRef[];
+  /** Wild animals living in the selected area; the panel shows their cards. */
+  selectedAreaAnimals: WikiAnimal[];
   onCloseArea: () => void;
 }
 
@@ -90,6 +99,7 @@ export function IslandMapPanel({
   onSelectArea,
   selectedArea,
   selectedAreaItems,
+  selectedAreaAnimals,
   onCloseArea,
 }: IslandMapPanelProps) {
   /**
@@ -184,6 +194,7 @@ export function IslandMapPanel({
       {selectedArea && (
         <AreaDetailPanel
           area={selectedArea}
+          animals={selectedAreaAnimals}
           items={selectedAreaItems}
           activeItemId={activeItemId}
           relevantItemIds={materials.map((material) => material.item.id)}

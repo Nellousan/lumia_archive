@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimalCard } from "@/components/animal/AnimalCard";
 import { ItemCard } from "@/components/ui/ItemCard";
 import { groupByCategoryTab } from "@/lib/wiki/catalog";
-import type { AreaItemRef, WikiArea } from "@/lib/wiki/types";
+import type { AreaItemRef, WikiAnimal, WikiArea } from "@/lib/wiki/types";
 
 export interface AreaDetailPanelProps {
   area: WikiArea;
+  /** The wild animals that spawn here; usually one, and never part of a plan. */
+  animals: WikiAnimal[];
   /** Every item the area spawns, with quantities. */
   items: AreaItemRef[];
   activeItemId: string | null;
@@ -28,9 +31,13 @@ export interface AreaDetailPanelProps {
  * standing in for the rarity/type/value line. They are grouped under the named
  * top-level categories — most actionable first, Weapon → Gear → Food → Normal —
  * and sorted inside each group by the catalog rule.
+ *
+ * Above them sits the area's wild animal: the one thing on this panel that is not
+ * a resource. Its loot is shown, but nothing in the app plans around it.
  */
 export function AreaDetailPanel({
   area,
+  animals,
   items,
   activeItemId,
   relevantItemIds,
@@ -103,15 +110,37 @@ export function AreaDetailPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {buckets.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
-            {area.empty
-              ? "data.json records no loot for this area yet."
-              : "Nothing here belongs to the current recipe."}
-          </p>
-        ) : (
-          <div className="space-y-5">
-            {buckets.map((bucket) => (
+        <div className="space-y-5">
+          {/* Above the loot, and outside the empty-state branch below: an area
+              with no recorded items still has whatever lives there, and the one
+              area that is both — the Research Center, home to Mr. Meiji — is the
+              case where the animal matters most. */}
+          {animals.length > 0 && (
+            <section>
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-300">
+                  Wild animal
+                </h3>
+                <span className="h-px flex-1 bg-white/[0.08]" />
+                <span className="font-mono text-[10px] text-stone-600">{animals.length}</span>
+              </div>
+
+              <div className="space-y-2">
+                {animals.map((animal) => (
+                  <AnimalCard key={animal.id} animal={animal} onSelectItem={onSelectItem} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {buckets.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
+              {area.empty
+                ? "data.json records no loot for this area yet."
+                : "Nothing here belongs to the current recipe."}
+            </p>
+          ) : (
+            buckets.map((bucket) => (
               <section key={bucket.id}>
                 <div className="mb-2 flex items-center gap-2">
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
@@ -137,9 +166,9 @@ export function AreaDetailPanel({
                   ))}
                 </div>
               </section>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
     </aside>
   );

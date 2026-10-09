@@ -17,11 +17,18 @@ import { useStepOverlay } from "@/hooks/useStepOverlay";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
 import { DEFAULT_LOOK_AHEAD, type RouteMode } from "@/lib/wiki/routes";
-import type { AreaItemRef, AreaSpawnRef, WikiDataset, WikiItem } from "@/lib/wiki/types";
+import type {
+  AreaItemRef,
+  AreaSpawnRef,
+  WikiAnimal,
+  WikiDataset,
+  WikiItem,
+} from "@/lib/wiki/types";
 
 /** Stable empties so derived memos do not invalidate on every render. */
 const NO_SPAWNS: AreaSpawnRef[] = [];
 const NO_ITEMS: AreaItemRef[] = [];
+const NO_ANIMALS: WikiAnimal[] = [];
 const NO_CRAFTABLES: WikiItem[] = [];
 
 export interface WikiExplorerProps {
@@ -184,6 +191,9 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const selectedAreaItems = selectedAreaId
     ? (dataset.itemsByAreaId[selectedAreaId] ?? NO_ITEMS)
     : NO_ITEMS;
+  const selectedAreaAnimals = selectedAreaId
+    ? (dataset.animalsByAreaId[selectedAreaId] ?? NO_ANIMALS)
+    : NO_ANIMALS;
 
   /** Hover wins over nothing; a pinned route outlives the pointer leaving the row. */
   const pinnedRouteId =
@@ -389,6 +399,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           onSelectArea={setSelectedAreaId}
           selectedArea={selectedArea}
           selectedAreaItems={selectedAreaItems}
+          selectedAreaAnimals={selectedAreaAnimals}
           onCloseArea={() => setSelectedAreaId(null)}
         />
       </div>

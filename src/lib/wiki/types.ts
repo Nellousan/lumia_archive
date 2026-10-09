@@ -164,6 +164,14 @@ export interface WikiAnimal {
   loot: WikiItem[];
   /** Areas it spawns in; empty for an animal the data places nowhere. */
   areas: WikiArea[];
+  /**
+   * Portrait artwork, or `null` when `public/animals` has none.
+   *
+   * The source is a square canvas holding the whole animal, framed so that its
+   * eye level sits on the middle row — the card crops a band around that row
+   * rather than trusting any one animal's proportions.
+   */
+  portrait: string | null;
 }
 
 /** One way to get an item off a wild animal: a given animal in a given area. */

@@ -42,10 +42,10 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
         onSelectItem(item.id);
       }}
       style={{ width: BUBBLE_CARD_WIDTH }}
-      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] border px-[3px] pb-[3px] pt-[6px] transition ${
+      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${
         built
-          ? "border-amber-300/50 bg-amber-300/10 hover:border-amber-200/70 hover:bg-amber-300/20"
-          : "border-white/[0.08] bg-black/30 hover:border-emerald-300/40 hover:bg-black/45"
+          ? "inset-ring-amber-300/50 bg-amber-300/10 hover:inset-ring-amber-200/70 hover:bg-amber-300/20"
+          : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45"
       }`}
     >
       <ItemSprite item={item} size="tile" bare />

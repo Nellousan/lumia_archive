@@ -24,6 +24,14 @@ export interface BubbleMaterialCardProps {
  * sprite gets the full width instead of sharing it with a label. The card width
  * and the text sizes live in island pixels, matching `lib/map-layout.ts` so the
  * bubble placement estimates stay in sync.
+ *
+ * The frame is an inset ring rather than a `border`. Below one device pixel —
+ * which is what a 1px border becomes once the overlay is scaled to about 0.6 —
+ * Firefox resolves a rounded border by drawing its inner edge square, leaving a
+ * square corner in the border colour inside each rounded one. It redraws on
+ * hover, so it reads as an artefact rather than as a style. An inset ring paints
+ * the same hairline without that path. The border's 1px is added to the padding
+ * so the box model, and therefore the artwork, does not move.
  */
 export function BubbleMaterialCard({
   material,
@@ -49,12 +57,12 @@ export function BubbleMaterialCard({
         onSelect(material.item.id);
       }}
       style={{ width: BUBBLE_CARD_WIDTH }}
-      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] border px-[3px] pb-[3px] pt-[6px] transition ${
+      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${
         focused
-          ? "border-amber-300/60 bg-amber-300/15"
+          ? "inset-ring-amber-300/60 bg-amber-300/15"
           : related
-            ? "border-amber-300/25 bg-black/35"
-            : "border-white/[0.08] bg-black/30 hover:border-emerald-300/40 hover:bg-black/45"
+            ? "inset-ring-amber-300/25 bg-black/35"
+            : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45"
       }`}
     >
       <ItemSprite item={material.item} size="tile" bare />

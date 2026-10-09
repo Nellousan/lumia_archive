@@ -26,7 +26,6 @@ import { stepCrafts, stepGathers, type RouteStep } from "./wiki/routes";
  * and `BubbleMaterialCard` read them) so the estimates below cannot drift away
  * from what is actually rendered.
  */
-export const BUBBLE_WIDTH = 230;
 export const BUBBLE_CARD_WIDTH = 72;
 
 /**
@@ -35,10 +34,39 @@ export const BUBBLE_CARD_WIDTH = 72;
  */
 const BUBBLE_DESIGN_CSS_WIDTH = 140;
 
+const BUBBLE_BORDER = 1; // bubble `border`
 const BUBBLE_PADDING = 6; // bubble `p-[6px]`
 const BUBBLE_CARD_GAP = 8; // card row `gap-[8px]`
 const BUBBLE_CARD_HEIGHT = 98; // square artwork + the quantity underneath
 const BUBBLE_CHROME_HEIGHT = 56; // bubble padding + area header
+
+/** How many item cards sit on one row before they wrap. */
+const CARDS_PER_ROW = 3;
+
+/** Width the header alone needs: room for an area name as long as "Research Center". */
+const BUBBLE_HEADER_WIDTH = 230;
+
+/**
+ * Bubble width in island pixels: exactly {@link CARDS_PER_ROW} cards, the gaps
+ * between them, the bubble's own padding and its hairline border — no more and no
+ * less, so a row breaks after the last card that fits rather than one short of it.
+ *
+ * Never narrower than {@link BUBBLE_HEADER_WIDTH}, so shortening a row — going
+ * back to two cards, say — cannot squeeze the area name in the header.
+ *
+ * Derived rather than typed out, because the count above is the only thing worth
+ * choosing here: the width follows from it, and the placement estimates follow
+ * from the width. Every term is box-sizing-dependent, which is the point: 2px of
+ * border is exactly what stops a third card from fitting, and an estimate that
+ * forgot it would reserve one row where the browser draws two.
+ */
+export const BUBBLE_WIDTH = Math.max(
+  BUBBLE_HEADER_WIDTH,
+  CARDS_PER_ROW * BUBBLE_CARD_WIDTH +
+    (CARDS_PER_ROW - 1) * BUBBLE_CARD_GAP +
+    2 * BUBBLE_PADDING +
+    2 * BUBBLE_BORDER,
+);
 
 /**
  * How much the bubbles shrink or grow with the island, as a multiplier on top of
@@ -57,14 +85,6 @@ export function bubbleScaleFor(islandWidth: number | null, mapWidth: number): nu
   if (islandWidth === null || islandWidth <= 0) return 1;
   return Math.min(1, (BUBBLE_DESIGN_CSS_WIDTH * mapWidth) / (BUBBLE_WIDTH * islandWidth));
 }
-
-/** How many cards fit on one row before they wrap. */
-const CARDS_PER_ROW = Math.max(
-  1,
-  Math.floor(
-    (BUBBLE_WIDTH - 2 * BUBBLE_PADDING + BUBBLE_CARD_GAP) / (BUBBLE_CARD_WIDTH + BUBBLE_CARD_GAP),
-  ),
-);
 
 /**
  * Estimated rendered size of a bubble holding `cardCount` cards, in island

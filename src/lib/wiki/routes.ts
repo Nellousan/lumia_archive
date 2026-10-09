@@ -2,6 +2,7 @@ import {
   BAG_SLOTS,
   equipmentSlotFor,
   planWeaponTypes,
+  stacksInBag,
   type EquipmentSlot,
 } from "./inventory";
 import type { RecipeNode, WikiArea, WikiDataset, WikiItem } from "./types";
@@ -539,15 +540,25 @@ function bestOrder(areas: WikiArea[]): { order: WikiArea[]; distance: number } {
  *
  * Sourcing is decided per route, exactly like the cover predicate: an item the
  * route's areas can supply in full is gathered, anything else is crafted from
- * its ingredients.
+ * its ingredients. Crafts, not units, are what `craftNeed` counts — one craft
+ * hands over `defaultQuantity` of what it makes — and `recipes` carries what one
+ * craft consumes, which is the recipe exactly as written.
  */
 interface SimPlan {
   /** Item id -> units that must be picked up somewhere on the route. */
   gather: Map<string, { item: WikiItem; quantity: number }>;
-  /** Item id -> units that must be built. */
+  /** Item id -> crafts that must happen, not units: one craft makes several. */
   craftNeed: Map<string, number>;
-  /** One recipe entry per item that gets built, with its per-unit ingredient use. */
-  recipes: Map<string, { item: WikiItem; children: Array<{ item: WikiItem; perUnit: number }> }>;
+  /** One recipe entry per item that gets built, with what one craft consumes. */
+  recipes: Map<
+    string,
+    {
+      item: WikiItem;
+      /** Units one craft hands over; see `WikiItem.defaultQuantity`. */
+      yield: number;
+      children: Array<{ item: WikiItem; perCraft: number }>;
+    }
+  >;
 }
 
 /** Stock of one item across the route's areas. */
@@ -559,6 +570,20 @@ function stockOnRoute(dataset: WikiDataset, itemId: string, chosen: Set<string>)
   return total;
 }
 
+/**
+ * Turns the recipe trees into the shopping list for one route.
+ *
+ * Demands are collected per *item* before any of them is answered, because one
+ * craft yields `defaultQuantity` units. Two planned items that each want an iron
+ * sheet therefore need one craft between them — and so one scrap metal and one
+ * hammer, not two of each. Walking each tree on its own cannot see that: it would
+ * price the second sheet as if the first craft had produced nothing, which is what
+ * the old per-tree walk did. Summing the units, turning units into crafts, and
+ * only then asking the crafts for their ingredients is what gets it right.
+ *
+ * The queue re-visits an item whenever a later parent raises its demand, so the
+ * yield folds across the whole plan rather than one branch of it.
+ */
 function compilePlan(
   requirements: Requirement[],
   chosen: Set<string>,
@@ -568,55 +593,117 @@ function compilePlan(
 ): SimPlan {
   const plan: SimPlan = { gather: new Map(), craftNeed: new Map(), recipes: new Map() };
 
+  /**
+   * The tree node for each item: whether it can be built at all inside the depth
+   * budget, and what its recipe is. One node per item, even when several trees ask
+   * for it — the demands are per item, so the answer has to be too.
+   */
+  const nodeOf = new Map<string, Requirement>();
+  const collect = (requirement: Requirement) => {
+    const existing = nodeOf.get(requirement.item.id);
+    // Prefer a node the tree could expand: depth and cycles are what decide
+    // whether an item gets built here or has to be found as it is.
+    if (!existing || (!existing.children && requirement.children)) {
+      nodeOf.set(requirement.item.id, requirement);
+    }
+    for (const child of requirement.children ?? []) collect(child);
+  };
+  for (const requirement of requirements) collect(requirement);
+
   // Units the survivor walks in with — the worn clothes and every component the
-  // island cannot supply; each spent once, the first time that item is asked
-  // for, so a plan wanting two of them still has to find the second.
+  // island cannot supply; each spent once, the first time that item is asked for,
+  // so a plan wanting two of them still has to find the second.
   const inHand = new Map<string, number>();
   if (startingClothes) inHand.set(startingClothes, 1);
   for (const itemId of assumed.keys()) inHand.set(itemId, 1);
 
-  const walk = (requirement: Requirement) => {
-    const itemId = requirement.item.id;
-    const spare = Math.min(inHand.get(itemId) ?? 0, requirement.quantity);
-    if (spare > 0) inHand.set(itemId, (inHand.get(itemId) ?? 0) - spare);
-    const needed = requirement.quantity - spare;
-    if (needed <= 0) return;
+  /** Units asked for so far, units handed over from the start, units answered. */
+  const demanded = new Map<string, number>();
+  const covered = new Map<string, number>();
+  const answered = new Map<string, number>();
+  const queue: string[] = [];
 
-    if (stockOnRoute(dataset, itemId, chosen) >= needed) {
-      const existing = plan.gather.get(itemId);
-      if (existing) existing.quantity += needed;
-      else plan.gather.set(itemId, { item: requirement.item, quantity: needed });
-      return;
-    }
-
-    const children = requirement.children ?? [];
-    plan.craftNeed.set(itemId, (plan.craftNeed.get(itemId) ?? 0) + needed);
-    if (!plan.recipes.has(itemId)) {
-      plan.recipes.set(itemId, {
-        item: requirement.item,
-        // Every recipe entry is one unit in this dataset, so the per-unit need is
-        // the child's share of this node's multiplier.
-        children: children.map((child) => ({
-          item: child.item,
-          perUnit: Math.max(1, Math.round(child.quantity / Math.max(1, requirement.quantity))),
-        })),
-      });
-    }
-    for (const child of children) walk(child);
+  const demand = (itemId: string, units: number) => {
+    if (units <= 0) return;
+    demanded.set(itemId, (demanded.get(itemId) ?? 0) + units);
+    queue.push(itemId);
   };
 
-  for (const requirement of requirements) walk(requirement);
+  for (const requirement of requirements) demand(requirement.item.id, requirement.quantity);
+
+  /**
+   * Demands are answered until none is left. A second visit is not a mistake: an
+   * item can be asked for by two parents, and a craft makes `defaultQuantity`
+   * units, so what the first visit planned may already cover the second. What the
+   * second visit adds is the shortfall — its ingredients, if the yield did not
+   * stretch that far.
+   */
+  while (queue.length > 0) {
+    const itemId = queue.shift() as string;
+    const node = nodeOf.get(itemId);
+    if (!node) continue;
+
+    const carried = (inHand.get(itemId) ?? 0) - (covered.get(itemId) ?? 0);
+    const spare = Math.min(carried, demanded.get(itemId) ?? 0);
+    if (spare > 0) covered.set(itemId, (covered.get(itemId) ?? 0) + spare);
+
+    const wanted = (demanded.get(itemId) ?? 0) - (covered.get(itemId) ?? 0);
+    const done = answered.get(itemId) ?? 0;
+    const shortfall = wanted - done;
+    if (shortfall <= 0) continue;
+
+    if (stockOnRoute(dataset, itemId, chosen) >= wanted) {
+      const existing = plan.gather.get(itemId);
+      if (existing) existing.quantity += shortfall;
+      else plan.gather.set(itemId, { item: node.item, quantity: shortfall });
+      answered.set(itemId, wanted);
+      continue;
+    }
+
+    // Built, not found: one craft consumes the recipe as written and hands over
+    // the item's default quantity, so units become crafts before they become
+    // ingredients. Two plans wanting one iron sheet each pay for one craft.
+    const yieldUnits = Math.max(1, node.item.defaultQuantity);
+    const crafts = Math.ceil(wanted / yieldUnits);
+    const planned = plan.craftNeed.get(itemId) ?? 0;
+    if (crafts > planned) {
+      plan.craftNeed.set(itemId, crafts);
+      if (!plan.recipes.has(itemId)) {
+        plan.recipes.set(itemId, {
+          item: node.item,
+          yield: yieldUnits,
+          // Ingredients come from the recipe as written, and only from what the
+          // tree actually reached: beyond its depth budget an item is not built
+          // from anything, exactly as before.
+          children: (node.item.recipe ?? []).flatMap((entry) => {
+            const child = dataset.itemsById[entry.itemId];
+            const reached = (node.children ?? []).some(
+              (childNode) => childNode.item.id === entry.itemId,
+            );
+            if (!child || !reached) return [];
+            return [{ item: child, perCraft: Math.max(1, entry.quantity) }];
+          }),
+        });
+      }
+      for (const child of plan.recipes.get(itemId)?.children ?? []) {
+        demand(child.item.id, (crafts - planned) * child.perCraft);
+      }
+    }
+    answered.set(itemId, wanted);
+  }
+
   return plan;
 }
 
 /**
  * The pack as the run-through carries it.
  *
- * Six bag slots, plus whatever can be worn. Capacity is about *stacks*, not
- * units, so the only way to run out of room is to hold too many different
- * things — and a craft can do that too, not just a pickup: consuming one unit of
- * a five-unit stack frees no slot at all, while the item it produces wants one.
- * Every operation is therefore checked against a projected pack first.
+ * Six bag slots, plus whatever can be worn. For most items capacity is about
+ * *stacks*, not units: a five-unit stack costs one slot either way, so holding more
+ * of something already carried is free. That is not true of what you wear — see
+ * {@link stacksInBag} — and a craft can cost a slot even when it consumes stacks,
+ * because what it hands over is a new object. Every operation is therefore checked
+ * against a projected pack first.
  */
 class Pack {
   private readonly held = new Map<string, number>();
@@ -658,14 +745,22 @@ class Pack {
     if (slot && !this.worn.has(slot)) this.worn.set(slot, itemId);
   }
 
-  private static bagCount(
+  /**
+   * Slots the pack would take up. One per stack for anything that stacks, one per
+   * copy for anything that does not, and nothing for a copy that is being worn.
+   */
+  private bagCount(
     held: ReadonlyMap<string, number>,
     worn: ReadonlyMap<EquipmentSlot, string>,
   ): number {
     const wornIds = new Set(worn.values());
     let used = 0;
     for (const [id, units] of held) {
-      if (units > 0 && !wornIds.has(id)) used += 1;
+      if (units <= 0) continue;
+      const carried = units - (wornIds.has(id) ? 1 : 0);
+      if (carried <= 0) continue;
+      const item = this.dataset.itemsById[id];
+      used += item && !stacksInBag(item) ? carried : 1;
     }
     return used;
   }
@@ -677,7 +772,7 @@ class Pack {
     for (const [slot, id] of worn) {
       if ((held.get(id) ?? 0) <= 0) worn.delete(slot);
     }
-    return Pack.bagCount(held, worn);
+    return this.bagCount(held, worn);
   }
 
   quantity(itemId: string): number {
@@ -685,12 +780,14 @@ class Pack {
   }
 
   bagUsed(): number {
-    return Pack.bagCount(this.held, this.worn);
+    return this.bagCount(this.held, this.worn);
   }
 
   /** True when `units` more of the item would leave the pack within its limit. */
   canAdd(itemId: string, units: number): boolean {
-    if (this.quantity(itemId) > 0) return true;
+    // More of a stack already carried costs nothing; a second hammer costs a slot.
+    const item = this.dataset.itemsById[itemId];
+    if (this.quantity(itemId) > 0 && (!item || stacksInBag(item))) return true;
     return this.project((held) => held.set(itemId, units)) <= BAG_SLOTS;
   }
 
@@ -710,21 +807,31 @@ class Pack {
     return true;
   }
 
-  /** True when crafting one unit would leave the pack within its limit. */
-  canCraft(recipe: { item: WikiItem; children: Array<{ item: WikiItem; perUnit: number }> }): boolean {
+  /** True when one craft would leave the pack within its limit. */
+  canCraft(recipe: {
+    item: WikiItem;
+    yield: number;
+    children: Array<{ item: WikiItem; perCraft: number }>;
+  }): boolean {
     return (
       this.project((held) => {
         for (const child of recipe.children) {
-          held.set(child.item.id, (held.get(child.item.id) ?? 0) - child.perUnit);
+          held.set(child.item.id, (held.get(child.item.id) ?? 0) - child.perCraft);
         }
-        held.set(recipe.item.id, (held.get(recipe.item.id) ?? 0) + 1);
+        // A craft hands over the item's whole default quantity at once, and every
+        // copy of a weapon or a piece of gear wants a slot of its own.
+        held.set(recipe.item.id, (held.get(recipe.item.id) ?? 0) + recipe.yield);
       }) <= BAG_SLOTS
     );
   }
 
-  craft(recipe: { item: WikiItem; children: Array<{ item: WikiItem; perUnit: number }> }): void {
-    for (const child of recipe.children) this.take(child.item.id, child.perUnit);
-    this.add(recipe.item.id, 1);
+  craft(recipe: {
+    item: WikiItem;
+    yield: number;
+    children: Array<{ item: WikiItem; perCraft: number }>;
+  }): void {
+    for (const child of recipe.children) this.take(child.item.id, child.perCraft);
+    this.add(recipe.item.id, recipe.yield);
   }
 
   /** Wears everything that fits; packing an item away can only free space. */
@@ -799,12 +906,13 @@ function runRoute(
       for (const [itemId, recipe] of plan.recipes) {
         const need = plan.craftNeed.get(itemId) ?? 0;
         if ((crafted.get(itemId) ?? 0) >= need) continue;
-        if (!recipe.children.every((child) => pack.quantity(child.item.id) >= child.perUnit)) continue;
+        if (!recipe.children.every((child) => pack.quantity(child.item.id) >= child.perCraft))
+          continue;
         if (!pack.canCraft(recipe)) continue;
 
         pack.craft(recipe);
         crafted.set(itemId, (crafted.get(itemId) ?? 0) + 1);
-        actions.push({ kind: "craft", craft: { item: recipe.item, quantity: 1 } });
+        actions.push({ kind: "craft", craft: { item: recipe.item, quantity: recipe.yield } });
         progressed = true;
       }
 

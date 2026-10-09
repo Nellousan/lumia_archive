@@ -124,13 +124,22 @@ function buildItems(availableSprites: Set<string>, warnings: string[]): WikiItem
       recipe = entries.length > 0 ? entries : null;
     }
 
+    // How many units one craft (or one pickup) hands over. Below one makes no
+    // sense and would loop the route solver, so it is a data note, not a crash.
+    const defaultQuantity = Math.max(1, Math.round(raw.defaultQuantity ?? 1));
+    if (raw.defaultQuantity !== defaultQuantity) {
+      warnings.push(
+        `Item "${raw.id}" has default quantity ${raw.defaultQuantity}; treated as ${defaultQuantity}.`,
+      );
+    }
+
     return {
       id: raw.id,
       name: raw.name,
       rarity: normalizeRarity(raw.rarity, raw.id, warnings),
       types: raw.type ?? [],
       value: raw.value ?? null,
-      defaultQuantity: raw.defaultQuantity ?? 1,
+      defaultQuantity,
       recipe,
       craftable: recipe !== null,
       sprite: availableSprites.has(raw.id) ? `${ITEM_SPRITE_BASE_PATH}/${raw.id}.png` : null,

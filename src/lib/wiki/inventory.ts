@@ -63,6 +63,23 @@ export function equipmentSlotFor(item: WikiItem): EquipmentSlot | null {
   return null;
 }
 
+/**
+ * Whether copies of an item share a single bag slot.
+ *
+ * Ingredients, food and everything else stack — but the things you *wear* do not.
+ * Two hammers are two slots, and so are two leather gloves: each piece is its own
+ * object with its own wear. Thrown weapons and traps are the exception the game
+ * makes, because they are ammunition in all but name, so they stack like the
+ * stones and arrows they are thrown alongside.
+ *
+ * Worn copies are excluded separately, by the pack that calls this: wearing one
+ * hammer leaves the spare in the bag, and that spare is what costs the slot.
+ */
+export function stacksInBag(item: WikiItem): boolean {
+  if (equipmentSlotFor(item) === null) return true;
+  return item.types.some((type) => type === "thrown" || type === "trap");
+}
+
 /** Every type key that occupies the weapon slot. */
 export const WEAPON_TYPES: string[] = Object.keys(SLOT_BY_TYPE).filter(
   (type) => SLOT_BY_TYPE[type] === "weapon",

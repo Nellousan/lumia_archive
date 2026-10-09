@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { AreaBubbleCard } from "./AreaBubbleCard";
 import { MapAreaShape } from "./MapAreaShape";
 import { MapTooltip } from "./MapTooltip";
+import { AnimalDropToggle } from "./AnimalDropToggle";
+import { RandomSpawnBox } from "./RandomSpawnBox";
 import { RouteOverlay } from "./RouteOverlay";
 import { RouteStepBubbleCard } from "./RouteStepBubbleCard";
 import type { RegionState } from "./regionStyles";
@@ -12,7 +14,7 @@ import { bubbleScaleFor, type BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { RoutePlan } from "@/lib/wiki/routes";
-import type { MapImage, WikiArea } from "@/lib/wiki/types";
+import type { MapImage, WikiArea, WikiItem } from "@/lib/wiki/types";
 
 /**
  * Narrowest the island is ever drawn, in CSS pixels — `min-w-[880px]` on the map
@@ -51,6 +53,13 @@ export interface IslandMapProps {
   onSelectArea: (areaId: string) => void;
   onHoverMaterial: (itemId: string | null) => void;
   onSelectItem: (itemId: string) => void;
+  /** The items with no fixed area, listed in the island's own corner. */
+  randomSpawnItems: WikiItem[];
+  /** Ids of the items the current plan needs; the corner box highlights them. */
+  plannedItemIds: string[];
+  /** True when the island is also showing what wild animals can drop. */
+  animalDrops: boolean;
+  onToggleAnimalDrops: () => void;
 }
 
 /**
@@ -83,6 +92,10 @@ export function IslandMap({
   onSelectArea,
   onHoverMaterial,
   onSelectItem,
+  randomSpawnItems,
+  plannedItemIds,
+  animalDrops,
+  onToggleAnimalDrops,
 }: IslandMapProps) {
   const boxRef = useRef<HTMLDivElement>(null);
   const measuredWidth = useElementWidth(boxRef);
@@ -182,6 +195,32 @@ export function IslandMap({
       ref={boxRef}
       className={`relative mx-auto w-full max-w-[1400px] ${MIN_ISLAND_WIDTH_CLASS}`}
     >
+      {/*
+       * The island's controls — what the map is showing, and what it cannot
+       * show — in the box that holds the artwork, so they are placed against the
+       * island itself and not against the pane around it: 12px in from its
+       * top-right corner, the same inset at every size and scroll position.
+       *
+       * The wrapper is zero-height and sticky. Zero-height because it must not
+       * push the artwork down a single pixel; sticky because below
+       * {@link MIN_ISLAND_WIDTH_CLASS} the island is wider than the screen and
+       * pans, and controls anchored to its corner would then start off-screen
+       * and stay there. While the map is panned `right-3` holds them at the
+       * visible edge, and `top-3` does the same when the island is taller than
+       * the pane.
+       */}
+      <div className="sticky right-3 top-3 z-40 ml-auto h-0 w-[158px]">
+        <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
+          <RandomSpawnBox
+            items={randomSpawnItems}
+            neededItemIds={plannedItemIds}
+            onSelectItem={onSelectItem}
+            onHoverItem={onHoverMaterial}
+          />
+          <AnimalDropToggle active={animalDrops} onToggle={onToggleAnimalDrops} />
+        </div>
+      </div>
+
       {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size static map, the SVG
           overlay must align with the exact rendered box, so no optimiser transform. */}
       <img

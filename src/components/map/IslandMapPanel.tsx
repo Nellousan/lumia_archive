@@ -1,13 +1,9 @@
 "use client";
 
-import { useRef } from "react";
 import { AreaDetailPanel } from "@/components/area/AreaDetailPanel";
 import type { BookmarkEntry } from "@/components/bookmarks/BookmarkBar";
 import { BookmarkBar } from "@/components/bookmarks/BookmarkBar";
-import { AnimalDropToggle } from "./AnimalDropToggle";
 import { IslandMap } from "./IslandMap";
-import { RandomSpawnBox } from "./RandomSpawnBox";
-import { useElementOffsetTop } from "@/hooks/useElementOffsetTop";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus, MapOverlayMode } from "@/lib/wiki/route";
@@ -102,15 +98,6 @@ export function IslandMapPanel({
   selectedAreaAnimals,
   onCloseArea,
 }: IslandMapPanelProps) {
-  /**
-   * Where the island actually starts. The pane's controls belong at the map's
-   * level, not at the top of the header, and the map is centred by auto margins
-   * inside an area whose height depends on the plan bar above it — so the offset
-   * is measured rather than assumed.
-   */
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const mapTop = useElementOffsetTop(scrollerRef);
-
   return (
     <section
       id="pane-map"
@@ -150,27 +137,7 @@ export function IslandMapPanel({
        * bottom of the map would be clipped with no way to reach it.
        */}
       <div className="relative z-10 flex min-h-0 flex-1 px-3 pb-3 pt-2 sm:px-4">
-        {/*
-         * The island's controls: what the map is showing, and what it cannot
-         * show. They sit in the map area's top right corner, level with the top
-         * of the island rather than up in the pane's header, and are anchored to
-         * the area rather than to the map — an island wider than the screen pans
-         * under them, and a control that scrolls away is no use.
-         */}
-        <div
-          className="absolute right-3 top-2 z-30 flex flex-col items-end gap-2"
-          style={mapTop === null ? undefined : { top: mapTop }}
-        >
-          <RandomSpawnBox
-            items={randomSpawnItems}
-            neededItemIds={plannedItemIds}
-            onSelectItem={onSelectItem}
-            onHoverItem={onHoverMaterial}
-          />
-          <AnimalDropToggle active={animalDrops} onToggle={onToggleAnimalDrops} />
-        </div>
-
-        <div ref={scrollerRef} className="m-auto max-h-full w-full overflow-auto">
+        <div className="m-auto max-h-full w-full overflow-auto">
           <IslandMap
             renderWidth={renderWidth}
             onRenderWidthChange={onRenderWidthChange}
@@ -187,6 +154,10 @@ export function IslandMapPanel({
             onSelectArea={onSelectArea}
             onHoverMaterial={onHoverMaterial}
             onSelectItem={onSelectItem}
+            randomSpawnItems={randomSpawnItems}
+            plannedItemIds={plannedItemIds}
+            animalDrops={animalDrops}
+            onToggleAnimalDrops={onToggleAnimalDrops}
           />
         </div>
       </div>

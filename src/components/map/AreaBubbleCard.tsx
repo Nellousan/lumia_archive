@@ -101,6 +101,8 @@ export function AreaBubbleCard({
               key={card.material.item.id}
               material={card.material}
               quantityInArea={card.quantityInArea}
+              source={card.source}
+              animals={card.animals}
               focused={focus?.itemId === card.material.item.id}
               related={
                 focus !== null &&

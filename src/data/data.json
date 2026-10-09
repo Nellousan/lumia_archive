@@ -9399,6 +9399,8 @@
       "baseHp": 40,
       "baseAtk": 15,
       "baseDef": 20,
+      "firstSpawnTime": 180,
+      "respawnTime": 110,
       "loot": [
         "bird_meat",
         "feather"
@@ -9407,6 +9409,146 @@
         "pond",
         "trail",
         "forest"
+      ]
+    },
+    {
+      "id": "osprey",
+      "name": "Osprey",
+      "baseHp": 40,
+      "baseAtk": 15,
+      "baseDef": 20,
+      "firstSpawnTime": 180,
+      "respawnTime": 110,
+      "loot": [
+        "bird_egg",
+        "feather"
+      ],
+      "areas": [
+        "docks",
+        "beach",
+        "lighthouse"
+      ]
+    },
+    {
+      "id": "bat",
+      "name": "Bat",
+      "baseHp": 60,
+      "baseAtk": 20,
+      "baseDef": 40,
+      "firstSpawnTime": 180,
+      "respawnTime": 110,
+      "loot": [
+        "water",
+        "bread"
+      ],
+      "areas": [
+        "tunnel",
+        "temple",
+        "chapel"
+      ]
+    },
+    {
+      "id": "hunting_dog",
+      "name": "Hunting Dog",
+      "baseHp": 100,
+      "baseAtk": 30,
+      "baseDef": 50,
+      "firstSpawnTime": 180,
+      "respawnTime": 140,
+      "loot": [
+        "fountain_pen",
+        "leather"
+      ],
+      "areas": [
+        "slums",
+        "school",
+        "alley"
+      ]
+    },
+    {
+      "id": "bloodhound",
+      "name": "Bloodhound",
+      "baseHp": 100,
+      "baseAtk": 30,
+      "baseDef": 50,
+      "firstSpawnTime": 180,
+      "respawnTime": 140,
+      "loot": [
+        "lighter",
+        "leather"
+      ],
+      "areas": [
+        "town_hall",
+        "hotel",
+        "uptown"
+      ]
+    },
+    {
+      "id": "gorilla",
+      "name": "Gorilla",
+      "baseHp": 200,
+      "baseAtk": 60,
+      "baseDef": 100,
+      "firstSpawnTime": 360,
+      "respawnTime": 170,
+      "loot": [
+        "thick_paper",
+        "burdock"
+      ],
+      "areas": [
+        "factory",
+        "fire_station",
+        "archery_range"
+      ]
+    },
+    {
+      "id": "bear",
+      "name": "Bear",
+      "baseHp": 150,
+      "baseAtk": 70,
+      "baseDef": 120,
+      "firstSpawnTime": 360,
+      "respawnTime": 170,
+      "loot": [
+        "garlic",
+        "flower"
+      ],
+      "areas": [
+        "well",
+        "cemetery",
+        "hospital"
+      ]
+    },
+    {
+      "id": "dr_wickeline",
+      "name": "Dr. Wickeline",
+      "baseHp": 350,
+      "baseAtk": 95,
+      "baseDef": 160,
+      "firstSpawnTime": 540,
+      "respawnTime": null,
+      "loot": [
+        "holy_blood",
+        "first_aid_kit"
+      ],
+      "areas": []
+    },
+    {
+      "id": "mr_meiji",
+      "name": "Mr. Meiji",
+      "baseHp": 400,
+      "baseAtk": 105,
+      "baseDef": 170,
+      "firstSpawnTime": 540,
+      "respawnTime": null,
+      "loot": [
+        "vital_sign_sensor",
+        "bull_intestine",
+        "cigarettes",
+        "fountain_pen"
+      ],
+      "areas": [
+        "research_center"
       ]
     }
   ]

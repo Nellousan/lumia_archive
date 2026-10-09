@@ -138,11 +138,23 @@ export function mergeMaterials(lists: RecipeMaterial[][]): RecipeMaterial[] {
 
 /**
  * Materials that are obtainable somewhere on the island, i.e. the ones worth
- * drawing a bubble for. Sorted by the number of areas, most spread out first.
+ * drawing a bubble for — either from a loot slot or off a wild animal. Sorted by
+ * the number of areas, most spread out first.
+ *
+ * Animal drops count here even though they never reach the routes: a material
+ * only a Bat drops still has somewhere to be shown, and the bubble is where the
+ * map says so.
  */
-export function gatherableMaterials(materials: RecipeMaterial[]): RecipeMaterial[] {
+export function gatherableMaterials(
+  dataset: WikiDataset,
+  materials: RecipeMaterial[],
+): RecipeMaterial[] {
   return materials
-    .filter((material) => material.areas.length > 0)
+    .filter(
+      (material) =>
+        material.areas.length > 0 ||
+        (dataset.animalDropsByItemId[material.item.id]?.length ?? 0) > 0,
+    )
     .sort((a, b) => b.areas.length - a.areas.length || a.item.name.localeCompare(b.item.name));
 }
 

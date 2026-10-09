@@ -33,10 +33,25 @@ export interface RawArea {
   items: Array<Record<string, number>>;
 }
 
+/** `data.json` stores an animal's stats, the ids it can drop and its area ids. */
+export interface RawAnimal {
+  id: string;
+  name: string;
+  baseHp?: number;
+  baseAtk?: number;
+  baseDef?: number;
+  /** Seconds into the match at which it first appears. */
+  firstSpawnTime?: number | null;
+  /** Seconds between respawns; absent/null for the once-a-match animals. */
+  respawnTime?: number | null;
+  loot?: string[];
+  areas?: string[];
+}
+
 export interface RawDataset {
   items: RawItem[];
   areas: RawArea[];
-  animals: unknown[];
+  animals: RawAnimal[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -131,6 +146,34 @@ export interface WikiArea {
   mapped: boolean;
 }
 
+/**
+ * A wild animal: where it spawns and what it can drop.
+ *
+ * Its loot is *not* a source of supply — killing one is optional and may not even
+ * be possible — so nothing here feeds the route solver. It exists to annotate the
+ * map: "you can also get this here, off a Bat".
+ */
+export interface WikiAnimal {
+  id: string;
+  name: string;
+  hp: number | null;
+  atk: number | null;
+  def: number | null;
+  firstSpawnTime: number | null;
+  respawnTime: number | null;
+  loot: WikiItem[];
+  /** Areas it spawns in; empty for an animal the data places nowhere. */
+  areas: WikiArea[];
+}
+
+/** One way to get an item off a wild animal: a given animal in a given area. */
+export interface AnimalDropRef {
+  animalId: string;
+  animalName: string;
+  areaId: string;
+  areaName: string;
+}
+
 export interface MapImage {
   src: string;
   width: number;
@@ -148,6 +191,15 @@ export interface WikiDataset {
   areasById: Record<string, WikiArea>;
   spawnsByItemId: Record<string, AreaSpawnRef[]>;
   itemsByAreaId: Record<string, AreaItemRef[]>;
+  animals: WikiAnimal[];
+  animalsById: Record<string, WikiAnimal>;
+  /**
+   * item id -> every animal × area that can drop it. Deliberately kept out of
+   * `spawnsByItemId`: a drop is a maybe, so it must never reach the route solver.
+   */
+  animalDropsByItemId: Record<string, AnimalDropRef[]>;
+  /** area id -> the animals that spawn there. */
+  animalsByAreaId: Record<string, WikiAnimal[]>;
   /**
    * Reverse recipe index: for an item used as an ingredient, the items that can
    * be crafted with it. Alphabetical; empty for the ~150 items no recipe needs.
@@ -158,6 +210,7 @@ export interface WikiDataset {
     itemCount: number;
     areaCount: number;
     craftableCount: number;
+    animalCount: number;
     mappedAreaCount: number;
     emptyAreaIds: string[];
   };

@@ -6,8 +6,12 @@ import type { RecipeMaterial } from "@/lib/wiki/types";
 
 export interface BubbleMaterialCardProps {
   material: RecipeMaterial;
-  /** How many of this material the area holds. */
+  /** How many of this material the area holds; unused for an animal drop. */
   quantityInArea: number;
+  /** What the card reports: a guaranteed loot slot, or only a wild animal. */
+  source: "spawn" | "animal";
+  /** Animals that can drop it here; empty when none does. */
+  animals: string[];
   focused: boolean;
   /** In the focused material's recipe subtree, but not the focused material. */
   related: boolean;
@@ -25,6 +29,12 @@ export interface BubbleMaterialCardProps {
  * and the text sizes live in island pixels, matching `lib/map-layout.ts` so the
  * bubble placement estimates stay in sync.
  *
+ * A card that can only be dropped by a wild animal is red and shows `◎` where a
+ * spawn shows its quantity — the same trick the route steps use for a build's
+ * star. There is no number to give: the drop is not a stack sitting in the area,
+ * it is a maybe. A guaranteed spawn that an animal also drops keeps its number
+ * and only names the animal, since the pickup itself is not a gamble.
+ *
  * The frame is an inset ring rather than a `border`. Below one device pixel —
  * which is what a 1px border becomes once the overlay is scaled to about 0.6 —
  * Firefox resolves a rounded border by drawing its inner edge square, leaving a
@@ -36,12 +46,32 @@ export interface BubbleMaterialCardProps {
 export function BubbleMaterialCard({
   material,
   quantityInArea,
+  source,
+  animals,
   focused,
   related,
   onHover,
   onSelect,
 }: BubbleMaterialCardProps) {
-  const label = `${material.item.name}, ${quantityInArea} in this area`;
+  const dropped = source === "animal";
+  const droppers = animals.join(" or ");
+  const label = dropped
+    ? `${material.item.name}, dropped by ${droppers} in this area — not a guaranteed spawn`
+    : animals.length > 0
+      ? `${material.item.name}, ${quantityInArea} in this area — also dropped by ${droppers}`
+      : `${material.item.name}, ${quantityInArea} in this area`;
+
+  const frame = dropped
+    ? focused
+      ? "inset-ring-red-300/70 bg-red-500/20"
+      : related
+        ? "inset-ring-red-400/30 bg-red-500/[0.10]"
+        : "inset-ring-red-400/45 bg-red-500/[0.13] hover:inset-ring-red-300/70 hover:bg-red-500/20"
+    : focused
+      ? "inset-ring-amber-300/60 bg-amber-300/15"
+      : related
+        ? "inset-ring-amber-300/25 bg-black/35"
+        : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45";
 
   return (
     <button
@@ -57,18 +87,18 @@ export function BubbleMaterialCard({
         onSelect(material.item.id);
       }}
       style={{ width: BUBBLE_CARD_WIDTH }}
-      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${
-        focused
-          ? "inset-ring-amber-300/60 bg-amber-300/15"
-          : related
-            ? "inset-ring-amber-300/25 bg-black/35"
-            : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45"
-      }`}
+      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${frame}`}
     >
       <ItemSprite item={material.item} size="tile" bare />
-      <span className="font-mono text-[23px] font-bold leading-none text-emerald-300">
-        ×{quantityInArea}
-      </span>
+      {dropped ? (
+        <span aria-hidden="true" className="text-[21px] leading-none text-red-400">
+          ◎
+        </span>
+      ) : (
+        <span className="font-mono text-[23px] font-bold leading-none text-emerald-300">
+          ×{quantityInArea}
+        </span>
+      )}
     </button>
   );
 }

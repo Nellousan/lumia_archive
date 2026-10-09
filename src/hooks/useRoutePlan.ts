@@ -93,8 +93,11 @@ export function useRoutePlan(
         continue;
       }
 
+      // A plan item with no recipe is mapped through its own sourcing: its loot
+      // slots, or failing that the animals that drop it.
       const spawns = dataset.spawnsByItemId[planned.id] ?? [];
-      if (spawns.length > 0) {
+      const animalDrops = dataset.animalDropsByItemId[planned.id] ?? [];
+      if (spawns.length > 0 || animalDrops.length > 0) {
         lists.push([
           { item: planned, quantity: 1, depth: 0, intermediate: false, areas: spawns },
         ]);

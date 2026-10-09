@@ -2,6 +2,7 @@ import { ITEM_SPRITE_BASE_PATH, LUMIA_ISLAND_MAP } from "./map-image";
 import { coordsToPolygon, polygonAnchor, polygonBounds } from "./geometry";
 import { KNOWN_RARITIES, allCategoryTypes } from "./taxonomy";
 import type {
+  AnimalDropRef,
   AreaItemRef,
   AreaSpawn,
   AreaSpawnRef,
@@ -10,6 +11,7 @@ import type {
   RawItem,
   RecipeEntry,
   SpriteTrim,
+  WikiAnimal,
   WikiArea,
   WikiDataset,
   WikiItem,
@@ -202,6 +204,62 @@ function buildAreas(warnings: string[]): WikiArea[] {
   return areas;
 }
 
+/**
+ * Normalizes the animals and their loot.
+ *
+ * The loot is resolved to items (an unknown id is a data note, not a crash) and
+ * the areas to mapped ones, because the only thing animals are used for is
+ * annotating a bubble, and a bubble belongs to an area.
+ */
+function buildAnimals(
+  itemsById: Record<string, WikiItem>,
+  areasById: Record<string, WikiArea>,
+  warnings: string[],
+): WikiAnimal[] {
+  return rawDataset.animals.map((raw): WikiAnimal => {
+    const loot: WikiItem[] = [];
+    for (const itemId of raw.loot ?? []) {
+      const item = itemsById[itemId];
+      if (!item) {
+        warnings.push(`Animal "${raw.id}" drops unknown item "${itemId}"; entry dropped.`);
+        continue;
+      }
+      if (!loot.some((known) => known.id === item.id)) loot.push(item);
+    }
+
+    const areas: WikiArea[] = [];
+    for (const areaId of raw.areas ?? []) {
+      const area = areasById[areaId];
+      if (!area) {
+        warnings.push(`Animal "${raw.id}" spawns in unknown area "${areaId}"; entry dropped.`);
+        continue;
+      }
+      if (!areas.some((known) => known.id === area.id)) areas.push(area);
+    }
+
+    if (areas.length === 0 && loot.length > 0) {
+      warnings.push(
+        `Animal "${raw.id}" has no area on the map; its loot ` +
+          `(${loot.map((item) => item.id).join(", ")}) cannot be shown.`,
+      );
+    }
+
+    areas.sort((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      id: raw.id,
+      name: raw.name || raw.id,
+      hp: raw.baseHp ?? null,
+      atk: raw.baseAtk ?? null,
+      def: raw.baseDef ?? null,
+      firstSpawnTime: raw.firstSpawnTime ?? null,
+      respawnTime: raw.respawnTime ?? null,
+      loot,
+      areas,
+    };
+  });
+}
+
 /** Builds every lookup table from the raw files. Pure — no module state. */
 export function buildWikiDataset(): WikiDataset {
   const warnings: string[] = [];
@@ -262,6 +320,42 @@ export function buildWikiDataset(): WikiDataset {
     refs.sort((a, b) => a.areaName.localeCompare(b.areaName));
   }
 
+  const animals = buildAnimals(itemsById, areasById, warnings);
+  const animalsById: Record<string, WikiAnimal> = Object.fromEntries(
+    animals.map((animal) => [animal.id, animal]),
+  );
+
+  /**
+   * The animal half of the map's sourcing information: which animals can drop an
+   * item, and where. One entry per animal × area so a bubble can name the animal
+   * it is talking about.
+   */
+  const animalDropsByItemId: Record<string, AnimalDropRef[]> = {};
+  const animalsByAreaId: Record<string, WikiAnimal[]> = {};
+
+  for (const animal of animals) {
+    for (const area of animal.areas) {
+      (animalsByAreaId[area.id] ??= []).push(animal);
+      for (const item of animal.loot) {
+        (animalDropsByItemId[item.id] ??= []).push({
+          animalId: animal.id,
+          animalName: animal.name,
+          areaId: area.id,
+          areaName: area.name,
+        });
+      }
+    }
+  }
+
+  for (const refs of Object.values(animalDropsByItemId)) {
+    refs.sort(
+      (a, b) => a.areaName.localeCompare(b.areaName) || a.animalName.localeCompare(b.animalName),
+    );
+  }
+  for (const residents of Object.values(animalsByAreaId)) {
+    residents.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   // Reverse recipe index: which items can be crafted with a given ingredient.
   const usedToCraftByItemId: Record<string, WikiItem[]> = {};
   for (const item of items) {
@@ -283,12 +377,17 @@ export function buildWikiDataset(): WikiDataset {
     areasById,
     spawnsByItemId,
     itemsByAreaId,
+    animals,
+    animalsById,
+    animalDropsByItemId,
+    animalsByAreaId,
     usedToCraftByItemId,
     map: LUMIA_ISLAND_MAP,
     stats: {
       itemCount: items.length,
       areaCount: areas.length,
       craftableCount: items.filter((item) => item.craftable).length,
+      animalCount: animals.length,
       mappedAreaCount: mappedAreas.length,
       emptyAreaIds: areas.filter((area) => area.empty).map((area) => area.id),
     },
@@ -316,7 +415,8 @@ export function reportDataset(dataset: WikiDataset): void {
 
   console.log(
     `[lumia-archive] data ready — ${stats.itemCount} items · ${stats.areaCount} areas ` +
-      `(${stats.mappedAreaCount} mapped) · ${stats.craftableCount} craftable — ${notes}`,
+      `(${stats.mappedAreaCount} mapped) · ${stats.craftableCount} craftable · ` +
+      `${stats.animalCount} animals — ${notes}`,
   );
 }
 

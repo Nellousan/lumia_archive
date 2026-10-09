@@ -589,6 +589,9 @@ function stockOnRoute(dataset: WikiDataset, itemId: string, chosen: Set<string>)
  *
  * The queue re-visits an item whenever a later parent raises its demand, so the
  * yield folds across the whole plan rather than one branch of it.
+ *
+ * Returns `null` when a demand cannot be answered at all — the route does not
+ * hold it and nothing makes it. See the craft branch below.
  */
 function compilePlan(
   requirements: Requirement[],
@@ -596,7 +599,7 @@ function compilePlan(
   dataset: WikiDataset,
   startingClothes: string | null,
   assumed: ReadonlyMap<string, WikiItem>,
-): SimPlan {
+): SimPlan | null {
   const plan: SimPlan = { gather: new Map(), craftNeed: new Map(), recipes: new Map() };
 
   /**
@@ -669,6 +672,20 @@ function compilePlan(
     // Built, not found: one craft consumes the recipe as written and hands over
     // the item's default quantity, so units become crafts before they become
     // ingredients. Two plans wanting one iron sheet each pay for one craft.
+    //
+    // Nothing makes it, though, and that is not the same as "not here". The
+    // sweep reads each requirement node on its own, so two nodes asking for the
+    // same ingredient can both be answered by one stack and a cover can slip
+    // through that the summed demand does not fit on. Turning that shortfall into
+    // a craft invented a recipe — Scrap Metal "built" out of nothing — and a
+    // route that lies about the map is worse than a route that is missing. The
+    // cover is dropped here instead, and whatever can really finish the job takes
+    // its place.
+    if (!node.item.recipe || node.item.recipe.length === 0) return null;
+    // A tree that refused to expand the item (depth budget, or a cyclic recipe)
+    // has no ingredients to spend either, so it is no more makeable than a leaf.
+    if ((node.children ?? []).length === 0) return null;
+
     const yieldUnits = Math.max(1, node.item.defaultQuantity);
     const crafts = Math.ceil(wanted / yieldUnits);
     const planned = plan.craftNeed.get(itemId) ?? 0;
@@ -1345,11 +1362,20 @@ export function buildRoutes(
   const routes: RoutePlan[] = [];
   const budget = { left: RUN_BUDGET };
   const cookableCandidates = cookableFoods(dataset);
+  /** Covers dropped because the ground cannot supply them, not because of the pack. */
+  let unreachable = 0;
 
   for (const mask of masks) {
     const cover = visited.filter((_, index) => mask & (1 << index));
     const chosen = new Set(cover.map((area) => area.id));
     const plan = compilePlan(requirements, chosen, dataset, startingClothes, assumed);
+    // The demand side of the cover test is per node, so a cover can survive it
+    // and still be impossible to shop for. Nothing to try here: the order
+    // cannot change what the areas hold.
+    if (!plan) {
+      unreachable += 1;
+      continue;
+    }
 
     // Fastest stops at the first order that works. Greedy keeps looking, because
     // the order decides how early each part gets built and therefore how early
@@ -1391,8 +1417,10 @@ export function buildRoutes(
   return {
     routes,
     truncated: truncated || routes.length >= MAX_ROUTES,
-    // Covers exist but none of them can be walked with six bag slots.
-    inventoryBlocked: routes.length === 0 && masks.length > 0,
+    // Covers exist but none of them can be walked with six bag slots. Only when
+    // no cover was dropped for want of supply: "the pack is too small" would be
+    // the wrong thing to say about a plan the island cannot equip at all.
+    inventoryBlocked: routes.length === 0 && masks.length > 0 && unreachable === 0,
     assumed: [...assumed.values()].sort((a, b) => a.name.localeCompare(b.name)),
     nothingToGather: false,
   };

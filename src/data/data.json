@@ -30,7 +30,7 @@
         "ingredients"
       ],
       "value": null,
-      "defaultQuantity": 1,
+      "defaultQuantity": 2,
       "recipe": [
         "scrap_metal",
         "hammer"

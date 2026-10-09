@@ -62,3 +62,31 @@ export function equipmentSlotFor(item: WikiItem): EquipmentSlot | null {
   }
   return null;
 }
+
+/** Every type key that occupies the weapon slot. */
+export const WEAPON_TYPES: string[] = Object.keys(SLOT_BY_TYPE).filter(
+  (type) => SLOT_BY_TYPE[type] === "weapon",
+);
+
+/**
+ * The weapon types a plan can actually wield.
+ *
+ * Weapon mastery is one of the game's most important stats and cannot be changed
+ * mid-match, so a survivor only ever raises the kind of weapon the plan is about.
+ * The set is the types of every weapon in the plan (its selection and bookmarks);
+ * an empty set means the plan is not about a weapon at all, and then the weapon
+ * slot is not storage — whatever crude weapon the survivor started with stays in
+ * it, and any weapon met on the way has to go in the bag.
+ */
+export function planWeaponTypes(plannedItems: WikiItem[]): Set<string> {
+  const types = new Set<string>();
+
+  for (const item of plannedItems) {
+    if (!item.types.some((type) => SLOT_BY_TYPE[type] === "weapon")) continue;
+    for (const type of item.types) {
+      if (SLOT_BY_TYPE[type] === "weapon") types.add(type);
+    }
+  }
+
+  return types;
+}

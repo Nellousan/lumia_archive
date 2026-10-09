@@ -50,8 +50,9 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
     >
       <ItemSprite item={item} size="tile" bare />
       {built ? (
-        <span className="font-mono text-[9px] font-bold uppercase leading-none text-amber-200">
-          build
+        // Same marker as the route list: a build, not a pickup.
+        <span aria-hidden="true" className="text-[13px] leading-none text-amber-300">
+          ✦
         </span>
       ) : (
         <span className="font-mono text-[12px] font-bold leading-none text-emerald-300">
@@ -66,8 +67,9 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
  * The bubble for one step of a highlighted route.
  *
  * It replaces the material bubble while a route is highlighted: the header names
- * the area and its place in the walk, the amber cards are what gets built once
- * those materials are in the pack, and the plain cards are what gets picked up.
+ * the area and its place in the walk, the amber cards marked with a star are what
+ * gets built once those materials are in the pack, and the plain cards are what
+ * gets picked up.
  */
 export function RouteStepBubbleCard({
   step,

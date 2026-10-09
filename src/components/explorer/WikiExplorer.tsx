@@ -15,6 +15,7 @@ import { useRoutePlan } from "@/hooks/useRoutePlan";
 import { useStepOverlay } from "@/hooks/useStepOverlay";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
+import { DEFAULT_LOOK_AHEAD, type RouteMode } from "@/lib/wiki/routes";
 import type { AreaItemRef, AreaSpawnRef, WikiDataset, WikiItem } from "@/lib/wiki/types";
 
 /** Stable empties so derived memos do not invalidate on every render. */
@@ -64,6 +65,9 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const [hoveredRouteId, setHoveredRouteId] = useState<string | null>(null);
   /** Clothes picked before the match; empty means the survivor starts bare. */
   const [startingClothes, setStartingClothes] = useState<string | null>(null);
+  /** Fastest by distance, or greedy for value worn early. */
+  const [routeMode, setRouteMode] = useState<RouteMode>("fastest");
+  const [lookAhead, setLookAhead] = useState(DEFAULT_LOOK_AHEAD);
   /**
    * The pinned route travels with the plan it was pinned for: bookmarking or
    * selecting something else changes the routes, so the highlight lets go
@@ -98,7 +102,14 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const usedToCraft = activeItem
     ? (dataset.usedToCraftByItemId[activeItem.id] ?? NO_CRAFTABLES)
     : NO_CRAFTABLES;
-  const route = useRoutePlan(dataset, activeItem, plannedItems, startingClothes);
+  const route = useRoutePlan(
+    dataset,
+    activeItem,
+    plannedItems,
+    startingClothes,
+    routeMode,
+    lookAhead,
+  );
 
   /** The clothes on offer, resolved once so the selector can show artwork. */
   const startingOptions = useMemo(
@@ -113,7 +124,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * Identity of the current plan, so a pin never outlives what it pointed at.
    * The starting clothes are part of it: changing them changes the routes.
    */
-  const planKey = `${plannedItems.map((planned) => planned.id).join("|")}#${startingClothes ?? ""}`;
+  const planKey = `${plannedItems.map((planned) => planned.id).join("|")}#${startingClothes ?? ""}#${routeMode}${lookAhead}`;
 
   const bookmarkEntries = useMemo(
     () =>
@@ -288,6 +299,10 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
               startingClothes={startingClothes}
               startingOptions={startingOptions}
               onStartingClothesChange={setStartingClothes}
+              mode={routeMode}
+              onModeChange={setRouteMode}
+              lookAhead={lookAhead}
+              onLookAheadChange={setLookAhead}
               onHoverRoute={setHoveredRouteId}
               onSelectRoute={handleSelectRoute}
               onSelectArea={setSelectedAreaId}

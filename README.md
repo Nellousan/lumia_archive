@@ -44,6 +44,13 @@ highest value, then alphabetically, and the counter above the grid reads *matche
 header — **bookmarks** an item into the plan. Selecting a card opens its detail: rarity, real data
 fields, the **crafting chain drawn as a tree**, and the **fastest routes**.
 
+**Two ways to rank a route.** *Fastest* (the default) is the walk: fewest areas, then the tidiest
+line. *Greedy* is about not spending the trip naked — in this game a survivor who hauls every
+ingredient to one spot and crafts at the end is weak the whole way — so at **every** step it asks
+what the next N areas (2 by default, 1–6) can leave the survivor wearing, and ranks the resulting
+profile step by step. Each step prints the worn value beside its pack dots, so the curve being
+ranked is visible.
+
 **Right pane — Lumia Island.** The **plan bar** sits directly above the island and lists what the map
 and the routes answer for: the selected item, then every bookmark. Under it, the PNG artwork with the
 image map overlaid as clickable polygons, and a **bubble anchored over every area that holds a
@@ -279,6 +286,20 @@ missing from `CATEGORY_TABS` raises its own note.
   reachable only by a wide plan — areas that another area out-stocks are dropped first, and beyond
   that a greedy search takes over. At most **100 routes** are returned; the fastest few are shown, so
   the cap only ever drops slower lists.
+  Ranking has two modes, chosen above the list. **Fastest** is described above. **Greedy** reads a
+  route as a profile: at each step, the most value *worn* within the look-ahead window starting
+  there (`lookAhead` areas, 1 to 6, two by default), and those profiles are then compared step by
+  step from the start, with the shorter walk breaking a tie. Applying the window at every step is
+  the point — the decision being modelled is made at every step, and a route that is strong early
+  but then plods through five areas of gathering before its next upgrade is what greedy exists to
+  avoid. Two length biases had to be designed out: a *sum* over the window rewards longer routes
+  (more steps to add up), so the metric takes a peak; and comparing profiles of different lengths
+  with zero padding let a longer route win by having more entries, so a profile is padded with its
+  own last value — a route that has ended keeps its kit. A detour therefore has to buy real
+  strength to earn an extra area. Greedy also explores up to 24 visit orders per cover instead of
+  stopping at the first workable one, since the order decides how early each part gets built.
+  Fastest mode is untouched: it explores the tidiest order only, and passing a look-ahead changes
+  nothing about its results.
   Requirements keep the recipe's OR structure: a craftable material is satisfied when the route can
   gather it *or* craft it from what it gathers, which is why `magazine` (craftable *and* gatherable)
   offers two 0-move routes before any crafting route. Stack sizes are honoured: needing two Scrap
@@ -301,6 +322,13 @@ missing from `CATEGORY_TABS` raises its own note.
   up or built. The rule is **build as soon as the ingredients are in the pack** — that is what frees
   room, two ingredients becoming one item, and it is why each step lists a build. Wearing is free and
   always taken, since it can only open space.
+  **The weapon slot is not storage.** Weapon mastery is one of the game's most important stats and
+  cannot be changed mid-match, so the slot is only usable when the plan is *about* a weapon. With no
+  weapon among the selection or bookmarks, the survivor keeps the crude weapon they started with and
+  anything else of that kind goes in the bag — the steel chain feeding a `rider_jacket` costs a slot
+  rather than riding free in the weapon slot. When the plan does hold weapons, only weapons of those
+  types may fill the slot: a blade plan never wields the blunt chain it picks up, and a plan for two
+  different weapon types admits both.
   Two consequences are easy to miss. A craft can *cost* a slot when it eats one unit of a stack that
   stays behind, so crafts are checked against the pack just like pickups. And the visit order stops
   being cosmetic: it decides which ingredients are in hand when, so covers of four areas or fewer are
@@ -424,6 +452,21 @@ missing from `CATEGORY_TABS` raises its own note.
   pickup cards, numbered badges, "nothing built here" where a step only gathers) while an unpinned map
   still shows the plan's material cards. A plan of ten items renders the *"No route fits the pack"*
   state, and one containing `bread` names it.
+- The weapon rules were swept over **214 plans x 3 ranking modes** (642 runs): **0 violations** —
+  no weapon was ever worn by a plan with no weapon in it (39 such plans), and no weapon was ever
+  worn outside the plan's own types. Checked straight off each route's `equipped` list, and again
+  through a replay that applies the same mastery rule. `rider_jacket` shows it: the steel chain it
+  needs sits in the bag, while adding a blade to the plan opens the slot for that blade alone and
+  still leaves the chain bagged. Worst run: 263 ms.
+- The greedy mode was swept over **193 plans x 4 look-ahead windows** (1, 2, 3 and 6 areas) —
+  **772 runs, 0 violations**: every route replayed action by action, every profile recomputed from
+  the replay (score and ordering both), every step's shown value re-derived from the pack, and
+  fastest mode returned byte-identical routes with and without a look-ahead set (193/193). Greedy's
+  profile beat the fastest list's in 199 comparisons and tied in 573. `rocker_s_jacket` shows the
+  intent: a window of 1 picks Uptown first (15 value immediately), 2 picks Fire Station then Uptown
+  (47 value by the second area), and 3 or more keeps the 2-move walk because it already reaches the
+  best available 55. The sweep is also what caught both length biases — the first metric picked a
+  four-move detour for the same plan. Worst run: 346 ms.
 - With components assumed rather than blocking, a sweep over **317 plans × 6 starting choices**
   (**1 902 runs, 64 373 routes**) reported no violations on the 629-item data: every route replayed
   action by action from the carried components and worn clothes, nothing assumed was ever gathered

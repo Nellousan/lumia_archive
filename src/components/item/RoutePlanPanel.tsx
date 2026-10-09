@@ -3,7 +3,7 @@
 import { RoutePlanList } from "./RoutePlanList";
 import { PaneDivider } from "@/components/ui/PaneDivider";
 import { ItemSprite } from "@/components/ui/ItemSprite";
-import type { RoutePlan } from "@/lib/wiki/routes";
+import { MAX_LOOK_AHEAD, type RouteMode, type RoutePlan } from "@/lib/wiki/routes";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RoutePlanPanelProps {
@@ -29,6 +29,12 @@ export interface RoutePlanPanelProps {
   /** The clothes that can be picked as a starting piece. */
   startingOptions: WikiItem[];
   onStartingClothesChange: (itemId: string | null) => void;
+  /** `fastest` walks the fewest areas; `greedy` gets value worn soonest. */
+  mode: RouteMode;
+  onModeChange: (mode: RouteMode) => void;
+  /** How many areas greedy looks ahead, counting the first. */
+  lookAhead: number;
+  onLookAheadChange: (lookAhead: number) => void;
   onHoverRoute: (routeId: string | null) => void;
   onSelectRoute: (routeId: string) => void;
   onSelectArea: (areaId: string) => void;
@@ -54,20 +60,27 @@ export function RoutePlanPanel({
   startingClothes,
   startingOptions,
   onStartingClothesChange,
+  mode,
+  onModeChange,
+  lookAhead,
+  onLookAheadChange,
   onHoverRoute,
   onSelectRoute,
   onSelectArea,
 }: RoutePlanPanelProps) {
   const startingItem = startingClothes ? (startingOptions.find((item) => item.id === startingClothes) ?? null) : null;
+  const lookAheadOptions = Array.from({ length: MAX_LOOK_AHEAD }, (_, index) => index + 1);
 
   return (
     <section className="shrink-0 px-4 pb-6 sm:px-6">
-      <PaneDivider label="Fastest routes" />
+      <PaneDivider label={mode === "greedy" ? "Greedy routes" : "Fastest routes"} />
 
       {/* What the survivor is already wearing on the first move changes which
           areas are worth visiting, so it belongs with the routes, not with the
           item detail. */}
-      <div className="mb-3 flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-2.5 py-2">
+      {/* Route settings: what to wear from the start, and what "best" means. */}
+      <div className="mb-3 space-y-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-2.5 py-2">
+      <div className="flex items-center gap-2">
         <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-stone-600">
           Starting armor
         </span>
@@ -92,6 +105,60 @@ export function RoutePlanPanel({
         </select>
       </div>
 
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-stone-600">
+            Route
+          </span>
+          <div className="flex flex-1 gap-1">
+            {(
+              [
+                ["fastest", "Fastest"],
+                ["greedy", "Greedy"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onModeChange(value)}
+                aria-pressed={mode === value}
+                title={
+                  value === "fastest"
+                    ? "Walk the fewest areas"
+                    : "Be worth the most, soonest — a longer walk can win"
+                }
+                className={`flex-1 rounded-md border px-2 py-1 text-[11px] font-semibold transition ${
+                  mode === value
+                    ? "border-amber-300/60 bg-amber-300/15 text-amber-100"
+                    : "border-white/10 text-stone-400 hover:border-white/20 hover:text-stone-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {mode === "greedy" && (
+            <label className="flex shrink-0 items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-600">
+                Look ahead
+              </span>
+              <select
+                value={lookAhead}
+                onChange={(event) => onLookAheadChange(Number(event.target.value))}
+                aria-label="Areas greedy looks ahead"
+                className="rounded-md border border-white/10 bg-ink-900 px-2 py-1 text-[11px] font-semibold text-stone-200 outline-none transition hover:border-white/20 focus:border-amber-300/50"
+              >
+                {lookAheadOptions.map((areas) => (
+                  <option key={areas} value={areas}>
+                    {areas} area{areas === 1 ? "" : "s"}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+      </div>
+
       <RoutePlanList
         key={planKey}
         routes={routes}
@@ -103,6 +170,8 @@ export function RoutePlanPanel({
         nothingToGather={nothingToGather}
         activeRouteId={activeRouteId}
         startingItem={startingItem}
+        mode={mode}
+        lookAhead={lookAhead}
         onHoverRoute={onHoverRoute}
         onSelectRoute={onSelectRoute}
         onSelectArea={onSelectArea}

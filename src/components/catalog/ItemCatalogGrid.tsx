@@ -100,13 +100,15 @@ export function ItemCatalogGrid({
       </div>
 
       {pageCount > 1 && (
-        <div className="mt-2.5 flex items-center justify-between gap-2">
+        // One tight cluster: the buttons are only useful beside the position they
+        // move, so they sit around the counter instead of at the rail's edges.
+        <div className="mt-2.5 flex items-center justify-center gap-2">
           <PageButton
             direction="previous"
             disabled={page === 0}
             onClick={() => onPageChange(page - 1)}
           />
-          <span className="font-mono text-[11px] text-stone-500">
+          <span className="min-w-[68px] text-center font-mono text-[11px] text-stone-500">
             page {page + 1} / {pageCount}
           </span>
           <PageButton

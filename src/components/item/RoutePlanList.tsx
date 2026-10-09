@@ -1,8 +1,15 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import { ItemSprite } from "@/components/ui/ItemSprite";
 import { BAG_SLOTS } from "@/lib/wiki/inventory";
-import { stepCrafts, stepGathers, type RoutePlan, type RouteStep } from "@/lib/wiki/routes";
+import {
+  stepCrafts,
+  stepGathers,
+  type RouteMode,
+  type RoutePlan,
+  type RouteStep,
+} from "@/lib/wiki/routes";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RoutePlanListProps {
@@ -23,6 +30,9 @@ export interface RoutePlanListProps {
   activeRouteId: string | null;
   /** Clothes worn from the first move, when one was picked. */
   startingItem: WikiItem | null;
+  /** What the list is ranked by, and how far greedy looks ahead. */
+  mode: RouteMode;
+  lookAhead: number;
   onHoverRoute: (routeId: string | null) => void;
   /** Pins a route, or unpins it when clicked again. */
   onSelectRoute: (routeId: string) => void;
@@ -31,6 +41,16 @@ export interface RoutePlanListProps {
 
 /** Routes shown before the "show all" fold; steps make each row tall. */
 const COLLAPSED_COUNT = 4;
+
+/**
+ * Height shared by the area chip and every item card on its line.
+ *
+ * Fixed rather than left to the text: the chip's natural height is its
+ * line-height plus padding plus border, which nothing else can match by
+ * accident. One constant keeps the strip even, and square cards mean only the
+ * height is ever written down.
+ */
+const STEP_CONTROL_HEIGHT = "h-7";
 
 function itemNames(items: { item: { name: string }; quantity: number }[]): string {
   return items
@@ -50,11 +70,81 @@ function peakBagUse(route: RoutePlan): number {
 }
 
 /**
+ * The pack at one step: one dot per bag slot, filled for the slots in use.
+ *
+ * Worn gear does not take a slot, so this counts what the survivor is carrying
+ * and nothing else — the same number the route header reports as its peak.
+ */
+function BagSlots({ used }: { used: number }) {
+  const label = `${used} of ${BAG_SLOTS} bag slots used`;
+
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className="ml-auto flex shrink-0 items-center gap-0.5 pl-2"
+    >
+      {Array.from({ length: BAG_SLOTS }, (_, slot) => (
+        <span
+          key={slot}
+          className={`size-1.5 rounded-full ${
+            slot < used ? "bg-amber-300" : "border border-white/20"
+          }`}
+        />
+      ))}
+    </span>
+  );
+}
+
+/**
  * One step of a route: where it happens, what is picked up, what gets built.
  *
  * The build column is the point of the list — intermediates appear at the first
  * stop whose materials complete them, which is also what keeps the pack inside
  * its six bag slots.
+ */
+/**
+ * One thing a step does, as a small card of artwork.
+ *
+ * No marker for a build here: the builds have their own line under the area, so
+ * the amber contour says it on its own. (The map's step bubbles mix both kinds on
+ * one row, which is why they keep the star.)
+ */
+function StepItemCard({
+  item,
+  quantity,
+  built,
+}: {
+  item: WikiItem;
+  quantity: number;
+  built: boolean;
+}) {
+  const label = built
+    ? `Build ${item.name}${quantity > 1 ? ` ×${quantity}` : ""} here`
+    : `Pick up ${item.name} ×${quantity} here`;
+
+  return (
+    <span
+      title={label}
+      aria-label={label}
+      role="img"
+      className={`grid ${STEP_CONTROL_HEIGHT} aspect-square shrink-0 place-items-center rounded-md border p-0.5 ${
+        built ? "border-amber-300/50 bg-amber-300/[0.08]" : "border-white/15 bg-white/[0.03]"
+      }`}
+    >
+      <ItemSprite item={item} size="tile" bare />
+    </span>
+  );
+}
+
+/**
+ * One step of a route: where it happens, how full the pack is when leaving, and
+ * what happens there.
+ *
+ * The area and the pack dots share the first line so the dots line up down the
+ * list whatever is built; the items sit underneath, in the order they are picked
+ * up or built — the order is the point of a step, not a detail of it.
  */
 function StepRow({
   step,
@@ -67,43 +157,66 @@ function StepRow({
 }) {
   const gathers = stepGathers(step);
   const crafts = stepCrafts(step);
+  const wornValue = step.equipped.reduce((total, item) => total + (item.value ?? 0), 0);
 
   return (
-    <li className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-      <span className="w-3 shrink-0 font-mono text-[10px] text-stone-600">{step.number}</span>
+    <li className="space-y-1">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="w-3 shrink-0 font-mono text-[11px] text-stone-600">{step.number}</span>
 
-      <button
-        type="button"
-        title={
-          gathers.length === 0
-            ? step.area.name
-            : `${step.area.name} — pick up ${gathers
-                .map((entry) => `${entry.item.name} ×${entry.quantity}`)
-                .join(", ")}`
-        }
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelectArea(step.area.id);
-        }}
-        className={`rounded-md border px-1.5 py-0.5 text-[11px] font-semibold transition ${
-          active
-            ? "border-amber-300/40 text-amber-100 hover:bg-amber-300/15"
-            : "border-white/10 text-stone-300 hover:border-emerald-400/40 hover:text-white"
-        }`}
-      >
-        {step.area.name}
-      </button>
+        <button
+          type="button"
+          title={
+            gathers.length === 0
+              ? step.area.name
+              : `${step.area.name} — pick up ${gathers
+                  .map((entry) => `${entry.item.name} ×${entry.quantity}`)
+                  .join(", ")}`
+          }
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelectArea(step.area.id);
+          }}
+          className={`inline-flex ${STEP_CONTROL_HEIGHT} shrink-0 items-center rounded-md border px-2 text-[13px] font-semibold transition ${
+            active
+              ? "border-amber-300/40 text-amber-100 hover:bg-amber-300/15"
+              : "border-white/10 text-stone-300 hover:border-emerald-400/40 hover:text-white"
+          }`}
+        >
+          {step.area.name}
+        </button>
 
-      {gathers.length > 0 && (
-        <span className="text-[10px] text-stone-500">pick up {itemNames(gathers)}</span>
-      )}
+        {/* Pickups sit beside the area they come from; only builds drop a line. */}
+        {gathers.map((entry) => (
+          <StepItemCard
+            key={entry.item.id}
+            item={entry.item}
+            quantity={entry.quantity}
+            built={false}
+          />
+        ))}
 
-      {crafts.length > 0 ? (
-        <span className="text-[10px] font-semibold text-amber-200/90">
-          {gathers.length > 0 ? "· " : ""}build {itemNames(crafts)}
+        <span className="ml-auto flex items-center gap-2">
+          {/* What the survivor is worth when leaving here — the curve greedy ranks. */}
+          <span
+            title={`value worn when leaving: ${wornValue}`}
+            className={`font-mono text-[10px] ${
+              wornValue > 0 ? "text-amber-300/80" : "text-stone-600"
+            }`}
+          >
+            {wornValue}
+          </span>
+          <BagSlots used={step.bagUsed} />
         </span>
-      ) : (
-        gathers.length === 0 && <span className="text-[10px] text-stone-600">nothing needed</span>
+      </div>
+
+      {crafts.length > 0 && (
+        // Indented to sit under the area chip rather than under the step number.
+        <div className="flex flex-wrap items-center gap-1 pl-[18px]">
+          {crafts.map((entry) => (
+            <StepItemCard key={entry.item.id} item={entry.item} quantity={entry.quantity} built />
+          ))}
+        </div>
       )}
     </li>
   );
@@ -128,6 +241,8 @@ export function RoutePlanList({
   nothingToGather,
   activeRouteId,
   startingItem,
+  mode,
+  lookAhead,
   onHoverRoute,
   onSelectRoute,
   onSelectArea,
@@ -176,7 +291,15 @@ export function RoutePlanList({
   return (
     <div>
       <p className="mb-2.5 text-[11px] leading-relaxed text-stone-500">
-        Fewest areas to gather {target}, building each part as soon as its materials are in the pack.
+        {mode === "greedy" ? (
+          <>
+            Best equipped soonest: at every step, the most value worn within the next {lookAhead} area
+            {lookAhead === 1 ? "" : "s"}, compared step by step — the fewest areas then breaking ties.
+            Gathering {target}, building each part as soon as its materials are in the pack.
+          </>
+        ) : (
+          <>Fewest areas to gather {target}, building each part as soon as its materials are in the pack.</>
+        )}
         {startingItem && (
           <>
             {" "}

@@ -1,4 +1,9 @@
-import { BAG_SLOTS, equipmentSlotFor, type EquipmentSlot } from "./inventory";
+import {
+  BAG_SLOTS,
+  equipmentSlotFor,
+  planWeaponTypes,
+  type EquipmentSlot,
+} from "./inventory";
 import type { RecipeNode, WikiArea, WikiDataset, WikiItem } from "./types";
 
 /**
@@ -100,7 +105,24 @@ export interface RoutePlan {
   materialCount: number;
   /** Distinct items the route ends up building, targets included. */
   craftCount: number;
+  /**
+   * Value worn, summed over the look-ahead window — the greedy ranking metric.
+   * Counts each step's kit again, so value that arrives earlier scores higher.
+   */
+  greedyScore: number;
 }
+
+/**
+ * How routes are ranked.
+ *
+ *  - `fastest` cares only about the walk: fewest areas, then the tidiest line.
+ *  - `greedy` cares about being strong early. In this game a survivor who hauls
+ *    every ingredient to one spot and crafts at the end spends the whole trip
+ *    naked, so greedy ranks by the value *worn* across the next few areas
+ *    instead: arriving at area 3 already holding a knife beats arriving at area
+ *    3 with a bag of scrap, even if both finish at the same time.
+ */
+export type RouteMode = "fastest" | "greedy";
 
 export interface RouteOptions {
   /**
@@ -109,7 +131,22 @@ export interface RouteOptions {
    * from the start (so it costs no bag space) and can still be spent on a craft.
    */
   startingClothes?: string | null;
+  /** Ranking mode; `fastest` by default. */
+  mode?: RouteMode;
+  /** How many areas greedy looks ahead, counting the first one. */
+  lookAhead?: number;
 }
+
+/** Look-ahead window bounds for the greedy mode. */
+export const DEFAULT_LOOK_AHEAD = 2;
+export const MAX_LOOK_AHEAD = 6;
+
+/**
+ * Visit orders tried per cover in greedy mode. The order is what decides when
+ * each part gets built, so greedy has to look at several instead of stopping at
+ * the first workable one.
+ */
+const GREEDY_ORDERS_PER_COVER = 24;
 
 export interface RoutePlanSet {
   /** Fastest first; `truncated` says whether more equal-or-slower ones exist. */
@@ -585,7 +622,27 @@ class Pack {
   private readonly held = new Map<string, number>();
   private readonly worn = new Map<EquipmentSlot, string>();
 
-  constructor(private readonly dataset: WikiDataset) {}
+  /**
+   * @param weaponTypes the weapon types this plan can wield. Empty means the
+   *   survivor keeps the crude weapon they started with: the slot is taken, so
+   *   nothing else may be stored there.
+   */
+  constructor(
+    private readonly dataset: WikiDataset,
+    private readonly weaponTypes: ReadonlySet<string> = new Set<string>(),
+  ) {}
+
+  /**
+   * Whether the item may be worn at all. Gear always fits its own slot; a weapon
+   * only fits if the plan is about that kind of weapon, since mastery cannot be
+   * changed mid-match.
+   */
+  private canWear(item: WikiItem): boolean {
+    const slot = equipmentSlotFor(item);
+    if (!slot) return false;
+    if (slot !== "weapon") return true;
+    return item.types.some((type) => this.weaponTypes.has(type));
+  }
 
   /** Walks in carrying one of these: bagged for now, worn later if it fits. */
   startHolding(itemId: string): void {
@@ -595,7 +652,9 @@ class Pack {
   /** Walks in already wearing the chosen clothes: one item, no bag slot. */
   startWearing(itemId: string): void {
     this.held.set(itemId, (this.held.get(itemId) ?? 0) + 1);
-    const slot = equipmentSlotFor(this.dataset.itemsById[itemId]);
+    const item = this.dataset.itemsById[itemId];
+    if (!this.canWear(item)) return;
+    const slot = equipmentSlotFor(item);
     if (slot && !this.worn.has(slot)) this.worn.set(slot, itemId);
   }
 
@@ -673,7 +732,9 @@ class Pack {
     const wornIds = new Set(this.worn.values());
     for (const [id, units] of this.held) {
       if (units <= 0 || wornIds.has(id)) continue;
-      const slot = equipmentSlotFor(this.dataset.itemsById[id]);
+      const item = this.dataset.itemsById[id];
+      if (!this.canWear(item)) continue;
+      const slot = equipmentSlotFor(item);
       if (slot && !this.worn.has(slot)) {
         this.worn.set(slot, id);
         wornIds.add(id);
@@ -706,8 +767,9 @@ function runRoute(
   order: WikiArea[],
   startingClothes: string | null,
   assumed: ReadonlyMap<string, WikiItem>,
+  weaponTypes: ReadonlySet<string>,
 ): RouteStep[] | null {
-  const pack = new Pack(dataset);
+  const pack = new Pack(dataset, weaponTypes);
   if (startingClothes && dataset.itemsById[startingClothes]) pack.startWearing(startingClothes);
   // Rare components are carried from the first move; they take bag slots like
   // anything else, and get worn at the first stop if they are equipment.
@@ -793,6 +855,88 @@ function runRoute(
 /* Route assembly                                                              */
 /* -------------------------------------------------------------------------- */
 
+/** What one step leaves the survivor wearing, in the item's own `value` terms. */
+function wornValue(step: RouteStep): number {
+  return step.equipped.reduce((total, item) => total + (item.value ?? 0), 0);
+}
+
+/**
+ * Headline greedy number: the first entry of the profile — the most value the
+ * survivor can be wearing within N areas of the start. Ranking uses the whole
+ * profile; this is what the list can quote as a single figure.
+ */
+function greedyScore(steps: RouteStep[], lookAhead: number): number {
+  return greedyProfile(steps, lookAhead)[0] ?? 0;
+}
+
+/**
+ * The greedy reading of a route: at *every* step, the most the survivor can be
+ * wearing within the look-ahead window that starts there.
+ *
+ * Applied at each step rather than once at the start, because the decision being
+ * modelled is made at each step — "from here, where do the next N areas leave
+ * me?" — and a route that is strong early but then plods through five areas of
+ * gathering before its next upgrade is exactly what greedy is meant to avoid.
+ * Worn value only ever drops when an ingredient is spent, so this is close to a
+ * running maximum, but it is computed from the real curve either way.
+ */
+function greedyProfile(steps: RouteStep[], lookAhead: number): number[] {
+  const curve = steps.map(wornValue);
+  if (curve.length === 0) return [];
+
+  // Past the last area the survivor simply keeps what they are wearing, so a
+  // window that runs off the end reads as the final kit rather than as nothing.
+  const final = curve[curve.length - 1];
+  const at = (index: number) => (index < curve.length ? curve[index] : final);
+
+  return curve.map((_, index) => {
+    let peak = 0;
+    for (let ahead = index; ahead < index + lookAhead; ahead += 1) {
+      peak = Math.max(peak, at(ahead));
+    }
+    return peak;
+  });
+}
+
+/**
+ * Positive when `a` is the greedier profile: compared step by step from the start.
+ *
+ * A shorter profile is padded with its own last entry — a route that has ended
+ * keeps its kit — so a longer walk never wins merely by having more steps to
+ * compare. Otherwise a four-move detour would outrank a two-move route with an
+ * identical curve simply because its profile has more entries.
+ */
+function compareProfiles(a: number[], b: number[]): number {
+  const at = (profile: number[], index: number) =>
+    profile.length === 0 ? 0 : profile[Math.min(index, profile.length - 1)];
+
+  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
+    const difference = at(a, index) - at(b, index);
+    if (difference !== 0) return difference;
+  }
+  return 0;
+}
+
+/**
+ * Greedy ordering: the better look-ahead profile first, then the shorter walk.
+ *
+ * Profiles are compared from the first step, so strength at the start outranks
+ * strength later, and the window decides how much patience each step is allowed.
+ */
+function compareGreedy(a: RoutePlan, b: RoutePlan, lookAhead: number): number {
+  const profiles = compareProfiles(
+    greedyProfile(a.steps, lookAhead),
+    greedyProfile(b.steps, lookAhead),
+  );
+  if (profiles !== 0) return -profiles;
+
+  return (
+    a.moves - b.moves ||
+    a.walkDistance - b.walkDistance ||
+    a.areaIds.join().localeCompare(b.areaIds.join())
+  );
+}
+
 function toRoute(cover: WikiArea[], order: WikiArea[], steps: RouteStep[]): RoutePlan {
   const materials = new Set<string>();
   const crafts = new Set<string>();
@@ -809,6 +953,7 @@ function toRoute(cover: WikiArea[], order: WikiArea[], steps: RouteStep[]): Rout
     walkDistance: Math.round(pathDistance(order)),
     materialCount: materials.size,
     craftCount: crafts.size,
+    greedyScore: 0,
   };
 }
 
@@ -909,8 +1054,17 @@ export function buildRoutes(
       ? options.startingClothes
       : null;
 
+  const greedy = options.mode === "greedy";
+  const lookAhead = Math.min(
+    Math.max(1, Math.round(options.lookAhead ?? DEFAULT_LOOK_AHEAD)),
+    MAX_LOOK_AHEAD,
+  );
+
   const requirements = trees.map(toRequirement);
   const assumed = assumedItems(dataset, requirements);
+  // What the plan can wield: weapon mastery cannot change mid-match, so only the
+  // kinds of weapon the plan is about may ever fill the weapon slot.
+  const weaponTypes = planWeaponTypes(trees.map((tree) => tree.item));
   const candidates = candidateAreas(dataset, requirements);
 
   // Nothing on the island is worth visiting: the whole plan is either worn or
@@ -944,25 +1098,47 @@ export function buildRoutes(
 
   const routes: RoutePlan[] = [];
   const budget = { left: RUN_BUDGET };
+
   for (const mask of masks) {
     const cover = visited.filter((_, index) => mask & (1 << index));
     const chosen = new Set(cover.map((area) => area.id));
     const plan = compilePlan(requirements, chosen, dataset, startingClothes, assumed);
 
+    // Fastest stops at the first order that works. Greedy keeps looking, because
+    // the order decides how early each part gets built and therefore how early
+    // the survivor is worth anything.
+    let best: { order: WikiArea[]; steps: RouteStep[]; profile: number[] } | null = null;
+    let tried = 0;
+
     for (const order of orderings(cover, budget)) {
-      const steps = runRoute(dataset, plan, order, startingClothes, assumed);
+      const steps = runRoute(dataset, plan, order, startingClothes, assumed, weaponTypes);
       if (!steps) continue;
-      routes.push(toRoute(cover, order, steps));
-      break;
+
+      if (!greedy) {
+        best = { order, steps, profile: [] };
+        break;
+      }
+
+      const profile = greedyProfile(steps, lookAhead);
+      if (!best || compareProfiles(profile, best.profile) > 0) best = { order, steps, profile };
+      tried += 1;
+      if (tried >= GREEDY_ORDERS_PER_COVER) break;
+    }
+
+    if (best) {
+      const route = toRoute(cover, best.order, best.steps);
+      routes.push({ ...route, greedyScore: greedyScore(best.steps, lookAhead) });
     }
     if (routes.length >= MAX_ROUTES || budget.left <= 0) break;
   }
 
   routes.sort(
-    (a, b) =>
-      a.moves - b.moves ||
-      a.walkDistance - b.walkDistance ||
-      a.areaIds.join().localeCompare(b.areaIds.join()),
+    greedy
+      ? (a, b) => compareGreedy(a, b, lookAhead)
+      : (a, b) =>
+          a.moves - b.moves ||
+          a.walkDistance - b.walkDistance ||
+          a.areaIds.join().localeCompare(b.areaIds.join()),
   );
 
   return {

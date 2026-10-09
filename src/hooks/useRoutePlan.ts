@@ -8,7 +8,7 @@ import {
   collectRecipeMaterials,
   mergeMaterials,
 } from "@/lib/wiki/recipe";
-import { buildRoutes } from "@/lib/wiki/routes";
+import { DEFAULT_LOOK_AHEAD, buildRoutes, type RouteMode } from "@/lib/wiki/routes";
 import { buildAreaBubbles, type MapOverlayMode } from "@/lib/wiki/route";
 import type { RecipeMaterial, RecipeNode, WikiDataset, WikiItem } from "@/lib/wiki/types";
 
@@ -29,6 +29,8 @@ export function useRoutePlan(
   item: WikiItem | null,
   plannedItems: WikiItem[],
   startingClothes: string | null = null,
+  mode: RouteMode = "fastest",
+  lookAhead: number = DEFAULT_LOOK_AHEAD,
 ) {
   // `item` is null while nothing is selected: the detail-panel values collapse
   // to empty, which is what empties that half of the rail.
@@ -130,8 +132,8 @@ export function useRoutePlan(
    * of crafted, which is often the whole point of the fastest route.
    */
   const routePlans = useMemo(
-    () => buildRoutes(dataset, plannedTrees, { startingClothes }),
-    [dataset, plannedTrees, startingClothes],
+    () => buildRoutes(dataset, plannedTrees, { startingClothes, mode, lookAhead }),
+    [dataset, plannedTrees, startingClothes, mode, lookAhead],
   );
 
   /**

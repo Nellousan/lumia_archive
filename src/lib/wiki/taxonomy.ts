@@ -27,22 +27,27 @@ export const ALL_GROUP_ID = "all";
 const ALL_TAB: CategoryTab = { id: ALL_GROUP_ID, label: "All", types: [] };
 
 /**
- * Top-level tabs, in display order. "All" comes last on purpose: it is a way out
- * of the taxonomy rather than a way in, and the rail opens on a real category.
+ * Top-level tabs, in display order.
+ *
+ * Weapon first because that is what the game is played with — most items are
+ * weapons and most questions are about them. "All" comes last on purpose: it is a
+ * way out of the taxonomy rather than a way in, and the rail opens on Weapon ->
+ * Blade. The order is also the "most actionable first" one the area panel groups
+ * by, so the two agree without either having to invert the other.
  */
 export const CATEGORY_TABS: CategoryTab[] = [
+  {
+    id: "weapon",
+    label: "Weapon",
+    types: ["blade", "stab", "blunt", "thrown", "gun", "bow", "hand", "trap"],
+  },
+  { id: "gear", label: "Gear", types: ["head", "clothes", "arm", "leg", "accessory"] },
+  { id: "food", label: "Food", types: ["health", "stamina"] },
   {
     id: "normal",
     label: "Normal",
     // `special` is part of the taxonomy but has no items in data.json yet.
     types: ["enhance", "special", "ingredients"],
-  },
-  { id: "food", label: "Food", types: ["health", "stamina"] },
-  { id: "gear", label: "Gear", types: ["head", "clothes", "arm", "leg", "accessory"] },
-  {
-    id: "weapon",
-    label: "Weapon",
-    types: ["blade", "stab", "blunt", "thrown", "gun", "bow", "hand", "trap"],
   },
   ALL_TAB,
 ];

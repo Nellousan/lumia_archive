@@ -88,26 +88,17 @@ export interface CategoryBucket {
 }
 
 /**
- * Bucket sequence:
- *  - `tab` follows `CATEGORY_TABS` (Normal, Food, Gear, Weapon);
- *  - `reverse` puts the most actionable categories first, which is what the area
- *    panel uses (Weapon, Gear, Food, Normal).
- */
-export type CategoryBucketOrder = "tab" | "reverse";
-
-/**
- * Buckets items under the named top-level tabs, in tab order, each bucket sorted
- * by the catalog rule (rarest, then highest value, then alphabetical).
+ * Buckets items under the named top-level tabs, in declaration order — which
+ * `CATEGORY_TABS` lists most actionable first (Weapon, Gear, Food, Normal) — each
+ * bucket sorted by the catalog rule (rarest, then highest value, then
+ * alphabetical). The area panel relies on that order.
  *
  * An item whose types span several tabs lands in the first match, so it appears
  * exactly once. Items matching no tab — which the dataset already reports as a
- * data note — fall into an "Other" bucket rather than being dropped; with
- * `reverse` that bucket leads, since it is the least expected.
+ * data note — fall into an "Other" bucket rather than being dropped, and that
+ * bucket trails the named ones.
  */
-export function groupByCategoryTab(
-  items: WikiItem[],
-  order: CategoryBucketOrder = "tab",
-): CategoryBucket[] {
+export function groupByCategoryTab(items: WikiItem[]): CategoryBucket[] {
   const tabs = CATEGORY_TABS.filter((tab) => tab.types.length > 0);
   const buckets: CategoryBucket[] = tabs.map((tab) => ({
     id: tab.id,
@@ -125,7 +116,7 @@ export function groupByCategoryTab(
     .filter((bucket) => bucket.items.length > 0)
     .map((bucket) => ({ ...bucket, items: [...bucket.items].sort(compareForCatalog) }));
 
-  return order === "reverse" ? ordered.reverse() : ordered;
+  return ordered;
 }
 
 /** Applies group, type and search filters, then sorts for display. */

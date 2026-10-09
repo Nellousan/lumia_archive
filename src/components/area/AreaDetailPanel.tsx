@@ -42,7 +42,7 @@ export function AreaDetailPanel({
   );
 
   const buckets = useMemo(
-    () => groupByCategoryTab(visible.map((entry) => entry.item), "reverse"),
+    () => groupByCategoryTab(visible.map((entry) => entry.item)),
     [visible],
   );
   const quantityByItemId = useMemo(

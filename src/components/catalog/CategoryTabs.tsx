@@ -54,7 +54,8 @@ function SubTab({ label, count, active, onClick }: SubTabProps) {
  *
  * Sub-tabs come from `CATEGORY_TABS`, not from the items present, so the strip
  * keeps the same shape as the dataset grows (and a type with no items yet, like
- * `special`, still gets its tab). "All" deliberately has no sub-tabs.
+ * `special`, still gets its tab). The group "All" has no sub-tabs of its own, and
+ * every group's own "All" sub-tab sits last, after its types.
  */
 export function CategoryTabs({
   activeGroupId,
@@ -98,12 +99,6 @@ export function CategoryTabs({
 
       {activeTab.types.length > 0 && (
         <div className="flex flex-wrap border-b border-white/[0.06] pl-0.5">
-          <SubTab
-            label="All"
-            count={groupCounts[activeTab.id] ?? 0}
-            active={activeTypeKey === null}
-            onClick={() => onSelectType(null)}
-          />
           {activeTab.types.map((typeKey) => {
             const active = activeTypeKey === typeKey;
             return (
@@ -116,6 +111,13 @@ export function CategoryTabs({
               />
             );
           })}
+          {/* The group's own "All" sits last, like the top-level one. */}
+          <SubTab
+            label="All"
+            count={groupCounts[activeTab.id] ?? 0}
+            active={activeTypeKey === null}
+            onClick={() => onSelectType(null)}
+          />
         </div>
       )}
     </div>

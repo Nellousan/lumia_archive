@@ -97,15 +97,17 @@ in the generated CSS). An unrecognised rarity string is treated as `common` and 
 
 | Tab    | Sub-tabs                                            | Items |
 | ------ | --------------------------------------------------- | ----- |
-| Normal | Enhance, Special, Ingredients                        | 54    |
-| Food   | Health, Stamina                                      | 100   |
-| Gear   | Head, Clothes, Arm, Leg, Accessory                   | 153   |
-| Weapon | Blade, Stab, Blunt, Thrown, Gun, Bow, Hand, Trap      | 322   |
+| Weapon | Blade, Stab, Blunt, Thrown, Gun, Bow, Hand, Trap, All | 322   |
+| Gear   | Head, Clothes, Arm, Leg, Accessory, All               | 153   |
+| Food   | Health, Stamina, All                                 | 100   |
+| Normal | Enhance, Special, Ingredients, All                    | 54    |
 | All    | *(none — filters nothing)*                          | 629   |
 
 Both levels are underline tabs — amber for the top level, a smaller emerald treatment for the
-sub-tabs — so they read as a hierarchy. **"All" is deliberately last**: it is a way out of the
-taxonomy rather than a way in.
+sub-tabs — so they read as a hierarchy. Weapon leads because it is what the game is played with.
+**Both "All" tabs are last**, top level and sub-tab alike: they are a way out of the taxonomy
+rather than a way in. The declaration order is also the "most actionable first" order the area
+panel groups by, so the two agree without either inverting the other.
 
 Sub-tabs come from that table rather than from the items present, so the strip keeps its shape as
 the dataset grows, and the page resets to the first one whenever the tab, sub-tab or search changes —
@@ -332,8 +334,8 @@ missing from `CATEGORY_TABS` raises its own note.
 - **Area panel.** Three quarters of the map pane wide (min 320px, max 900px), listing the area's
   loot on the same card as the rail with the quantity found there in place of the rarity/type/value
   line (`ItemCard`'s `footnote` prop). Items are bucketed under the four named category tabs, most
-  actionable first — Weapon, Gear, Food, Normal, i.e. `"reverse"` of the rail's tab order, via
-  `groupByCategoryTab`'s `order` argument — and sorted inside each bucket by the catalog rule. Every
+  actionable first — Weapon, Gear, Food, Normal, which is now simply the declared tab order — and
+  sorted inside each bucket by the catalog rule. Every
   item in `data.json` belongs to exactly one tab, so nothing is ambiguous.
 - **Recipe tree.** Every recipe in `data.json` has exactly two direct ingredients, so `RecipeBranch`
   lays siblings side by side and splits the width evenly: the sub-ingredients end up about the size

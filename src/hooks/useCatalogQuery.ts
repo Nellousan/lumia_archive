@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   DEFAULT_CATALOG_QUERY,
   filterCatalog,
+  paginate,
   reconcileQuery,
   subTypeKeys,
   type CatalogQuery,
@@ -34,8 +35,25 @@ export function useCatalogQuery(items: WikiItem[]) {
     [items, query],
   );
 
-  /** Items actually rendered in the rail. */
+  /** Items matching the whole query, before paging. */
   const visibleItems = useMemo(() => filterCatalog(items, query), [items, query]);
+
+  /**
+   * The page being read, remembered together with the filter it belongs to: any
+   * change of tab, sub-tab or search starts a new key and lands back on page one,
+   * without an effect that would fight the render.
+   */
+  const [paging, setPaging] = useState<{ key: string; page: number } | null>(null);
+  const pageKey = `${query.groupId}|${query.typeKey ?? ""}|${query.search}`;
+  const page = useMemo(
+    () => paginate(visibleItems, paging?.key === pageKey ? paging.page : 0),
+    [pageKey, paging, visibleItems],
+  );
+
+  const goToPage = useCallback(
+    (next: number) => setPaging({ key: pageKey, page: next }),
+    [pageKey],
+  );
 
   /** Sub-tab keys for the active tab, in declared order. */
   const typeKeys = useMemo(() => subTypeKeys(query.groupId), [query.groupId]);
@@ -64,6 +82,11 @@ export function useCatalogQuery(items: WikiItem[]) {
     updateQuery,
     resetQuery,
     visibleItems,
+    /** The 12 items of the current page. */
+    pageItems: page.items,
+    page: page.page,
+    pageCount: page.pageCount,
+    goToPage,
     typeKeys,
     typeCounts,
     groupCounts,

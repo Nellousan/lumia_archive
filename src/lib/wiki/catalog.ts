@@ -14,11 +14,33 @@ export interface CatalogQuery {
   search: string;
 }
 
+/**
+ * Where the rail opens: the blade shelf. Starting on "All" would drop the reader
+ * into the entire compendium, which is the least useful view of it.
+ */
 export const DEFAULT_CATALOG_QUERY: CatalogQuery = {
-  groupId: ALL_GROUP_ID,
-  typeKey: null,
+  groupId: "weapon",
+  typeKey: "blade",
   search: "",
 };
+
+/** One rail page: four columns of three rows. */
+export const ITEMS_PER_PAGE = 12;
+
+export interface CatalogPage<T> {
+  items: T[];
+  /** Clamped to the available pages, 0-based. */
+  page: number;
+  pageCount: number;
+}
+
+/** Slices one page out of the filtered catalog, clamped to the pages that exist. */
+export function paginate<T>(items: T[], page: number): CatalogPage<T> {
+  const pageCount = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+  const clamped = Math.min(Math.max(page, 0), pageCount - 1);
+  const start = clamped * ITEMS_PER_PAGE;
+  return { items: items.slice(start, start + ITEMS_PER_PAGE), page: clamped, pageCount };
+}
 
 /** Case- and punctuation-insensitive comparison for search. */
 export function normalizeSearchTerm(value: string): string {

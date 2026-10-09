@@ -8,8 +8,13 @@ import type { CatalogQuery } from "@/lib/wiki/catalog";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface CatalogPanelProps {
-  /** Currently visible (already filtered and ordered) items. */
+  /** Items on the current page (already filtered, ordered and sliced). */
   items: WikiItem[];
+  /** How many items the filter matches in total, across every page. */
+  matchedCount: number;
+  page: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
   /** Total number of items in the dataset, for the "x of y" counter. */
   totalCount: number;
   query: CatalogQuery;
@@ -28,6 +33,10 @@ export interface CatalogPanelProps {
 /** Left rail, top pane: search, the two-level category tabs and the item grid. */
 export function CatalogPanel({
   items,
+  matchedCount,
+  page,
+  pageCount,
+  onPageChange,
   totalCount,
   query,
   onQueryChange,
@@ -70,7 +79,7 @@ export function CatalogPanel({
             Select item
           </span>
           <span className="shrink-0 font-mono text-[11px] text-stone-600">
-            {items.length} / {totalCount}
+            {matchedCount} / {totalCount}
           </span>
         </div>
 
@@ -78,8 +87,11 @@ export function CatalogPanel({
           items={items}
           activeItemId={activeItemId}
           bookmarkedIds={bookmarkedIds}
+          page={page}
+          pageCount={pageCount}
           onSelect={onSelectItem}
           onToggleBookmark={onToggleBookmark}
+          onPageChange={onPageChange}
         />
       </div>
     </div>

@@ -232,7 +232,11 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:h-[calc(100vh-4rem)] lg:flex-row lg:overflow-hidden">
         <aside className="flex w-full shrink-0 flex-col border-b border-white/[0.08] bg-ink-900 lg:w-[38%] lg:max-w-[560px] lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <CatalogPanel
-            items={catalog.visibleItems}
+            items={catalog.pageItems}
+            matchedCount={catalog.visibleItems.length}
+            page={catalog.page}
+            pageCount={catalog.pageCount}
+            onPageChange={catalog.goToPage}
             totalCount={dataset.items.length}
             query={catalog.query}
             onQueryChange={catalog.updateQuery}

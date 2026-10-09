@@ -4,7 +4,8 @@ import type { Rarity } from "./types";
  * Curated taxonomy.
  *
  * `data.json` carries 17 raw type keys. The rail presents them as two levels:
- * five top-level tabs, each with its own ordered sub-tabs. Both levels are
+ * five top-level tabs, each with its own ordered sub-tabs (the catch-all "All"
+ * last). Both levels are
  * derived from the single source of truth below — `CATEGORY_TABS` is the only
  * place the structure is written down.
  *
@@ -22,9 +23,14 @@ export interface CategoryTab {
 
 export const ALL_GROUP_ID = "all";
 
-/** Top-level tabs, in display order. "All" is always first. */
+/** The catch-all tab. Kept as a constant so the fallback below cannot drift. */
+const ALL_TAB: CategoryTab = { id: ALL_GROUP_ID, label: "All", types: [] };
+
+/**
+ * Top-level tabs, in display order. "All" comes last on purpose: it is a way out
+ * of the taxonomy rather than a way in, and the rail opens on a real category.
+ */
 export const CATEGORY_TABS: CategoryTab[] = [
-  { id: ALL_GROUP_ID, label: "All", types: [] },
   {
     id: "normal",
     label: "Normal",
@@ -38,10 +44,11 @@ export const CATEGORY_TABS: CategoryTab[] = [
     label: "Weapon",
     types: ["blade", "stab", "blunt", "thrown", "gun", "bow", "hand", "trap"],
   },
+  ALL_TAB,
 ];
 
 export function getCategoryTab(groupId: string): CategoryTab {
-  return CATEGORY_TABS.find((tab) => tab.id === groupId) ?? CATEGORY_TABS[0];
+  return CATEGORY_TABS.find((tab) => tab.id === groupId) ?? ALL_TAB;
 }
 
 /** Every raw type key the taxonomy knows about. */

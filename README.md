@@ -36,9 +36,11 @@ npm run dev          # http://localhost:3000
 Two panes:
 
 **Left rail — the compendium.** Search (`/` focuses it), five category tabs each with their own
-sub-tabs, and a four-column grid of item cards. Each card shows the artwork, the name, then the
-rarity dot with the type and — when `data.json` has one — the value. The grid is ordered rarest
-first, then by highest value, then alphabetically. A star in the corner of a card — or on the detail
+sub-tabs, and a grid of item cards. The rail opens on **Weapon → Blade**, and the grid is **paged**
+rather than scrolled: 12 cards, four columns of three rows, with a previous/next pager underneath
+(hidden while a filter fits on one page). Each card shows the artwork, the name, then the rarity dot
+with the type and — when `data.json` has one — the value. Items are ordered rarest first, then by
+highest value, then alphabetically, and the counter above the grid reads *matched / total*. A star in the corner of a card — or on the detail
 header — **bookmarks** an item into the plan. Selecting a card opens its detail: rarity, real data
 fields, the **crafting chain drawn as a tree**, and the **fastest routes**.
 
@@ -95,17 +97,19 @@ in the generated CSS). An unrecognised rarity string is treated as `common` and 
 
 | Tab    | Sub-tabs                                            | Items |
 | ------ | --------------------------------------------------- | ----- |
-| All    | *(none — filters nothing)*                          | 194   |
-| Normal | Enhance, Special, Ingredients                        | 25    |
-| Food   | Health, Stamina                                      | 35    |
-| Gear   | Head, Clothes, Arm, Leg, Accessory                   | 38    |
-| Weapon | Blade, Stab, Blunt, Thrown, Gun, Bow, Hand, Trap      | 96    |
+| Normal | Enhance, Special, Ingredients                        | 54    |
+| Food   | Health, Stamina                                      | 100   |
+| Gear   | Head, Clothes, Arm, Leg, Accessory                   | 153   |
+| Weapon | Blade, Stab, Blunt, Thrown, Gun, Bow, Hand, Trap      | 322   |
+| All    | *(none — filters nothing)*                          | 629   |
 
 Both levels are underline tabs — amber for the top level, a smaller emerald treatment for the
-sub-tabs — so they read as a hierarchy.
+sub-tabs — so they read as a hierarchy. **"All" is deliberately last**: it is a way out of the
+taxonomy rather than a way in.
 
 Sub-tabs come from that table rather than from the items present, so the strip keeps its shape as
-the dataset grows. This grouping matches the source wiki's own `itemcategory` values — notably
+the dataset grows, and the page resets to the first one whenever the tab, sub-tab or search changes —
+the paging state is keyed by the filter it belongs to, so no effect has to chase it. This grouping matches the source wiki's own `itemcategory` values — notably
 `hand` really is *Weapon (hand)* there (Knuckle, Claw, Gauntlet…), not an armor slot.
 
 **`Special` is empty**: neither `data.json` nor the source manifest contains a `special` type yet.

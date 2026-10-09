@@ -5,12 +5,12 @@ import type { BookmarkEntry } from "@/components/bookmarks/BookmarkBar";
 import { BookmarkBar } from "@/components/bookmarks/BookmarkBar";
 import { AnimalDropToggle } from "./AnimalDropToggle";
 import { IslandMap } from "./IslandMap";
-import { ClearSelectionButton } from "@/components/ui/ClearSelectionButton";
+import { RandomSpawnBox } from "./RandomSpawnBox";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus, MapOverlayMode } from "@/lib/wiki/route";
 import type { RoutePlan } from "@/lib/wiki/routes";
-import type { AreaItemRef, MapImage, RecipeMaterial, WikiArea } from "@/lib/wiki/types";
+import type { AreaItemRef, MapImage, RecipeMaterial, WikiArea, WikiItem } from "@/lib/wiki/types";
 
 export interface IslandMapPanelProps {
   /**
@@ -18,6 +18,10 @@ export interface IslandMapPanelProps {
    * the mobile tabs; laid out on its own it is simply a flex column.
    */
   className?: string;
+  /** The items with no fixed area, listed in the island's own box. */
+  randomSpawnItems: WikiItem[];
+  /** Ids of the items the current plan needs; the box highlights them. */
+  plannedItemIds: string[];
   /** True when the island is also showing what wild animals can drop. */
   animalDrops: boolean;
   onToggleAnimalDrops: () => void;
@@ -49,7 +53,6 @@ export interface IslandMapPanelProps {
   onSelectItem: (itemId: string) => void;
   onSelectArea: (areaId: string) => void;
   /** Drops the selection so the map is emptied of bubbles. */
-  onClearSelection: () => void;
   selectedArea: WikiArea | null;
   selectedAreaItems: AreaItemRef[];
   onCloseArea: () => void;
@@ -58,6 +61,8 @@ export interface IslandMapPanelProps {
 /** Right-hand pane: island artwork, area overlay and bubbles. */
 export function IslandMapPanel({
   className = "flex",
+  randomSpawnItems,
+  plannedItemIds,
   animalDrops,
   onToggleAnimalDrops,
   renderWidth,
@@ -81,7 +86,6 @@ export function IslandMapPanel({
   onHoverMaterial,
   onSelectItem,
   onSelectArea,
-  onClearSelection,
   selectedArea,
   selectedAreaItems,
   onCloseArea,
@@ -94,6 +98,21 @@ export function IslandMapPanel({
       className={`relative min-h-0 flex-1 flex-col bg-ink-850 ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 map-grid opacity-30" />
+
+      {/*
+       * The island's controls, in its top right corner: what the map is showing,
+       * and what it cannot show. Anchored to the pane rather than to the map, so
+       * panning an island wider than the screen cannot carry them off.
+       */}
+      <div className="absolute right-3 top-4 z-30 flex flex-col items-end gap-2 sm:right-6 sm:top-5">
+        <AnimalDropToggle active={animalDrops} onToggle={onToggleAnimalDrops} />
+        <RandomSpawnBox
+          items={randomSpawnItems}
+          neededItemIds={plannedItemIds}
+          onSelectItem={onSelectItem}
+          onHoverItem={onHoverMaterial}
+        />
+      </div>
 
       <div className="relative z-10 flex shrink-0 flex-col gap-3 px-4 pb-1 pt-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:pt-5">
         <div>
@@ -109,16 +128,6 @@ export function IslandMapPanel({
           </h1>
         </div>
 
-        <ClearSelectionButton
-          label="Clear item"
-          disabled={activeItemId === null}
-          hint={
-            bookmarks.length > 1
-              ? "Deselect the item — the bookmarked items stay in the plan"
-              : "Deselect the item, emptying the island"
-          }
-          onClear={onClearSelection}
-        />
       </div>
 
       <BookmarkBar
@@ -135,12 +144,6 @@ export function IslandMapPanel({
        * bottom of the map would be clipped with no way to reach it.
        */}
       <div className="relative z-10 flex min-h-0 flex-1 px-3 pb-3 pt-2 sm:px-4">
-        {/* Anchored to the pane rather than to the map, so panning an island
-            wider than the screen cannot scroll the control away. */}
-        <div className="absolute left-3 top-2 z-30 sm:left-4">
-          <AnimalDropToggle active={animalDrops} onToggle={onToggleAnimalDrops} />
-        </div>
-
         <div className="m-auto max-h-full w-full overflow-auto">
           <IslandMap
             renderWidth={renderWidth}

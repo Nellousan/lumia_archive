@@ -51,6 +51,28 @@ const spriteManifestTyped = spriteManifest as unknown as {
 };
 const spriteFiles = spriteManifestTyped.files;
 
+/**
+ * Items that spawn in random loot spots rather than in any one place.
+ *
+ * `data.json` records no area for them, and that is not an omission: they turn up
+ * wherever the match puts them, so no bubble can point at one. The island's box
+ * lists them so a plan needing one reads as "you will have to get lucky" instead
+ * of showing nothing at all.
+ *
+ * Curated here rather than derived, because "no area" is also what a crafted item
+ * looks like: it is the shipping band, not a property the loader can infer. Ids,
+ * checked against the dataset — a typo would silently shrink the box, so an
+ * unknown id is reported with the other data notes.
+ */
+const RANDOM_SPAWN_ITEM_IDS = [
+  "ogre_skin",
+  "tree_of_life",
+  "meteorite",
+  "mithril",
+  "vital_sign_sensor",
+  "holy_blood",
+];
+
 /** Expands the manifest's compact box into the domain shape. */
 function toSpriteTrim(id: string): SpriteTrim | null {
   const box = spriteManifestTyped.trim?.[id];
@@ -323,6 +345,16 @@ export function buildWikiDataset(): WikiDataset {
     refs.sort((a, b) => a.areaName.localeCompare(b.areaName));
   }
 
+  const randomSpawnItems: WikiItem[] = [];
+  for (const itemId of RANDOM_SPAWN_ITEM_IDS) {
+    const item = itemsById[itemId];
+    if (!item) {
+      warnings.push(`Random-spawn item "${itemId}" is not in data.json; not shown on the island.`);
+      continue;
+    }
+    randomSpawnItems.push(item);
+  }
+
   const animals = buildAnimals(itemsById, areasById, warnings);
   const animalsById: Record<string, WikiAnimal> = Object.fromEntries(
     animals.map((animal) => [animal.id, animal]),
@@ -384,6 +416,7 @@ export function buildWikiDataset(): WikiDataset {
     animalsById,
     animalDropsByItemId,
     animalsByAreaId,
+    randomSpawnItems,
     usedToCraftByItemId,
     map: LUMIA_ISLAND_MAP,
     stats: {

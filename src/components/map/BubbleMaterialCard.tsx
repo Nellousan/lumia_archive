@@ -1,6 +1,6 @@
 "use client";
 
-import { ItemSprite } from "@/components/ui/ItemSprite";
+import { ItemFrame } from "@/components/ui/ItemFrame";
 import { BUBBLE_CARD_WIDTH } from "@/lib/map-layout";
 import type { RecipeMaterial } from "@/lib/wiki/types";
 
@@ -61,7 +61,7 @@ export function BubbleMaterialCard({
       ? `${material.item.name}, ${quantityInArea} in this area — also dropped by ${droppers}`
       : `${material.item.name}, ${quantityInArea} in this area`;
 
-  const frame = dropped
+  const tone = dropped
     ? focused
       ? "inset-ring-red-300/70 bg-red-500/20"
       : related
@@ -74,31 +74,25 @@ export function BubbleMaterialCard({
         : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45";
 
   return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onMouseEnter={() => onHover(material.item.id)}
-      onMouseLeave={() => onHover(null)}
-      onFocus={() => onHover(material.item.id)}
-      onBlur={() => onHover(null)}
-      onClick={(event) => {
-        event.stopPropagation();
-        onSelect(material.item.id);
-      }}
+    <ItemFrame
+      item={material.item}
+      label={label}
+      tone={tone}
+      className="gap-[2px] px-[4px] pb-[4px] pt-[7px]"
       style={{ width: BUBBLE_CARD_WIDTH }}
-      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${frame}`}
-    >
-      <ItemSprite item={material.item} size="tile" bare />
-      {dropped ? (
-        <span aria-hidden="true" className="text-[21px] leading-none text-red-400">
-          ◎
-        </span>
-      ) : (
-        <span className="font-mono text-[23px] font-bold leading-none text-emerald-300">
-          ×{quantityInArea}
-        </span>
-      )}
-    </button>
+      onHover={onHover}
+      onSelect={() => onSelect(material.item.id)}
+      footnote={
+        dropped ? (
+          <span aria-hidden="true" className="text-[21px] leading-none text-red-400">
+            ◎
+          </span>
+        ) : (
+          <span className="font-mono text-[23px] font-bold leading-none text-emerald-300">
+            ×{quantityInArea}
+          </span>
+        )
+      }
+    />
   );
 }

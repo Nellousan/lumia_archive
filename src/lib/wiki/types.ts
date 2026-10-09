@@ -201,6 +201,11 @@ export interface WikiDataset {
   /** area id -> the animals that spawn there. */
   animalsByAreaId: Record<string, WikiAnimal[]>;
   /**
+   * The items with no fixed home on the island, in the order the island's box
+   * shows them. See `RANDOM_SPAWN_ITEM_IDS` for the list and why it is curated.
+   */
+  randomSpawnItems: WikiItem[];
+  /**
    * Reverse recipe index: for an item used as an ingredient, the items that can
    * be crafted with it. Alphabetical; empty for the ~150 items no recipe needs.
    */

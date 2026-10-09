@@ -143,6 +143,18 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    */
   const planKey = `${plannedItems.map((planned) => planned.id).join("|")}#${startingClothes ?? ""}#${routeMode}${lookAhead}`;
 
+  /**
+   * What the island's random-spawn box highlights: everything the plan is about,
+   * which is the planned items themselves as well as the materials they need — an
+   * item with no recipe and no area is exactly the case the box exists for, and it
+   * would otherwise never be the one lit up.
+   */
+  const plannedItemIds = useMemo(() => {
+    const ids = new Set(plannedItems.map((planned) => planned.id));
+    for (const material of route.materials) ids.add(material.item.id);
+    return [...ids];
+  }, [plannedItems, route.materials]);
+
   const bookmarkEntries = useMemo(
     () =>
       plannedItems.map((planned) => ({
@@ -350,6 +362,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
 
         <IslandMapPanel
           className={`${paneDisplay("map")} lg:flex`}
+          randomSpawnItems={dataset.randomSpawnItems}
+          plannedItemIds={plannedItemIds}
           animalDrops={showAnimalDrops}
           onToggleAnimalDrops={() => setShowAnimalDrops((shown) => !shown)}
           renderWidth={islandWidth}
@@ -373,7 +387,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           onHoverMaterial={setFocusedMaterialId}
           onSelectItem={handleFollowLink}
           onSelectArea={setSelectedAreaId}
-          onClearSelection={handleClearSelection}
           selectedArea={selectedArea}
           selectedAreaItems={selectedAreaItems}
           onCloseArea={() => setSelectedAreaId(null)}

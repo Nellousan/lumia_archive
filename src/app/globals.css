@@ -21,29 +21,37 @@
 /* Base                                                                        */
 /* -------------------------------------------------------------------------- */
 
-html {
-  background: var(--color-ink-950);
-  /* Reserve the scrollbar so the two-column shell does not shift when panels
-     overflow by a pixel. */
-  scrollbar-gutter: stable;
-}
+/*
+ * Base resets live in `@layer base` on purpose. Unlayered CSS outranks every
+ * layer, so a bare `button { font: inherit }` here silently beat every
+ * text-size utility in the app: a button asking for `text-[10px]` rendered at
+ * the inherited 16px. Anything that belongs to the base layer has to say so.
+ */
+@layer base {
+  html {
+    background: var(--color-ink-950);
+    /* Reserve the scrollbar so the two-column shell does not shift when panels
+       overflow by a pixel. */
+    scrollbar-gutter: stable;
+  }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  font-family: var(--font-sans);
-  background: var(--color-ink-950);
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    background: var(--color-ink-950);
+    -webkit-font-smoothing: antialiased;
+  }
 
-button,
-input {
-  font: inherit;
-}
+  button,
+  input {
+    font: inherit;
+  }
 
-button {
-  cursor: pointer;
+  button {
+    cursor: pointer;
+  }
 }
 
 * {

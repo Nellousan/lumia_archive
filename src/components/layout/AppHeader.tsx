@@ -22,8 +22,19 @@ export function AppHeader({ stats, islandCollapsed, onToggleIsland }: AppHeaderP
   return (
     <header className="flex h-16 items-center justify-between border-b border-white/[0.08] bg-ink-900 px-4 sm:px-7">
       <div className="flex items-center gap-3">
-        <div className="relative grid size-9 place-items-center rounded-full border border-amber-200/40 bg-amber-300/10">
-          <span className="font-display text-lg font-black text-amber-300">L</span>
+        {/* The mark brings its own circle — the artwork is a disc that fills its
+            canvas — so the frame is down to a hairline, kept only so the dark rim
+            of the emblem still reads against the dark header. */}
+        <div className="relative size-9 shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size brand
+              mark; nothing to optimise at 36px, and the pip is positioned on it. */}
+          <img
+            src="/aglaia.png"
+            alt=""
+            width={36}
+            height={36}
+            className="size-9 rounded-full ring-1 ring-white/10"
+          />
           <span className="absolute -right-0.5 top-0 size-2 rounded-full border border-ink-900 bg-emerald-400" />
         </div>
         <div>

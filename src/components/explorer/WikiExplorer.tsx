@@ -20,7 +20,6 @@ import type { MapFocus } from "@/lib/wiki/route";
 import { DEFAULT_LOOK_AHEAD, type RouteMode } from "@/lib/wiki/routes";
 import type {
   AreaItemRef,
-  AreaSpawnRef,
   WikiAnimal,
   WikiDataset,
   WikiItem,
@@ -30,7 +29,6 @@ import type {
 const TWO_COLUMN_QUERY = "(min-width: 1024px)";
 
 /** Stable empties so derived memos do not invalidate on every render. */
-const NO_SPAWNS: AreaSpawnRef[] = [];
 const NO_ITEMS: AreaItemRef[] = [];
 const NO_ANIMALS: WikiAnimal[] = [];
 const NO_CRAFTABLES: WikiItem[] = [];
@@ -135,9 +133,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     return planned;
   }, [activeItem, bookmarks.ids, dataset.itemsById]);
 
-  const spawnRefs = activeItem
-    ? (dataset.spawnsByItemId[activeItem.id] ?? NO_SPAWNS)
-    : NO_SPAWNS;
   const usedToCraft = activeItem
     ? (dataset.usedToCraftByItemId[activeItem.id] ?? NO_CRAFTABLES)
     : NO_CRAFTABLES;
@@ -322,6 +317,10 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       items={usedToCraft}
       activeItemId={activeItem?.id ?? null}
       onSelect={handleFollowLink}
+      // Hidden island: this strip is the first thing in the crafting column, and
+      // the recipe below it starts wherever the strip ends. Reserving the height
+      // keeps that starting point put, whatever is selected.
+      reserveHeight={collapsed}
     />
   ) : null;
 
@@ -331,7 +330,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       tree={route.tree}
       materialCount={route.recipeMaterials.length}
       areaCount={route.recipeAreaCount}
-      spawnRefs={spawnRefs}
       bookmarked={activeItem ? bookmarks.isBookmarked(activeItem.id) : false}
       focusedMaterialId={focusedMaterialId}
       onHoverMaterial={setFocusedMaterialId}

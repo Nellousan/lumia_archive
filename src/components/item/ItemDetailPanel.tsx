@@ -1,13 +1,12 @@
 "use client";
 
-import { ItemFactsGrid, type ItemFact } from "./ItemFactsGrid";
 import { ItemTypeBadges } from "./ItemTypeBadges";
 import { RarityBadge } from "./RarityBadge";
 import { RecipeTree } from "./RecipeTree";
 import { BookmarkButton } from "@/components/ui/BookmarkButton";
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { PaneDivider } from "@/components/ui/PaneDivider";
-import type { AreaSpawnRef, RecipeNode, WikiItem } from "@/lib/wiki/types";
+import type { RecipeNode, WikiItem } from "@/lib/wiki/types";
 
 export interface ItemDetailPanelProps {
   /** `null` while nothing is selected. */
@@ -15,7 +14,6 @@ export interface ItemDetailPanelProps {
   tree: RecipeNode | null;
   materialCount: number;
   areaCount: number;
-  spawnRefs: AreaSpawnRef[];
   /** True when the open item is part of the plan. */
   bookmarked: boolean;
   focusedMaterialId: string | null;
@@ -38,7 +36,6 @@ export function ItemDetailPanel({
   tree,
   materialCount,
   areaCount,
-  spawnRefs,
   bookmarked,
   focusedMaterialId,
   onHoverMaterial,
@@ -62,24 +59,6 @@ export function ItemDetailPanel({
       </div>
     );
   }
-
-  const facts: ItemFact[] = [
-    {
-      label: "Default qty",
-      value: String(item.defaultQuantity),
-      hint: "defaultQuantity from data.json.",
-    },
-    {
-      label: "Found in",
-      value: spawnRefs.length === 0 ? "—" : `${spawnRefs.length}`,
-      hint: "Number of areas on Lumia Island containing this item.",
-    },
-    {
-      label: "Recipe",
-      value: item.craftable ? `${item.recipe?.length ?? 0} steps` : "Gathered",
-      hint: "Direct ingredients, or 'Gathered' when the item has no recipe.",
-    },
-  ];
 
   return (
     <div className="flex-1 p-4 sm:px-6 sm:py-5">
@@ -112,14 +91,30 @@ export function ItemDetailPanel({
           </h2>
           <p className="mt-0.5 font-mono text-[11px] text-stone-600">{item.id}</p>
 
-          {/* Value sits with the identity rather than in the facts grid, so the
-              headline block reads as name / id / worth. */}
-          <p className="mt-2 flex items-baseline gap-2">
-            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-600">
-              Value
+          {/* Value sits with the identity rather than in a facts grid, so the
+              headline block reads as name / id / worth — and what one craft
+              hands over sits beside it, which is the other number the data
+              actually carries. */}
+          <p className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="flex items-baseline gap-2">
+              <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-600">
+                Value
+              </span>
+              <span className="font-mono text-base font-bold leading-none text-amber-300">
+                {item.value === null ? "—" : item.value}
+              </span>
             </span>
-            <span className="font-mono text-base font-bold leading-none text-amber-300">
-              {item.value === null ? "—" : item.value}
+
+            <span
+              title="How many units one craft hands over — defaultQuantity in data.json."
+              className="flex items-baseline gap-2"
+            >
+              <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-600">
+                Default qty
+              </span>
+              <span className="font-mono text-base font-bold leading-none text-stone-300">
+                {item.defaultQuantity}
+              </span>
             </span>
           </p>
         </div>
@@ -152,8 +147,6 @@ export function ItemDetailPanel({
           </button>
         </div>
       </div>
-
-      <ItemFactsGrid facts={facts} />
 
       <PaneDivider label="Crafting recipe" />
       {tree ? (

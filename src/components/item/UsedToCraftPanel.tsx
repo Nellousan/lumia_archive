@@ -6,11 +6,25 @@ import type { WikiItem } from "@/lib/wiki/types";
 /** Fixed card width inside the horizontal strip; the card itself is `w-full`. */
 const STRIP_CARD_WIDTH = 88;
 
+/**
+ * Height of the strip, in pixels: one card at {@link STRIP_CARD_WIDTH}, plus the
+ * room the horizontal scrollbar wants. Reserved for the empty state when the
+ * caller asks for it, so the panel is the same size either way.
+ */
+const STRIP_HEIGHT = 95;
+
 export interface UsedToCraftPanelProps {
   /** Items whose recipe consumes the active item, alphabetically. */
   items: WikiItem[];
   activeItemId: string;
   onSelect: (itemId: string) => void;
+  /**
+   * Keeps the panel's size when there is nothing to list, by holding the strip's
+   * height with the empty message centred in it. Hidden-island mode asks for
+   * this: the strip sits at the top of a column whose next section would
+   * otherwise start at a different place for every item browsed.
+   */
+  reserveHeight?: boolean;
 }
 
 /**
@@ -20,7 +34,12 @@ export interface UsedToCraftPanelProps {
  * upwards through the crafting chain, the same way `RecipeTree` follows it down.
  * Shown even when empty — a stable rail beats one that jumps as you browse.
  */
-export function UsedToCraftPanel({ items, activeItemId, onSelect }: UsedToCraftPanelProps) {
+export function UsedToCraftPanel({
+  items,
+  activeItemId,
+  onSelect,
+  reserveHeight = false,
+}: UsedToCraftPanelProps) {
   return (
     <div className="border-b border-white/[0.07] px-4 py-3 sm:px-6">
       <div className="mb-2 flex items-center justify-between gap-3">
@@ -31,11 +50,19 @@ export function UsedToCraftPanel({ items, activeItemId, onSelect }: UsedToCraftP
       </div>
 
       {items.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-white/10 px-3 py-2 text-[11px] text-stone-500">
-          No recipe consumes this item.
-        </p>
+        <div
+          className={`flex ${reserveHeight ? "items-center" : ""}`}
+          style={reserveHeight ? { height: STRIP_HEIGHT } : undefined}
+        >
+          <p className="w-full rounded-lg border border-dashed border-white/10 px-3 py-2 text-center text-[11px] text-stone-500">
+            No recipe consumes this item.
+          </p>
+        </div>
       ) : (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div
+          className="flex gap-2 overflow-x-auto pb-1"
+          style={reserveHeight ? { minHeight: STRIP_HEIGHT } : undefined}
+        >
           {items.map((item) => (
             <div key={item.id} className="shrink-0" style={{ width: STRIP_CARD_WIDTH }}>
               <ItemCard item={item} selected={item.id === activeItemId} onSelect={onSelect} />

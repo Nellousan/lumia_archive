@@ -44,15 +44,17 @@ const PANES: PaneOption[] = [
  * must not depend on the page around it being scrolled to the end. The panes
  * reserve its height (`PANE_BOTTOM_INSET`), so nothing hides underneath.
  *
- * Hidden from `lg` up, where the panes are side by side and there is nothing to
- * switch between.
+ * Flat and edge to edge, two equal halves that are clickable over their whole
+ * area — a switcher is something the thumb aims at, not a pair of buttons to make
+ * out. Hidden from `lg` up, where the panes are side by side and there is nothing
+ * to switch between.
  */
 export function MobilePaneTabs({ pane, onPaneChange }: MobilePaneTabsProps) {
   return (
     <nav
       role="tablist"
       aria-label="Explorer section"
-      className="fixed inset-x-0 bottom-0 z-50 flex items-stretch gap-2 border-t border-white/[0.08] bg-ink-900/95 px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 flex items-stretch divide-x divide-white/[0.07] border-t border-white/10 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
       {PANES.map((option) => {
         const active = option.id === pane;
@@ -66,12 +68,13 @@ export function MobilePaneTabs({ pane, onPaneChange }: MobilePaneTabsProps) {
             aria-controls={option.panelId}
             title={option.hint}
             onClick={() => onPaneChange(option.id)}
-            className={`h-14 flex-1 rounded-xl border px-3 text-[11px] font-bold uppercase tracking-[0.14em] transition ${
-              active
-                ? "border-amber-300/50 bg-amber-300/10 text-amber-200"
-                : "border-white/10 bg-white/[0.03] text-stone-500 hover:text-stone-200"
+            className={`relative flex h-14 flex-1 items-center justify-center text-[11px] font-bold uppercase tracking-[0.14em] transition ${
+              active ? "bg-amber-300/[0.07] text-amber-200" : "text-stone-500 hover:text-stone-200"
             }`}
           >
+            {active && (
+              <span aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-amber-300" />
+            )}
             {option.label}
           </button>
         );

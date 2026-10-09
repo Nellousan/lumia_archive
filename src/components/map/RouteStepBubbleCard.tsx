@@ -1,13 +1,15 @@
 "use client";
 
 import { ItemSprite } from "@/components/ui/ItemSprite";
-import { BUBBLE_CARD_WIDTH, toIslandPosition, type BubblePlacement } from "@/lib/map-layout";
+import { BUBBLE_CARD_WIDTH, toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
 import { stepCrafts, stepGathers, type RouteStep } from "@/lib/wiki/routes";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RouteStepBubbleCardProps {
   step: RouteStep;
   placement: BubblePlacement;
+  /** Cap the overlay is drawn at; see {@link toLayerPosition}. */
+  bubbleScale: number;
   /** True when this step's area panel is open. */
   active: boolean;
   onHoverArea: (areaId: string | null) => void;
@@ -72,12 +74,13 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
 export function RouteStepBubbleCard({
   step,
   placement,
+  bubbleScale,
   active,
   onHoverArea,
   onSelectArea,
   onSelectItem,
 }: RouteStepBubbleCardProps) {
-  const { left, top } = toIslandPosition(placement);
+  const { left, top } = toLayerPosition(placement, bubbleScale);
   const gathers = stepGathers(step);
   const crafts = stepCrafts(step);
   const total = gathers.length + crafts.length;
@@ -88,8 +91,8 @@ export function RouteStepBubbleCard({
       style={{
         left,
         top,
-        // Centred on the area, then scaled to the size the map can afford.
-        transform: "translate(-50%, -50%) scale(var(--map-bubble-scale, 1))",
+        // Centred on the area; the layer it sits in already carries the scaling.
+        transform: "translate(-50%, -50%)",
       }}
       onMouseEnter={() => onHoverArea(step.area.id)}
       onMouseLeave={() => onHoverArea(null)}

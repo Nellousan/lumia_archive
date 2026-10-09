@@ -1,12 +1,14 @@
 "use client";
 
 import { BubbleMaterialCard } from "./BubbleMaterialCard";
-import { BUBBLE_WIDTH, toIslandPosition, type BubblePlacement } from "@/lib/map-layout";
+import { BUBBLE_WIDTH, toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
 
 export interface AreaBubbleCardProps {
   bubble: AreaBubble;
   placement: BubblePlacement;
+  /** Cap the overlay is drawn at; see {@link toLayerPosition}. */
+  bubbleScale: number;
   /** True when this bubble belongs to the area whose detail panel is open. */
   active: boolean;
   focus: MapFocus | null;
@@ -32,6 +34,7 @@ export interface AreaBubbleCardProps {
 export function AreaBubbleCard({
   bubble,
   placement,
+  bubbleScale,
   active,
   focus,
   routeActive,
@@ -41,7 +44,7 @@ export function AreaBubbleCard({
   onHoverMaterial,
   onSelectItem,
 }: AreaBubbleCardProps) {
-  const { left, top } = toIslandPosition(placement);
+  const { left, top } = toLayerPosition(placement, bubbleScale);
   const containsFocused = bubble.cards.some((card) => card.material.item.id === focus?.itemId);
   // A bubble also counts as relevant when it holds anything needed to craft the
   // focused material, not just the material itself.
@@ -60,8 +63,8 @@ export function AreaBubbleCard({
         left,
         top,
         width: BUBBLE_WIDTH,
-        // Centred on the area, then scaled to the size the map can afford.
-        transform: "translate(-50%, -50%) scale(var(--map-bubble-scale, 1))",
+        // Centred on the area; the layer it sits in already carries the scaling.
+        transform: "translate(-50%, -50%)",
       }}
       onMouseEnter={() => onHoverArea(bubble.area.id)}
       onMouseLeave={() => onHoverArea(null)}

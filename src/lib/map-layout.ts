@@ -208,13 +208,19 @@ export function resolveBubblePlacements(
 /**
  * Style that drops a bubble centre onto the island.
  *
- * Both numbers are already in island pixels and the overlay layer is scaled to
- * the rendered map, so they go on verbatim — no percentage conversion, which is
- * what used to let a bubble drift away from the area it belongs to.
+ * The overlay layer is drawn in *capped* island pixels — its own box is
+ * `map.width / bubbleScale` wide and one transform scales it to the map — so an
+ * island coordinate has to be divided by the cap to land in it. Sizes do not:
+ * they are already in the layer's units.
+ *
+ * The division lives here rather than in the layer's transform because a second
+ * transform per bubble is not free: nested scales make Firefox re-rasterise the
+ * cards' sub-pixel borders as square corners under some zooms. One transform and
+ * arithmetic that cannot go stale is the cheaper arrangement.
  */
-export function toIslandPosition(placement: BubblePlacement): {
-  left: number;
-  top: number;
-} {
-  return { left: placement.x, top: placement.y };
+export function toLayerPosition(
+  placement: BubblePlacement,
+  bubbleScale: number,
+): { left: number; top: number } {
+  return { left: placement.x / bubbleScale, top: placement.y / bubbleScale };
 }

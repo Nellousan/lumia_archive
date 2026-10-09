@@ -93,13 +93,18 @@ export function IslandMap({
     if (measuredWidth !== null) onRenderWidthChange(Math.round(measuredWidth));
   }, [measuredWidth, onRenderWidthChange]);
 
-  /** Scale that maps the island's own pixels onto the rendered map. */
-  const overlayScale = renderWidth === null ? null : renderWidth / map.width;
   /**
    * Extra factor on the bubbles: they follow the map down to a phone, and hold
    * their size once the island is wide enough to draw them at full size.
    */
   const bubbleScale = bubbleScaleFor(renderWidth, map.width);
+  /**
+   * One transform for the whole overlay: the island's pixels at the bubble cap,
+   * scaled onto the rendered map. Bubbles are positioned straight into that
+   * space by {@link toLayerPosition} — a transform per bubble on top of this one
+   * makes Firefox draw the cards' rounded borders square at some zoom levels.
+   */
+  const overlayScale = renderWidth === null ? null : (renderWidth / map.width) * bubbleScale;
 
   const areaById = useMemo(() => new Map(areas.map((area) => [area.id, area])), [areas]);
   const bubbleByAreaId = useMemo(
@@ -219,13 +224,11 @@ export function IslandMap({
       <div
         className="pointer-events-none absolute left-0 top-0 z-20 overflow-hidden"
         style={{
-          width: map.width,
-          height: map.height,
+          width: map.width / bubbleScale,
+          height: map.height / bubbleScale,
           transform: `scale(${overlayScale ?? 1})`,
           transformOrigin: "top left",
           visibility: overlayScale === null ? "hidden" : "visible",
-          // Read by the bubbles below; see `BUBBLE_WIDTH` for the units.
-          ["--map-bubble-scale" as string]: bubbleScale,
         }}
       >
         {stepOverlay
@@ -237,6 +240,7 @@ export function IslandMap({
                   key={step.area.id}
                   step={step}
                   placement={placement}
+                  bubbleScale={bubbleScale}
                   active={activeAreaId === step.area.id}
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}
@@ -252,6 +256,7 @@ export function IslandMap({
                   key={bubble.area.id}
                   bubble={bubble}
                   placement={placement}
+                  bubbleScale={bubbleScale}
                   active={activeAreaId === bubble.area.id}
                   focus={focus}
                   routeActive={routeAreaIds !== null}
@@ -268,6 +273,7 @@ export function IslandMap({
           <MapTooltip
             area={tooltipArea}
             anchor={placements[tooltipArea.id]}
+            bubbleScale={bubbleScale}
             materialNames={tooltipMaterialNames}
           />
         )}

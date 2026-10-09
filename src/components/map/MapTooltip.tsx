@@ -1,11 +1,13 @@
 "use client";
 
-import { toIslandPosition, type BubblePlacement } from "@/lib/map-layout";
+import { toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
 import type { WikiArea } from "@/lib/wiki/types";
 
 export interface MapTooltipProps {
   area: WikiArea;
   anchor: BubblePlacement;
+  /** Cap the overlay is drawn at; see {@link toLayerPosition}. */
+  bubbleScale: number;
   /** Names of recipe materials found in this area, if any. */
   materialNames: string[];
 }
@@ -17,8 +19,8 @@ export interface MapTooltipProps {
  * Sized in island pixels like the bubbles it stands in for, so it scales with the
  * map rather than with the window.
  */
-export function MapTooltip({ area, anchor, materialNames }: MapTooltipProps) {
-  const { left, top } = toIslandPosition(anchor);
+export function MapTooltip({ area, anchor, bubbleScale, materialNames }: MapTooltipProps) {
+  const { left, top } = toLayerPosition(anchor, bubbleScale);
 
   return (
     <div
@@ -29,7 +31,7 @@ export function MapTooltip({ area, anchor, materialNames }: MapTooltipProps) {
         left,
         top,
         transformOrigin: "bottom center",
-        transform: "translate(-50%, -100%) scale(var(--map-bubble-scale, 1))",
+        transform: "translate(-50%, -100%)",
       }}
       role="status"
     >

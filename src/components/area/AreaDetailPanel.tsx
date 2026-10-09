@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimalCard } from "@/components/animal/AnimalCard";
-import { ItemCard, ItemNumbers } from "@/components/ui/ItemCard";
+import { ItemCard } from "@/components/ui/ItemCard";
 import { groupByCategoryTab } from "@/lib/wiki/catalog";
 import type { AreaItemRef, WikiAnimal, WikiArea } from "@/lib/wiki/types";
 
@@ -158,16 +158,12 @@ export function AreaDetailPanel({
                       selected={item.id === activeItemId}
                       onSelect={onSelectItem}
                       footnote={
-                        // Two quantities meet on this card: how much of the item
-                        // lies in *this* area (emerald, the reason the panel is
-                        // open) and how much one craft hands over (white, the
-                        // item's own number). The value comes with the second,
-                        // exactly as it does on every other card.
-                        <span className="flex items-center gap-1.5">
-                          <span className="font-mono text-[13px] font-bold leading-none text-emerald-300">
-                            ×{quantityByItemId.get(item.id) ?? 0}
-                          </span>
-                          <ItemNumbers item={item} />
+                        // The card's own numbers — value and craft yield — are
+                        // left off here on purpose: the only quantity that means
+                        // anything in this panel is what lies in *this* area, and
+                        // a second figure beside it only competes with it.
+                        <span className="font-mono text-[13px] font-bold leading-none text-emerald-300">
+                          ×{quantityByItemId.get(item.id) ?? 0}
                         </span>
                       }
                     />

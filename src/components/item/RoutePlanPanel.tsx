@@ -38,6 +38,8 @@ export interface RoutePlanPanelProps {
   onHoverRoute: (routeId: string | null) => void;
   onSelectRoute: (routeId: string) => void;
   onSelectArea: (areaId: string) => void;
+  /** Opens a food from a route's "also cookable" row. */
+  onSelectItem: (itemId: string) => void;
 }
 
 /**
@@ -67,6 +69,7 @@ export function RoutePlanPanel({
   onHoverRoute,
   onSelectRoute,
   onSelectArea,
+  onSelectItem,
 }: RoutePlanPanelProps) {
   const startingItem = startingClothes ? (startingOptions.find((item) => item.id === startingClothes) ?? null) : null;
   const lookAheadOptions = Array.from({ length: MAX_LOOK_AHEAD }, (_, index) => index + 1);
@@ -175,6 +178,7 @@ export function RoutePlanPanel({
         onHoverRoute={onHoverRoute}
         onSelectRoute={onSelectRoute}
         onSelectArea={onSelectArea}
+        onSelectItem={onSelectItem}
       />
     </section>
   );

@@ -3,9 +3,11 @@
 import { Fragment, useState } from "react";
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { BAG_SLOTS } from "@/lib/wiki/inventory";
+import { RARITY_META, itemTypeLabel } from "@/lib/wiki/taxonomy";
 import {
   stepCrafts,
   stepGathers,
+  type CookableFood,
   type RouteMode,
   type RoutePlan,
   type RouteStep,
@@ -37,6 +39,8 @@ export interface RoutePlanListProps {
   /** Pins a route, or unpins it when clicked again. */
   onSelectRoute: (routeId: string) => void;
   onSelectArea: (areaId: string) => void;
+  /** Opens a food from a route's "also cookable" row in the item detail. */
+  onSelectItem: (itemId: string) => void;
 }
 
 /** Routes shown before the "show all" fold; steps make each row tall. */
@@ -139,6 +143,70 @@ function StepItemCard({
     >
       <ItemSprite item={item} size="tile" bare />
     </span>
+  );
+}
+
+/**
+ * Rarities kept out of the cookable row: the bottom of the ladder is a Pill, and
+ * the row exists to point at what is worth noticing.
+ */
+const HIDDEN_RARITIES = new Set<WikiItem["rarity"]>(["common"]);
+
+/**
+ * What else these areas could supply, as a row of artwork under the steps.
+ *
+ * Sprite-only, like the map's bubbles and the step cards, so a route that could
+ * cook fourteen things still costs a single line — the name, the type, the value
+ * and the ingredients are on hover, and clicking one opens it. Rarity tints the
+ * frame, which is what keeps the ordering legible without labels: the row runs
+ * from violet at the front to emerald at the back.
+ *
+ * Nothing here is part of the plan, and the row says so: it is what the ground
+ * offers, not what the route came for.
+ */
+function CookableRow({
+  foods,
+  onSelectItem,
+}: {
+  foods: CookableFood[];
+  onSelectItem: (itemId: string) => void;
+}) {
+  const visible = foods.filter((food) => !HIDDEN_RARITIES.has(food.item.rarity));
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1 border-t border-white/[0.05] pt-1.5 pl-[22px] lg:pl-[18px]">
+      <span
+        title="Food and stamina these areas could also supply — none of it is part of the plan"
+        className="shrink-0 pr-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-600"
+      >
+        Also cookable
+      </span>
+
+      {visible.map(({ item, ingredients }) => {
+        const rarity = RARITY_META[item.rarity];
+        const typeLabel = item.types.map(itemTypeLabel).join(" / ") || "Unclassified";
+        const label = `${item.name} — ${typeLabel} (${rarity.label})${
+          item.value !== null ? ` · value ${item.value}` : ""
+        }${ingredients.length > 0 ? ` · ${ingredients.map((one) => one.name).join(" + ")}` : ""}`;
+
+        return (
+          <button
+            key={item.id}
+            type="button"
+            title={label}
+            aria-label={label}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelectItem(item.id);
+            }}
+            className={`grid size-6 shrink-0 place-items-center rounded-md border p-0.5 transition hover:brightness-125 sm:size-7 ${rarity.badge}`}
+          >
+            <ItemSprite item={item} size="tile" bare />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -252,6 +320,7 @@ export function RoutePlanList({
   onHoverRoute,
   onSelectRoute,
   onSelectArea,
+  onSelectItem,
 }: RoutePlanListProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -390,6 +459,8 @@ export function RoutePlanList({
                     </Fragment>
                   ))}
                 </ol>
+
+                <CookableRow foods={route.cookable} onSelectItem={onSelectItem} />
               </div>
             </li>
           );

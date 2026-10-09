@@ -5,6 +5,7 @@ import {
   stacksInBag,
   type EquipmentSlot,
 } from "./inventory";
+import { getCategoryTab, rarityRank } from "./taxonomy";
 import type { RecipeNode, WikiArea, WikiDataset, WikiItem } from "./types";
 
 /**
@@ -111,6 +112,11 @@ export interface RoutePlan {
    * Counts each step's kit again, so value that arrives earlier scores higher.
    */
   greedyScore: number;
+  /**
+   * Food and stamina this route's areas could also supply, rarest first. Never
+   * part of the plan — see {@link routeCookables}.
+   */
+  cookable: CookableFood[];
 }
 
 /**
@@ -967,7 +973,6 @@ function runRoute(
 function wornValue(step: RouteStep): number {
   return step.equipped.reduce((total, item) => total + (item.value ?? 0), 0);
 }
-
 /**
  * Headline greedy number: the first entry of the profile — the most value the
  * survivor can be wearing within N areas of the start. Ranking uses the whole
@@ -1073,7 +1078,109 @@ function compareGreedy(a: RoutePlan, b: RoutePlan, lookAhead: number): number {
   );
 }
 
-function toRoute(cover: WikiArea[], order: WikiArea[], steps: RouteStep[]): RoutePlan {
+/** One cookable food, with the ingredients its recipe asks for already resolved. */
+export interface CookableFood {
+  item: WikiItem;
+  /** Direct ingredients, in recipe order — what the row quotes on hover. */
+  ingredients: WikiItem[];
+}
+
+/** The taxonomy's own food group, so "food" means one thing app-wide. */
+const FOOD_TYPES = new Set(getCategoryTab("food").types);
+
+/**
+ * Every food and stamina item there is to cook, found once per search.
+ *
+ * Scanning `dataset.items` per route would cost 629 comparisons for a handful of
+ * hits; the candidates do not depend on the route, so they are collected before
+ * the covers are walked.
+ */
+function cookableFoods(dataset: WikiDataset): WikiItem[] {
+  return dataset.items.filter(
+    (item) =>
+      item.recipe !== null &&
+      item.recipe.length > 0 &&
+      item.types.some((type) => FOOD_TYPES.has(type)),
+  );
+}
+
+/**
+ * Food and stamina a survivor could also cook while walking this route.
+ *
+ * None of it is part of the plan: the solver buys what the recipe trees ask for
+ * and never looks at the kitchen. But a route *is* a set of areas, and areas hold
+ * food ingredients, so someone standing in them can usually cook more than they
+ * came for — which is what this answers, against the areas the route visits.
+ *
+ * The reading is the solver's own, one level down: an item counts when the
+ * route's areas hold it, or when every ingredient of its recipe can be had the
+ * same way. That is what makes the teas and the ramen reachable from Water and a
+ * Lighter — neither of which is food — and it is why a route can list a dish
+ * whose ingredients are nowhere in it as such.
+ *
+ * Deliberately not bag-aware. Six slots are already accounted for by the plan
+ * above, and what a survivor is willing to carry instead is a judgement the list
+ * should not make for them; it says what the ground offers, and the step rows say
+ * how full the pack gets. Sorted rarest first, then by value, so reading from the
+ * front — or cutting the row short — is never the wrong end.
+ */
+function routeCookables(
+  dataset: WikiDataset,
+  cover: WikiArea[],
+  foods: WikiItem[],
+): CookableFood[] {
+  const stock = new Map<string, number>();
+  for (const area of cover) {
+    for (const spawn of area.spawns) {
+      stock.set(spawn.itemId, (stock.get(spawn.itemId) ?? 0) + spawn.quantity);
+    }
+  }
+
+  const reachable = new Map<string, boolean>();
+  const canObtain = (itemId: string, ancestors: ReadonlySet<string>): boolean => {
+    const cached = reachable.get(itemId);
+    if (cached !== undefined) return cached;
+
+    let result: boolean;
+    if ((stock.get(itemId) ?? 0) > 0) {
+      result = true;
+    } else {
+      const recipe = dataset.itemsById[itemId]?.recipe ?? null;
+      // A cycle cannot be answered from itself, so it stays uncached: an answer
+      // reached through a loop must not speak for the item on its own.
+      if (!recipe || recipe.length === 0 || ancestors.has(itemId)) return false;
+      const next = new Set(ancestors);
+      next.add(itemId);
+      result = recipe.every((entry) => canObtain(entry.itemId, next));
+    }
+
+    reachable.set(itemId, result);
+    return result;
+  };
+
+  return foods
+    .filter((item) => canObtain(item.id, new Set<string>()))
+    .map((item) => ({
+      item,
+      ingredients: (item.recipe ?? [])
+        .map((entry) => dataset.itemsById[entry.itemId])
+        .filter((ingredient): ingredient is WikiItem => Boolean(ingredient)),
+    }))
+    .sort(
+      (a, b) =>
+        rarityRank(a.item.rarity) - rarityRank(b.item.rarity) ||
+        (b.item.value ?? 0) - (a.item.value ?? 0) ||
+        a.item.name.localeCompare(b.item.name),
+    );
+}
+
+function toRoute(
+  dataset: WikiDataset,
+  cover: WikiArea[],
+  order: WikiArea[],
+  steps: RouteStep[],
+  foods: WikiItem[],
+): RoutePlan {
   const materials = new Set<string>();
   const crafts = new Set<string>();
   for (const step of steps) {
@@ -1090,6 +1197,9 @@ function toRoute(cover: WikiArea[], order: WikiArea[], steps: RouteStep[]): Rout
     materialCount: materials.size,
     craftCount: crafts.size,
     greedyScore: 0,
+    // Off the cover, not the order: the question is what these areas could
+    // supply, and walking them in a different sequence does not change that.
+    cookable: routeCookables(dataset, cover, foods),
   };
 }
 
@@ -1234,6 +1344,7 @@ export function buildRoutes(
 
   const routes: RoutePlan[] = [];
   const budget = { left: RUN_BUDGET };
+  const cookableCandidates = cookableFoods(dataset);
 
   for (const mask of masks) {
     const cover = visited.filter((_, index) => mask & (1 << index));
@@ -1262,7 +1373,7 @@ export function buildRoutes(
     }
 
     if (best) {
-      const route = toRoute(cover, best.order, best.steps);
+      const route = toRoute(dataset, cover, best.order, best.steps, cookableCandidates);
       routes.push({ ...route, greedyScore: greedyScore(best.steps, lookAhead) });
     }
     if (routes.length >= MAX_ROUTES || budget.left <= 0) break;

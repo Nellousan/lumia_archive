@@ -366,6 +366,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       onHoverRoute={setHoveredRouteId}
       onSelectRoute={handleSelectRoute}
       onSelectArea={setSelectedAreaId}
+      onSelectItem={handleFollowLink}
     />
     ) : null;
 

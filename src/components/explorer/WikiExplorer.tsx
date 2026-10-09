@@ -12,6 +12,7 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { useItemSelection } from "@/hooks/useItemSelection";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useRoutePlan } from "@/hooks/useRoutePlan";
 import { useStepOverlay } from "@/hooks/useStepOverlay";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
@@ -24,6 +25,9 @@ import type {
   WikiDataset,
   WikiItem,
 } from "@/lib/wiki/types";
+
+/** Where the island and the item rail start sharing the row (Tailwind's `lg`). */
+const TWO_COLUMN_QUERY = "(min-width: 1024px)";
 
 /** Stable empties so derived memos do not invalidate on every render. */
 const NO_SPAWNS: AreaSpawnRef[] = [];
@@ -83,6 +87,16 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
 
   /** Wild-animal drops are opt-in: a maybe is not what the island is for. */
   const [showAnimalDrops, setShowAnimalDrops] = useState(false);
+
+  /**
+   * Focus mode: the island folded away so the crafting half of the item can use
+   * the width it was sharing. Meaningful only from `lg` up, where the two panes
+   * sit side by side — below that the island is a tab of its own, so the switch
+   * is hidden and this is ignored even if it was left on.
+   */
+  const [islandCollapsed, setIslandCollapsed] = useState(false);
+  const isTwoColumn = useMediaQuery(TWO_COLUMN_QUERY);
+  const collapsed = islandCollapsed && isTwoColumn;
 
   const [focusedMaterialId, setFocusedMaterialId] = useState<string | null>(null);
   const [hoveredAreaId, setHoveredAreaId] = useState<string | null>(null);
@@ -278,6 +292,83 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   /** Both panes occupy the same slot: one is shown, the other is display:none. */
   const paneDisplay = (pane: MobilePane) => (mobilePane === pane ? "flex" : "hidden");
 
+  /**
+   * The four blocks the rail is made of, named so the two arrangements below can
+   * place them without repeating a line of their wiring: stacked in one column
+   * beside the island, or split across three when it is folded away.
+   */
+  const catalogPane = (
+    <CatalogPanel
+      items={catalog.pageItems}
+      matchedCount={catalog.visibleItems.length}
+      page={catalog.page}
+      pageCount={catalog.pageCount}
+      onPageChange={catalog.goToPage}
+      totalCount={dataset.items.length}
+      query={catalog.query}
+      onQueryChange={catalog.updateQuery}
+      groupCounts={catalog.groupCounts}
+      typeCounts={catalog.typeCounts}
+      activeItemId={activeItem?.id ?? null}
+      bookmarkedIds={bookmarks.ids}
+      onSelectItem={handleSelectFromCatalog}
+      onToggleBookmark={bookmarks.toggleBookmark}
+      searchInputRef={searchInputRef}
+    />
+  );
+
+  const usedToCraftPane = activeItem ? (
+    <UsedToCraftPanel
+      items={usedToCraft}
+      activeItemId={activeItem?.id ?? null}
+      onSelect={handleFollowLink}
+    />
+  ) : null;
+
+  const detailPane = (
+    <ItemDetailPanel
+      item={activeItem}
+      tree={route.tree}
+      materialCount={route.recipeMaterials.length}
+      areaCount={route.recipeAreaCount}
+      spawnRefs={spawnRefs}
+      bookmarked={activeItem ? bookmarks.isBookmarked(activeItem.id) : false}
+      focusedMaterialId={focusedMaterialId}
+      onHoverMaterial={setFocusedMaterialId}
+      onSelectItem={handleFollowLink}
+      onSelectArea={setSelectedAreaId}
+      onToggleBookmark={bookmarks.toggleBookmark}
+      canGoBack={canGoBack}
+      onGoBack={handleGoBack}
+      onClearSelection={handleClearSelection}
+    />
+  );
+
+  const routesPane =
+    plannedItems.length > 0 ? (
+    <RoutePlanPanel
+      routes={route.routes}
+      plannedCount={plannedItems.length}
+      truncated={route.routesTruncated}
+      unobtainableNames={route.unobtainable.map((planned) => planned.name)}
+      inventoryBlocked={route.inventoryBlocked}
+      assumed={route.assumed}
+      nothingToGather={route.nothingToGather}
+      activeRouteId={activeRoute?.id ?? null}
+      planKey={planKey}
+      startingClothes={startingClothes}
+      startingOptions={startingOptions}
+      onStartingClothesChange={setStartingClothes}
+      mode={routeMode}
+      onModeChange={setRouteMode}
+      lookAhead={lookAhead}
+      onLookAheadChange={setLookAhead}
+      onHoverRoute={setHoveredRouteId}
+      onSelectRoute={handleSelectRoute}
+      onSelectArea={setSelectedAreaId}
+    />
+    ) : null;
+
   return (
     // `100dvh` where it is understood, `100vh` everywhere else: the switcher is
     // pinned either way, but a stale viewport height would leave the panes sized
@@ -286,7 +377,11 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       className="flex h-screen flex-col overflow-hidden bg-ink-950 text-stone-100"
       style={{ height: "100dvh" }}
     >
-      <AppHeader stats={dataset.stats} />
+      <AppHeader
+        stats={dataset.stats}
+        islandCollapsed={collapsed}
+        onToggleIsland={() => setIslandCollapsed((folded) => !folded)}
+      />
 
       {/*
        * Each pane scrolls on its own, so switching tabs never lands mid-list, and
@@ -296,80 +391,60 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       <div
         className={`flex min-h-0 flex-1 flex-col lg:flex-row lg:pb-0 ${PANE_BOTTOM_INSET}`}
       >
+        {/*
+         * The item rail. With the island folded away this one scrolling column
+         * becomes three: the catalogue stays put, the crafting half of the item
+         * — what consumes it, then how it is made — moves into the space the map
+         * was using, and the routes take the right edge as a panel of their own.
+         * Each column scrolls on its own, so a long recipe tree no longer pushes
+         * the routes off the bottom of a shared column.
+         */}
         <aside
           id="pane-items"
           role="tabpanel"
           aria-labelledby="tab-items"
-          className={`${paneDisplay("items")} min-h-0 w-full flex-1 flex-col overflow-y-auto border-b border-white/[0.08] bg-ink-900 lg:flex lg:flex-none lg:w-[38%] lg:max-w-[560px] lg:border-b-0 lg:border-r`}
+          className={`${paneDisplay("items")} min-h-0 w-full flex-1 flex-col overflow-y-auto border-b border-white/[0.08] bg-ink-900 lg:flex lg:flex-none lg:max-w-[560px] lg:border-b-0 lg:border-r ${
+            // Folded away, the catalogue hands a little of its width to the
+            // crafting column: the point of the mode is that the recipe gets the
+            // room, and the grid of items barely notices 34% instead of 38%.
+            collapsed ? "lg:w-[34%] lg:min-w-[320px]" : "lg:w-[38%]"
+          }`}
         >
-          <CatalogPanel
-            items={catalog.pageItems}
-            matchedCount={catalog.visibleItems.length}
-            page={catalog.page}
-            pageCount={catalog.pageCount}
-            onPageChange={catalog.goToPage}
-            totalCount={dataset.items.length}
-            query={catalog.query}
-            onQueryChange={catalog.updateQuery}
-            groupCounts={catalog.groupCounts}
-            typeCounts={catalog.typeCounts}
-            activeItemId={activeItem?.id ?? null}
-            bookmarkedIds={bookmarks.ids}
-            onSelectItem={handleSelectFromCatalog}
-            onToggleBookmark={bookmarks.toggleBookmark}
-            searchInputRef={searchInputRef}
-          />
+          {catalogPane}
 
-          {activeItem && (
-            <UsedToCraftPanel
-              items={usedToCraft}
-              activeItemId={activeItem?.id ?? null}
-              onSelect={handleFollowLink}
-            />
-          )}
-
-          <ItemDetailPanel
-            item={activeItem}
-            tree={route.tree}
-            materialCount={route.recipeMaterials.length}
-            areaCount={route.recipeAreaCount}
-            spawnRefs={spawnRefs}
-            bookmarked={activeItem ? bookmarks.isBookmarked(activeItem.id) : false}
-            focusedMaterialId={focusedMaterialId}
-            onHoverMaterial={setFocusedMaterialId}
-            onSelectItem={handleFollowLink}
-            onSelectArea={setSelectedAreaId}
-            onToggleBookmark={bookmarks.toggleBookmark}
-            canGoBack={canGoBack}
-            onGoBack={handleGoBack}
-            onClearSelection={handleClearSelection}
-          />
-
-          {plannedItems.length > 0 && (
-            <RoutePlanPanel
-              routes={route.routes}
-              plannedCount={plannedItems.length}
-              truncated={route.routesTruncated}
-              unobtainableNames={route.unobtainable.map((planned) => planned.name)}
-              inventoryBlocked={route.inventoryBlocked}
-              assumed={route.assumed}
-              nothingToGather={route.nothingToGather}
-              activeRouteId={activeRoute?.id ?? null}
-              planKey={planKey}
-              startingClothes={startingClothes}
-              startingOptions={startingOptions}
-              onStartingClothesChange={setStartingClothes}
-              mode={routeMode}
-              onModeChange={setRouteMode}
-              lookAhead={lookAhead}
-              onLookAheadChange={setLookAhead}
-              onHoverRoute={setHoveredRouteId}
-              onSelectRoute={handleSelectRoute}
-              onSelectArea={setSelectedAreaId}
-            />
+          {!collapsed && (
+            <>
+              {usedToCraftPane}
+              {detailPane}
+              {routesPane}
+            </>
           )}
         </aside>
 
+        {collapsed && (
+          <>
+            <section
+              aria-label="Item crafting"
+              className={`flex min-h-0 flex-1 flex-col overflow-y-auto bg-ink-900 ${
+                routesPane ? "border-r border-white/[0.08]" : ""
+              }`}
+            >
+              {usedToCraftPane}
+              {detailPane}
+            </section>
+
+            {routesPane && (
+              <aside
+                aria-label="Routes"
+                className="flex min-h-0 w-[26%] min-w-[300px] max-w-[400px] flex-col overflow-y-auto bg-ink-900"
+              >
+                {routesPane}
+              </aside>
+            )}
+          </>
+        )}
+
+        {!collapsed && (
         <IslandMapPanel
           className={`${paneDisplay("map")} lg:flex`}
           randomSpawnItems={dataset.randomSpawnItems}
@@ -402,6 +477,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           selectedAreaAnimals={selectedAreaAnimals}
           onCloseArea={() => setSelectedAreaId(null)}
         />
+        )}
       </div>
 
       <MobilePaneTabs pane={mobilePane} onPaneChange={setMobilePane} />

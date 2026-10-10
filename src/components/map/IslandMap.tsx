@@ -13,6 +13,7 @@ import { useElementWidth } from "@/hooks/useElementWidth";
 import {
   bubbleScaleFor,
   estimateBubbleSize,
+  islandControlScale,
   estimateStepBubbleSize,
   resolveBubblePlacements,
   type BubblePlacement,
@@ -131,6 +132,12 @@ export function IslandMap({
    * makes Firefox draw the cards' rounded borders square at some zoom levels.
    */
   const overlayScale = renderWidth === null ? null : (renderWidth / map.width) * bubbleScale;
+  /**
+   * The corner controls are laid out in CSS pixels, outside the scaled layer, so
+   * they take the same rule as a plain multiplier instead — see
+   * {@link islandControlScale}.
+   */
+  const controlsScale = islandControlScale(renderWidth);
 
   const areaById = useMemo(() => new Map(areas.map((area) => [area.id, area])), [areas]);
   const bubbleByAreaId = useMemo(
@@ -371,7 +378,16 @@ export function IslandMap({
        * the pane.
        */}
       <div className="sticky right-3 top-3 z-40 ml-auto h-0 w-[158px]">
-        <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
+        {/*
+         * The island's own chrome, shrunk by the same rule as the bubbles — it is
+         * laid out in CSS pixels rather than in the island's coordinate layer, so
+         * without this it would sit at full size beside bubbles drawn at half its
+         * scale. Anchored top-right, which is the corner it hangs from.
+         */}
+        <div
+          className="absolute right-0 top-0 flex flex-col items-end gap-2"
+          style={{ transform: `scale(${controlsScale})`, transformOrigin: "top right" }}
+        >
           <RandomSpawnBox
             items={randomSpawnItems}
             dropAnimalsByItemId={dropAnimalsByItemId}

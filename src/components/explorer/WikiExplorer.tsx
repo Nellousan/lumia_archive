@@ -649,16 +649,23 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
          * Each column scrolls on its own, so a long recipe tree no longer pushes
          * the routes off the bottom of a shared column.
          */}
+        {/*
+         * A quarter of the row, at every width — the island takes the other three.
+         *
+         * The fraction used to be capped in pixels (`max-w-[560px]`), which made the
+         * rail a different size on every screen: 38% of a 1280 laptop, 29% of a
+         * 1080p desk, 15% of a 4K one, with the map absorbing all the difference. A
+         * fraction with nothing capping it is the only version that holds, and it
+         * holds at 100% zoom and above because it is a fraction of the viewport
+         * rather than a count of pixels, so browser zoom cancels out.
+         *
+         * Below `lg` the pane is the whole screen, and this is ignored.
+         */}
         <aside
           id="pane-items"
           role="tabpanel"
           aria-labelledby="tab-items"
-          className={`${paneDisplay("items")} min-h-0 w-full flex-1 flex-col overflow-y-auto border-b border-white/[0.08] bg-ink-900 lg:flex lg:flex-none lg:max-w-[560px] lg:border-b-0 lg:border-r ${
-            // Folded away, the catalogue hands a little of its width to the
-            // crafting column: the point of the mode is that the recipe gets the
-            // room, and the grid of items barely notices 34% instead of 38%.
-            collapsed ? "lg:w-[34%] lg:min-w-[320px]" : "lg:w-[38%]"
-          }`}
+          className={`${paneDisplay("items")} min-h-0 w-full flex-1 flex-col overflow-y-auto border-b border-white/[0.08] bg-ink-900 lg:flex lg:w-1/4 lg:flex-none lg:border-b-0 lg:border-r`}
         >
           {catalogPane}
 

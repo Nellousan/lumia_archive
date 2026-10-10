@@ -451,6 +451,22 @@ missing from `CATEGORY_TABS` raises its own note.
   with the quantity available in that area; a material two planned items both need collapses into
   one card with the summed quantity. Bubbles are spread by a small collision solver
   (`lib/map-layout.ts`) and clamped inside the map.
+- **How big a bubble is.** A tenth of the island box, at every size — `BUBBLE_WIDTH_SHARE` in
+  `lib/map-layout.ts`, and the only number to touch to make them bigger or smaller. The size used to
+  be capped in pixels instead (140px outright), which made the *share* an accident of the monitor:
+  16% of a small island and 5% of a large one, so a laptop got a third again more clutter than a 4K
+  desk for no reason other than the screen. Nothing caps it now, because nothing has to: the island
+  box itself stops at `max-w-[1400px]`, so a tenth of it is 140px at the widest an island ever gets.
+  The island's own corner chrome — the random-spawn box and the animal-drop toggle, which are laid
+  out in CSS pixels rather than in the island's coordinate layer — hangs off the same constant via
+  `islandControlScale`, so its `w-10` cards come out the size of the cards inside the bubbles
+  (within a pixel, measured at seven widths) instead of half again bigger.
+- **The rail is a quarter of the window.** `lg:w-1/4` on the item pane, with no pixel cap: the map
+  takes the other three quarters, and the split is the same picture on a 1280 laptop and a 3440
+  monitor. It used to be `w-[38%] max-w-[560px]`, which meant 38% of a small screen and 16% of a
+  large one. Being a fraction of the viewport rather than a count of pixels is also what makes it
+  hold at 100% zoom and above — browser zoom scales both sides of the ratio. Below `lg` there is one
+  column and the pane is the whole screen.
 - **The page never scrolls.** The shell is exactly one viewport tall (`100dvh`) and every pane scrolls
   inside it, so the root is clipped (`overflow: hidden` on `html`). That is load-bearing rather than
   tidy: once the rail's content passes a certain height the document starts reporting a scrollable area
@@ -827,6 +843,18 @@ missing from `CATEGORY_TABS` raises its own note.
   `layer:base`, next to a `.outline-none` that resolves to `outline-style: none`. Measure the style and
   not the width: `outline-width` keeps reporting the cascaded value under `outline-style: none` — and
   reports the untouched initial `medium` (3px) when no ring applies at all.
+- The two layout shares were measured, not eyeballed, which is the only way a *share* can be checked:
+  a bubble's width is a number that looks plausible at any value. `node _verify/check-pane-width.mjs`
+  reads the rail and the island out of the DOM at nine widths (1024 → 3440) and got 0.25 / 0.75 every
+  time, with no sideways overflow in either pane, the same quarter with the island folded away, and
+  the full width at 390px where there is one column. `node _verify/check-bubble-scale.mjs` does the
+  same for seven widths: the drawn bubble came out at 10.0% of the island box every time (74px at
+  1024, 110px at 1512, 140px at 1920 and above, where the island's own `max-w-[1400px]` stops it), and
+  the random-spawn box at `158 ×` the same factor — which puts its `w-10` cards within a pixel of what
+  a bubble's 72-island-pixel card is drawn at (21 vs 21.5px at 1024, 40 vs 41px at 1920). Both checks
+  assert the share *and* that it does not drift between widths, since either alone would pass while
+  the other was wrong. The trade-off is asserted too rather than assumed: the area name inside a
+  bubble is text in island units, so it renders at 6.3px on a 736px island and 12px at 1400px.
 
 ---
 

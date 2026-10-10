@@ -14,7 +14,7 @@ import { bubbleScaleFor, type BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { RoutePlan } from "@/lib/wiki/routes";
-import type { MapImage, WikiArea, WikiItem } from "@/lib/wiki/types";
+import type { MapImage, WikiAnimal, WikiArea, WikiItem } from "@/lib/wiki/types";
 
 /**
  * Narrowest the island is ever drawn, in CSS pixels — `min-w-[880px]` on the map
@@ -55,6 +55,8 @@ export interface IslandMapProps {
   onSelectItem: (itemId: string) => void;
   /** The items with no fixed area, listed in the island's own corner. */
   randomSpawnItems: WikiItem[];
+  /** item id -> the animals that can drop it; names the source in the box. */
+  dropAnimalsByItemId: Record<string, WikiAnimal[]>;
   /** Ids of the items the current plan needs; the corner box highlights them. */
   plannedItemIds: string[];
   /** True when the island is also showing what wild animals can drop. */
@@ -93,6 +95,7 @@ export function IslandMap({
   onHoverMaterial,
   onSelectItem,
   randomSpawnItems,
+  dropAnimalsByItemId,
   plannedItemIds,
   animalDrops,
   onToggleAnimalDrops,
@@ -213,6 +216,7 @@ export function IslandMap({
         <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
           <RandomSpawnBox
             items={randomSpawnItems}
+            dropAnimalsByItemId={dropAnimalsByItemId}
             neededItemIds={plannedItemIds}
             onSelectItem={onSelectItem}
             onHoverItem={onHoverMaterial}

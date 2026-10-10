@@ -404,6 +404,18 @@ export function buildWikiDataset(): WikiDataset {
     }
   }
 
+  /**
+   * The same question asked without the area: which animals can drop an item.
+   * An animal with no home area — Wickeline — is the whole reason this exists.
+   */
+  const animalsByDropItemId: Record<string, WikiAnimal[]> = {};
+  for (const animal of animals) {
+    for (const item of animal.loot) (animalsByDropItemId[item.id] ??= []).push(animal);
+  }
+  for (const droppers of Object.values(animalsByDropItemId)) {
+    droppers.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   for (const refs of Object.values(animalDropsByItemId)) {
     refs.sort(
       (a, b) => a.areaName.localeCompare(b.areaName) || a.animalName.localeCompare(b.animalName),
@@ -437,6 +449,7 @@ export function buildWikiDataset(): WikiDataset {
     animals,
     animalsById,
     animalDropsByItemId,
+    animalsByDropItemId,
     animalsByAreaId,
     randomSpawnItems,
     usedToCraftByItemId,

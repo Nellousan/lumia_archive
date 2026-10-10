@@ -8,14 +8,7 @@ import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus, MapOverlayMode } from "@/lib/wiki/route";
 import type { RoutePlan } from "@/lib/wiki/routes";
-import type {
-  AreaItemRef,
-  MapImage,
-  RecipeMaterial,
-  WikiAnimal,
-  WikiArea,
-  WikiItem,
-} from "@/lib/wiki/types";
+import type { AreaItemRef, MapImage, WikiAnimal, WikiArea, WikiItem } from "@/lib/wiki/types";
 
 export interface IslandMapPanelProps {
   /**
@@ -25,6 +18,8 @@ export interface IslandMapPanelProps {
   className?: string;
   /** The items with no fixed area, listed in the island's own box. */
   randomSpawnItems: WikiItem[];
+  /** item id -> the animals that can drop it; the box names the source. */
+  dropAnimalsByItemId: Record<string, WikiAnimal[]>;
   /** Ids of the items the current plan needs; the box highlights them. */
   plannedItemIds: string[];
   /** True when the island is also showing what wild animals can drop. */
@@ -37,8 +32,6 @@ export interface IslandMapPanelProps {
   areas: WikiArea[];
   bubbles: AreaBubble[];
   placements: Record<string, BubblePlacement>;
-  /** Materials driving the bubbles; also marks the area panel's "recipe" rows. */
-  materials: RecipeMaterial[];
   overlayMode: MapOverlayMode;
   /** False when the plan is empty: the island shows no bubbles at all. */
   hasPlan: boolean;
@@ -69,6 +62,7 @@ export interface IslandMapPanelProps {
 export function IslandMapPanel({
   className = "flex",
   randomSpawnItems,
+  dropAnimalsByItemId,
   plannedItemIds,
   animalDrops,
   onToggleAnimalDrops,
@@ -78,7 +72,6 @@ export function IslandMapPanel({
   areas,
   bubbles,
   placements,
-  materials,
   overlayMode,
   hasPlan,
   focus,
@@ -155,6 +148,7 @@ export function IslandMapPanel({
             onHoverMaterial={onHoverMaterial}
             onSelectItem={onSelectItem}
             randomSpawnItems={randomSpawnItems}
+            dropAnimalsByItemId={dropAnimalsByItemId}
             plannedItemIds={plannedItemIds}
             animalDrops={animalDrops}
             onToggleAnimalDrops={onToggleAnimalDrops}
@@ -163,15 +157,24 @@ export function IslandMapPanel({
       </div>
 
       {selectedArea && (
-        <AreaDetailPanel
-          area={selectedArea}
-          animals={selectedAreaAnimals}
-          items={selectedAreaItems}
-          activeItemId={activeItemId}
-          relevantItemIds={materials.map((material) => material.item.id)}
-          onSelectItem={onSelectItem}
-          onClose={onCloseArea}
-        />
+        <>
+          {/* The island behind the panel is a click away from closing it. It is
+              invisible — the map is worth reading while the panel is open — so it
+              only catches the click; the ✕ above stays for the keyboard. */}
+          <div
+            aria-hidden="true"
+            onClick={onCloseArea}
+            className="absolute inset-0 z-30"
+          />
+          <AreaDetailPanel
+            area={selectedArea}
+            animals={selectedAreaAnimals}
+            items={selectedAreaItems}
+            activeItemId={activeItemId}
+            onSelectItem={onSelectItem}
+            onClose={onCloseArea}
+          />
+        </>
       )}
     </section>
   );

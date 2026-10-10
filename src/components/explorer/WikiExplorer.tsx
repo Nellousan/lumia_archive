@@ -447,6 +447,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
         <IslandMapPanel
           className={`${paneDisplay("map")} lg:flex`}
           randomSpawnItems={dataset.randomSpawnItems}
+          dropAnimalsByItemId={dataset.animalsByDropItemId}
           plannedItemIds={plannedItemIds}
           animalDrops={showAnimalDrops}
           onToggleAnimalDrops={() => setShowAnimalDrops((shown) => !shown)}
@@ -456,7 +457,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           areas={dataset.areas}
           bubbles={route.bubbles}
           placements={route.placements}
-          materials={route.materials}
           overlayMode={route.overlayMode}
           hasPlan={plannedItems.length > 0}
           focus={focus}

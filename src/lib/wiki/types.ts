@@ -209,6 +209,15 @@ export interface WikiDataset {
   /** area id -> the animals that spawn there. */
   animalsByAreaId: Record<string, WikiAnimal[]>;
   /**
+   * item id -> the animals that can drop it, with or without a home area.
+   *
+   * `animalDropsByItemId` is keyed by animal × area, so an animal the data places
+   * nowhere contributes nothing to it — Wickeline, whose Holy Blood is otherwise
+   * unobtainable, disappears from that index entirely. This one keeps the animal.
+   * Alphabetical by name.
+   */
+  animalsByDropItemId: Record<string, WikiAnimal[]>;
+  /**
    * The items with no fixed home on the island, in the order the island's box
    * shows them. See `RANDOM_SPAWN_ITEM_IDS` for the list and why it is curated.
    */

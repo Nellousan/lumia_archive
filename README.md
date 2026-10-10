@@ -75,7 +75,8 @@ and the routes answer for: the selected item, then every bookmark. Under it, the
 image map overlaid as clickable polygons, and a **bubble anchored over every area that holds a
 material the plan needs** — each bubble names the area and lists one compact card per material found
 there, artwork plus the quantity available. Clicking any material opens it. Clicking an area opens a
-wide slide-over with everything that spawns there, filterable down to just the current plan.
+wide slide-over with everything that spawns there; clicking the island outside it — or Escape, or
+the ✕ — closes it.
 Highlight a route and the bubbles swap to that route's steps: **what gets picked up and what gets
 built** at each one, numbered in walk order.
 
@@ -386,7 +387,10 @@ missing from `CATEGORY_TABS` raises its own note.
   line (`ItemCard`'s `footnote` prop). Items are bucketed under the four named category tabs, most
   actionable first — Weapon, Gear, Food, Normal, which is now simply the declared tab order — and
   sorted inside each bucket by the catalog rule. Every
-  item in `data.json` belongs to exactly one tab, so nothing is ambiguous.
+  item in `data.json` belongs to exactly one tab, so nothing is ambiguous. The panel carries no
+  filter and no count of its own: it lists everything the area holds, the header already says how
+  many stacks that is, and the one area with nothing at all (the Research Center) shows its animal
+  and stops rather than explaining itself.
 - **Recipe tree.** Every recipe in `data.json` has exactly two direct ingredients, so `RecipeBranch`
   lays siblings side by side and splits the width evenly: the sub-ingredients end up about the size
   of a catalog card. Connectors are drawn per column as two half-width rail segments plus a vertical
@@ -516,6 +520,14 @@ missing from `CATEGORY_TABS` raises its own note.
   paints at 36×36 from `public/aglaia.png` (still 644×644 on disk), no trace of the amber "L" it
   replaced, and the tab icon is the single `link[rel=icon]` Next emits — 126×126, served with a
   content hash, byte-identical to `src/app/icon.png`.
+- The island's panels were re-checked against `data.json` at 1512 and 390 px: the random-spawn box
+  names the animal that drops an item where the data knows one (Holy Blood → "found on Dr.
+  Wickeline, no fixed area"; Vital Sign Sensor → "found on Mr. Meiji, in Research Center") and falls
+  back to "found at random" for the four that are genuinely loose; the animal-drops switch's tooltip
+  carries no disclaimer in either state; the Research Center lists its animal and no prose about
+  missing loot; neither the "N shown" count nor the "Recipe only" filter remains on any area; and
+  the slide-over closes on a click outside it, stays open on a click inside, and still closes on
+  Escape and on the ✕.
 - The startup line was verified on a real `next start`: it prints once, before the first request —
   `[lumia-archive] data ready — 201 items · 22 areas (22 mapped) · 39 craftable — 2 data note(s): …` —
   and the island pane no longer renders any data-notes strip.

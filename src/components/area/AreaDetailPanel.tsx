@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { AnimalCard } from "@/components/animal/AnimalCard";
 import { ItemCard } from "@/components/ui/ItemCard";
 import { groupByCategoryTab } from "@/lib/wiki/catalog";
@@ -13,8 +13,6 @@ export interface AreaDetailPanelProps {
   /** Every item the area spawns, with quantities. */
   items: AreaItemRef[];
   activeItemId: string | null;
-  /** Items belonging to the recipe currently mapped, highlighted in the list. */
-  relevantItemIds: string[];
   onSelectItem: (itemId: string) => void;
   onClose: () => void;
 }
@@ -34,27 +32,22 @@ export interface AreaDetailPanelProps {
  *
  * Above them sits the area's wild animal: the one thing on this panel that is not
  * a resource. Its loot is shown, but nothing in the app plans around it.
+ *
+ * Everything here is what the area holds, with no filter to narrow it and no
+ * count to announce — the header already says how many stacks were recorded, and
+ * a panel that answers one question does not need two controls in front of it.
  */
 export function AreaDetailPanel({
   area,
   animals,
   items,
   activeItemId,
-  relevantItemIds,
   onSelectItem,
   onClose,
 }: AreaDetailPanelProps) {
-  const [onlyRelevant, setOnlyRelevant] = useState(false);
-  const relevantSet = useMemo(() => new Set(relevantItemIds), [relevantItemIds]);
-
-  const visible = useMemo(
-    () => (onlyRelevant ? items.filter((entry) => relevantSet.has(entry.item.id)) : items),
-    [items, onlyRelevant, relevantSet],
-  );
-
   const buckets = useMemo(
-    () => groupByCategoryTab(visible.map((entry) => entry.item)),
-    [visible],
+    () => groupByCategoryTab(items.map((entry) => entry.item)),
+    [items],
   );
   const quantityByItemId = useMemo(
     () => new Map(items.map((entry) => [entry.item.id, entry.quantity])),
@@ -89,32 +82,11 @@ export function AreaDetailPanel({
         </button>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-2.5">
-        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">
-          {visible.length} shown
-        </span>
-        {relevantSet.size > 0 && (
-          <button
-            type="button"
-            onClick={() => setOnlyRelevant((value) => !value)}
-            aria-pressed={onlyRelevant}
-            className={`rounded-md border px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition ${
-              onlyRelevant
-                ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                : "border-white/10 bg-white/[0.03] text-stone-500 hover:text-stone-200"
-            }`}
-          >
-            Recipe only
-          </button>
-        )}
-      </div>
-
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="space-y-5">
-          {/* Above the loot, and outside the empty-state branch below: an area
-              with no recorded items still has whatever lives there, and the one
-              area that is both — the Research Center, home to Mr. Meiji — is the
-              case where the animal matters most. */}
+          {/* The animal comes first: it is what the one area with no loot at all
+              still has, and the Research Center — home to Mr. Meiji — is exactly
+              that area. */}
           {animals.length > 0 && (
             <section>
               <div className="mb-2 flex items-center gap-2">
@@ -133,45 +105,37 @@ export function AreaDetailPanel({
             </section>
           )}
 
-          {buckets.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
-              {area.empty
-                ? "data.json records no loot for this area yet."
-                : "Nothing here belongs to the current recipe."}
-            </p>
-          ) : (
-            buckets.map((bucket) => (
-              <section key={bucket.id}>
-                <div className="mb-2 flex items-center gap-2">
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
-                    {bucket.label}
-                  </h3>
-                  <span className="h-px flex-1 bg-white/[0.08]" />
-                  <span className="font-mono text-[10px] text-stone-600">{bucket.items.length}</span>
-                </div>
+          {buckets.map((bucket) => (
+            <section key={bucket.id}>
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
+                  {bucket.label}
+                </h3>
+                <span className="h-px flex-1 bg-white/[0.08]" />
+                <span className="font-mono text-[10px] text-stone-600">{bucket.items.length}</span>
+              </div>
 
-                <div className="grid grid-cols-3 gap-2 min-[560px]:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                  {bucket.items.map((item) => (
-                    <ItemCard
-                      key={item.id}
-                      item={item}
-                      selected={item.id === activeItemId}
-                      onSelect={onSelectItem}
-                      footnote={
-                        // The card's own numbers — value and craft yield — are
-                        // left off here on purpose: the only quantity that means
-                        // anything in this panel is what lies in *this* area, and
-                        // a second figure beside it only competes with it.
-                        <span className="font-mono text-[13px] font-bold leading-none text-emerald-300">
-                          ×{quantityByItemId.get(item.id) ?? 0}
-                        </span>
-                      }
-                    />
-                  ))}
-                </div>
-              </section>
-            ))
-          )}
+              <div className="grid grid-cols-3 gap-2 min-[560px]:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {bucket.items.map((item) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    selected={item.id === activeItemId}
+                    onSelect={onSelectItem}
+                    footnote={
+                      // The card's own numbers — value and craft yield — are left
+                      // off here on purpose: the only quantity that means anything
+                      // in this panel is what lies in *this* area, and a second
+                      // figure beside it only competes with it.
+                      <span className="font-mono text-[13px] font-bold leading-none text-emerald-300">
+                        ×{quantityByItemId.get(item.id) ?? 0}
+                      </span>
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       </div>
     </aside>

@@ -16,6 +16,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useRoutePlan } from "@/hooks/useRoutePlan";
 import { useStepOverlay } from "@/hooks/useStepOverlay";
 import { copyText } from "@/lib/clipboard";
+import { scrollWithinScroller } from "@/lib/scroll";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
 import { DEFAULT_LOOK_AHEAD, type RouteMode } from "@/lib/wiki/routes";
@@ -347,12 +348,16 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * so stepping aside here is enough to let it stand. A rank the list no longer
    * reaches resolves to nothing, and the item the link also opened is then the
    * thing to show.
+   *
+   * The move is confined to the pane the section lives in. `scrollIntoView` would
+   * scroll the document as well, which is how the section ended up under the header
+   * rather than against it.
    */
   useEffect(() => {
     if (!linkApplied || arrivalScroll.current === null) return;
     arrivalScroll.current = null;
     if (revealRouteId !== null) return;
-    usedToCraftRef.current?.scrollIntoView({ block: "start" });
+    scrollWithinScroller(usedToCraftRef.current, "start");
   }, [linkApplied, revealRouteId]);
 
   const activeRouteId = pinnedRouteId ?? hoveredRouteId;

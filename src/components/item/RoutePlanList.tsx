@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { ItemSprite } from "@/components/ui/ItemSprite";
+import { scrollWithinScroller } from "@/lib/scroll";
 import { BAG_SLOTS } from "@/lib/wiki/inventory";
 import { RARITY_META, itemTypeLabel } from "@/lib/wiki/taxonomy";
 import {
@@ -418,15 +419,18 @@ export function RoutePlanList({
 
   /*
    * A shared route is opened *to*: the fold starts lifted so the row it names is
-   * drawn at all, and the row is then scrolled into view. Both belong to the
-   * arrival — the list is remounted for it (its `key` carries the reveal), so the
-   * reader's own fold, from then on, is never touched by it again.
+   * drawn at all, and the row is then brought to the middle of its own pane. Both
+   * belong to the arrival — the list is remounted for it (its `key` carries the
+   * reveal), so the reader's own fold, from then on, is never touched by it again.
+   *
+   * The scroll is confined to the pane the list sits in: `scrollIntoView` would
+   * also move the document and land the whole page under the header.
    */
   useEffect(() => {
     const row = activeRowRef.current;
     if (revealRouteId === null || !expanded || revealed.current || row === null) return;
     revealed.current = true;
-    row.scrollIntoView({ block: "center" });
+    scrollWithinScroller(row, "center");
   }, [revealRouteId, expanded]);
 
   if (routes.length === 0 && nothingToGather) {

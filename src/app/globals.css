@@ -30,9 +30,17 @@
 @layer base {
   html {
     background: var(--color-ink-950);
-    /* Reserve the scrollbar so the two-column shell does not shift when panels
-       overflow by a pixel. */
-    scrollbar-gutter: stable;
+    /*
+     * The shell is exactly one viewport tall and every pane scrolls inside it, so
+     * the document itself must never scroll. This is not idle housekeeping: once
+     * the rail's content passes a certain height the document starts reporting a
+     * scrollable area of its own, and a wheel over the island — which scrolls
+     * nothing by itself — then slides the whole app up into empty space. Clipping
+     * the root rules that out and leaves the panes' own overflow alone. The
+     * scrollbar this replaces (`scrollbar-gutter: stable`) was reserving a gutter
+     * for a scrollbar the shell should never show.
+     */
+    overflow: hidden;
   }
 
   body {

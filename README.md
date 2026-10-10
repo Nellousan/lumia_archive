@@ -95,8 +95,11 @@ it is pinned on the island — and clicking it lets it go, as any other pin does
 the origin you are reading on, so one copied from a dev server points at `localhost`.
 
 **Where the rail lands.** A link says what the reader came for, and the rail is scrolled to match. An
-item open — alone, or with a plan behind it — brings the **Used to craft** section flush to the top:
-that item is what the reader is here for, and the catalogue above it is what they scrolled past. A link
+item open — alone, or with a plan behind it — brings the **Used to craft** section flush against the
+header: that item is what the reader is here for, and the catalogue above it is what they scrolled past.
+The move is made on the rail's own `scrollTop` rather than with `scrollIntoView`, which walks *every*
+scrollable ancestor and would scroll the document too — landing the section under the header instead of
+against it (`lib/scroll.ts`). A link
 that names a route is scrolled to the route instead, and the item scroll stands aside for it; if the
 rank no longer reaches, which is what an old link to a shrunken plan looks like, the item's crafting
 view is what stands. A plan of bookmarks alone has no item to open and keeps the default top. The
@@ -236,6 +239,7 @@ src/
       geometry.ts         # polygon centroid/anchor/bounds helpers
       map-image.ts        # base map dimensions (must match the PNG)
     clipboard.ts          # copy-to-clipboard, with the pre-2018 fallback
+    scroll.ts             # scrolling confined to one pane, never the document
     map-layout.ts         # bubble size estimates + collision-aware placement
   instrumentation.ts      # startup hook: logs the dataset summary to stdout
   hooks/
@@ -332,6 +336,13 @@ missing from `CATEGORY_TABS` raises its own note.
   with the quantity available in that area; a material two planned items both need collapses into
   one card with the summed quantity. Bubbles are spread by a small collision solver
   (`lib/map-layout.ts`) and clamped inside the map.
+- **The page never scrolls.** The shell is exactly one viewport tall (`100dvh`) and every pane scrolls
+  inside it, so the root is clipped (`overflow: hidden` on `html`). That is load-bearing rather than
+  tidy: once the rail's content passes a certain height the document starts reporting a scrollable area
+  of its own — Chromium counting a descendant scroll container's overflow — and a wheel over the island,
+  which scrolls nothing by itself, then slid the whole app up into empty space. Clipping the root also
+  means nothing the app does can move the header: the two arrival scrolls go through
+  `lib/scroll.ts`, which moves one scroll container and never the document.
 - **The plan bar.** Bookmarked items sit directly above the island, and everything listed there
   drives it: the bubbles, and the routes — so a couple of bookmarks are enough to get routes, with
   nothing selected. The selected item appears alongside the bookmarks so it is
@@ -617,10 +628,18 @@ missing from `CATEGORY_TABS` raises its own note.
   nothing at all; a one-item plan carried an 11-character payload; an item that is both open and
   bookmarked round-tripped its 36 routes and pinned rank 1; and Enter on an area chip inside a row
   opened the area without pinning the route. Each arrival was then checked for where the rail lands: an
-  item open, alone or over a two-item plan, put the **Used to craft** section at offset **0** of the
-  rail's scrolled 617 px; a bookmarks-only link left it at `scrollTop 0`; a link naming a route had the
-  crafting strip **3 040 px** behind the pinned row; and picking another item after arriving left the
-  strip exactly where it was, so the scroll is spent rather than repeated.
+  item open, alone or over a two-item plan, put the **Used to craft** section **flush with the header**
+  (`|section.top − header.bottom| ≤ 1` after 617 px of rail scroll, header still at `top: 0`);
+  a bookmarks-only link left the rail at `scrollTop 0`; a link naming a route left the crafting strip
+  **3 040 px** behind the pinned row, header still at `0`; and picking another item after arriving left
+  the strip exactly where it was, so the scroll is spent rather than repeated.
+- The shell was checked against the void: on a page carrying a long route list, a real wheel over the
+  island left `window.scrollY` at **0** and the header at **0**, with the rail's own scroll untouched —
+  and taking the root clip off in the same session reproduced the report exactly, scrolling the page to
+  **400** and pushing the header off the top. A wheel over the rail still scrolled the rail (617 → 1 017)
+  with the page at 0, and focusing the last control in the rail revealed it by scrolling the rail
+  (46 946) rather than the document. The same checks passed at 390 px, where the rail is the whole
+  screen.
 
 ---
 

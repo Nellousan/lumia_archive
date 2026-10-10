@@ -178,6 +178,17 @@ material itself, soft amber for its ingredients, and everything unrelated dims b
 for intermediates that spawn nowhere — `iron_sheet` is not found anywhere on the island, so without
 the widening, focusing it would highlight nothing at all.
 
+A pinned route replaces the material bubbles with its step cards, and those cards answer the same
+question: pointing at *pick up scrap metal here* still lights up every other area holding scrap
+metal. That question is what a route *raises* — the walk sends you to one area, and the reader wants
+to know whether it had to — so a pinned route must not be what silences it. While a card is hovered
+the focus outranks the route tint rather than blending with it, because the route and material
+colours are both amber and near-identical and a blended answer would say nothing; the route stays
+legible through the takeover, since its numbered stops are drawn over the areas rather than in them.
+Letting go restores the route exactly. A build card is hoverable for the same reason, and it is the
+only way to ask about an intermediate: a crafted item has no spawn area, so it has no material card
+to hover with the route unpinned.
+
 Keyboard: `/` search · `Esc` closes the area panel, then unpins the highlighted route, then clears the
 material focus.
 
@@ -711,6 +722,15 @@ missing from `CATEGORY_TABS` raises its own note.
   loads, which is what makes the payload readable. Reloading a real share link (`?p=ARQAAAAT-Yo`) left
   that payload out of the queue entirely (`[?&]p=` never appears in it) while the plan still restored
   (Rocker's Jacket, 4 routes). Asserted at 1512 px and 390 px.
+
+- The material hover was checked under a pinned route against the same hover with nothing pinned,
+  rather than merely checked for "something lit up". With route 1 (Alley → School → Fire Station)
+  pinned and *Steel Chain* hovered on its step card, the areas holding it became Alley (on the route)
+  plus Hotel, Slums and Uptown (off it) — the same set, and the same dimming everywhere else, as
+  hovering the same material with the route released. *Scrap Metal* and *Windbreaker* agreed too, and
+  *Iron Sheet*, which spawns nowhere, reported its 8 ingredient areas instead. Every hovered card drew
+  its own focus ring, no route tint survived a hover, and letting go restored the route's island
+  exactly (compared region by region, state and dimming). Asserted at 1512 px and 1280 px.
 
 ---
 

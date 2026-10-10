@@ -39,6 +39,10 @@ export interface IslandMapProps {
   bubbles: AreaBubble[];
   /** Resolved bubble centres, in base-map pixels. */
   placements: Record<string, BubblePlacement>;
+  /**
+   * The material being focused, if any. It answers "where else is this?", and it
+   * outranks the route tint below so that pinning a route does not silence it.
+   */
   focus: MapFocus | null;
   /** Route to highlight, if one is hovered or pinned in the rail. */
   activeRoute: RoutePlan | null;
@@ -176,21 +180,34 @@ export function IslandMap({
   );
 
   const regionState = (area: WikiArea): RegionState => {
+    // A hovered material is a question about the island — "where else is this?" —
+    // and it outranks the route tint so it answers exactly what it answers with
+    // no route on screen. It has to come first rather than be blended in: the
+    // route and material states are both amber and near-identical, so an area
+    // that stayed "route" would be indistinguishable from one holding the
+    // material. The route survives the takeover regardless, because its numbered
+    // stops are drawn over these regions rather than in them.
+    if (supportAreaIds) {
+      const bubble = bubbleByAreaId.get(area.id);
+      if (!bubble) return area.empty ? "empty" : "base";
+      if (primaryAreaIds?.has(area.id)) return "material";
+      if (supportAreaIds.has(area.id)) return "support";
+      return "relevant";
+    }
+
     // A highlighted route takes over the island: its areas are the answer, so
     // the recipe/material tints step aside until the route is unpinned.
     if (routeAreaIds) return routeAreaIds.has(area.id) ? "route" : area.empty ? "empty" : "base";
 
-    const bubble = bubbleByAreaId.get(area.id);
-    if (!bubble) return area.empty ? "empty" : "base";
-    if (!supportAreaIds) return "relevant";
-    if (primaryAreaIds?.has(area.id)) return "material";
-    if (supportAreaIds.has(area.id)) return "support";
-    return "relevant";
+    return bubbleByAreaId.has(area.id) ? "relevant" : area.empty ? "empty" : "base";
   };
 
   const regionDimmed = (area: WikiArea) => {
+    // Same order as the states above: what the reader is asking about decides
+    // what stays lit.
+    if (supportAreaIds) return !supportAreaIds.has(area.id);
     if (routeAreaIds) return !routeAreaIds.has(area.id);
-    return supportAreaIds !== null && !supportAreaIds.has(area.id);
+    return false;
   };
 
   return (
@@ -285,9 +302,11 @@ export function IslandMap({
                   placement={placement}
                   bubbleScale={bubbleScale}
                   active={activeAreaId === step.area.id}
+                  focusedItemId={focus?.itemId ?? null}
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}
                   onSelectItem={onSelectItem}
+                  onHoverItem={onHoverMaterial}
                 />
               );
             })

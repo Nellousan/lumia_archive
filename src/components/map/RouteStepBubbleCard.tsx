@@ -12,9 +12,13 @@ export interface RouteStepBubbleCardProps {
   bubbleScale: number;
   /** True when this step's area panel is open. */
   active: boolean;
+  /** The material the pointer is on, if any; draws this card's own focus ring. */
+  focusedItemId: string | null;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
   onSelectItem: (itemId: string) => void;
+  /** Focuses the item while the pointer is on its card; see below. */
+  onHoverItem: (itemId: string | null) => void;
 }
 
 interface StepCardProps {
@@ -24,10 +28,13 @@ interface StepCardProps {
   quantity: number;
   /** True for something built here, false for something picked up. */
   built: boolean;
+  /** True while this card's own item is the focused one. */
+  focused: boolean;
   onSelectItem: (itemId: string) => void;
+  onHoverItem: (itemId: string | null) => void;
 }
 
-function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
+function StepCard({ item, quantity, built, focused, onSelectItem, onHoverItem }: StepCardProps) {
   const label = built
     ? `Build ${item.name}${quantity > 1 ? ` ×${quantity}` : ""} here`
     : `Pick up ${item.name} ×${quantity} here`;
@@ -41,11 +48,19 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
         event.stopPropagation();
         onSelectItem(item.id);
       }}
+      // Keyboard parity, the same as the other item frames: focusing the card
+      // with the keyboard asks the island the same question the pointer asks.
+      onMouseEnter={() => onHoverItem(item.id)}
+      onMouseLeave={() => onHoverItem(null)}
+      onFocus={() => onHoverItem(item.id)}
+      onBlur={() => onHoverItem(null)}
       style={{ width: BUBBLE_CARD_WIDTH }}
       className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${
-        built
-          ? "inset-ring-amber-300/50 bg-amber-300/10 hover:inset-ring-amber-200/70 hover:bg-amber-300/20"
-          : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45"
+        focused
+          ? "inset-ring-amber-300/70 bg-amber-300/20"
+          : built
+            ? "inset-ring-amber-300/50 bg-amber-300/10 hover:inset-ring-amber-200/70 hover:bg-amber-300/20"
+            : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45"
       }`}
     >
       <ItemSprite item={item} size="tile" bare />
@@ -70,15 +85,24 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
  * the area and its place in the walk, the amber cards marked with a sparkle are what
  * gets built once those materials are in the pack, and the plain cards are what
  * gets picked up.
+ *
+ * Hovering a card focuses its item, which is the same answer the material cards
+ * give with no route on screen: every other area holding it lights up. A route
+ * being pinned is no reason to stop answering "where else is this?" — that
+ * question is what a reader asks precisely when the route sends them somewhere
+ * inconvenient. The route stays readable while it is answered, because the
+ * numbered stops are drawn over the areas rather than in them.
  */
 export function RouteStepBubbleCard({
   step,
   placement,
   bubbleScale,
   active,
+  focusedItemId,
   onHoverArea,
   onSelectArea,
   onSelectItem,
+  onHoverItem,
 }: RouteStepBubbleCardProps) {
   const { left, top } = toLayerPosition(placement, bubbleScale);
   const gathers = stepGathers(step);
@@ -125,7 +149,9 @@ export function RouteStepBubbleCard({
               item={built.item}
               quantity={built.quantity}
               built
+              focused={focusedItemId === built.item.id}
               onSelectItem={onSelectItem}
+              onHoverItem={onHoverItem}
             />
           ))}
           {gathers.map((picked) => (
@@ -136,7 +162,9 @@ export function RouteStepBubbleCard({
               item={picked.item}
               quantity={picked.quantity}
               built={false}
+              focused={focusedItemId === picked.item.id}
               onSelectItem={onSelectItem}
+              onHoverItem={onHoverItem}
             />
           ))}
         </div>

@@ -1,12 +1,18 @@
 "use client";
 
-export interface StarGlyphProps {
+export interface BookmarkGlyphProps {
   filled: boolean;
   className?: string;
 }
 
-/** The bookmark star, drawn the same wherever it appears. */
-export function StarGlyph({ filled, className = "size-3.5" }: StarGlyphProps) {
+/**
+ * The bookmark ribbon, drawn the same wherever it appears.
+ *
+ * The classic shape — square shoulders at the top, a V cut into the bottom — so it
+ * reads as "keep this" rather than as a rating. `filled` carries the state: hollow
+ * when the item is not in the plan, solid when it is.
+ */
+export function BookmarkGlyph({ filled, className = "size-4" }: BookmarkGlyphProps) {
   return (
     <svg
       aria-hidden="true"
@@ -16,8 +22,9 @@ export function StarGlyph({ filled, className = "size-3.5" }: StarGlyphProps) {
       stroke="currentColor"
       strokeWidth={2}
       strokeLinejoin="round"
+      strokeLinecap="round"
     >
-      <path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" />
+      <path d="M8 3h8a3 3 0 0 1 3 3v15l-7-4-7 4V6a3 3 0 0 1 3-3z" />
     </svg>
   );
 }
@@ -29,7 +36,7 @@ export interface BookmarkButtonProps {
   onToggle: () => void;
   /**
    * `panel` is a full-size button for the detail header; `overlay` is the small
-   * corner star on a catalog card, hidden until the card is hovered or focused.
+   * corner control on a catalog card, hidden until the card is hovered or focused.
    */
   variant?: "panel" | "overlay";
 }
@@ -63,7 +70,7 @@ export function BookmarkButton({
     <button
       type="button"
       onClick={(event) => {
-        // On a catalog card the star sits over the card's own click target.
+        // On a catalog card the control sits over the card's own click target.
         event.stopPropagation();
         onToggle();
       }}
@@ -72,7 +79,9 @@ export function BookmarkButton({
       title={`${action} — ${itemName}`}
       className={shape}
     >
-      <StarGlyph filled={bookmarked} className={variant === "overlay" ? "size-3" : "size-3.5"} />
+      {/* A ribbon is narrower than the star it replaces, so it is drawn a notch
+          larger to keep the same weight in the button. */}
+      <BookmarkGlyph filled={bookmarked} className={variant === "overlay" ? "size-3.5" : "size-4"} />
     </button>
   );
 }

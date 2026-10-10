@@ -67,7 +67,7 @@ export interface SharedPlan {
    * The bookmarks, in the order they were added. The order is part of the plan —
    * the requirements reach the solver in sequence — and an item that is both open
    * and bookmarked is named here as well as in {@link itemId}: planning drops the
-   * repeat, the plan bar keeps its star.
+   * repeat, the plan bar keeps its bookmark.
    */
   bookmarkIds: string[];
   /** Clothes worn from the first move, or `null` for a bare survivor. */

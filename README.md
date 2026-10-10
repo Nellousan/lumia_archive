@@ -149,8 +149,8 @@ sub-tabs, and a grid of item cards. The rail opens on **Weapon → Blade**, and 
 rather than scrolled: 12 cards, four columns of three rows, with a previous/next pager underneath
 (hidden while a filter fits on one page). Each card shows the artwork, the name, then the rarity dot
 with the type and — when `data.json` has one — the value. Items are ordered rarest first, then by
-highest value, then alphabetically, and the counter above the grid reads *matched / total*. A star in the corner of a card — or on the detail
-header — **bookmarks** an item into the plan. Selecting a card opens its detail: rarity, real data
+highest value, then alphabetically, and the counter above the grid reads *matched / total*. A bookmark ribbon in the corner of a card — or on the detail
+header — keeps an item in the plan. Selecting a card opens its detail: rarity, real data
 fields, the **crafting chain drawn as a tree**, and the **fastest routes**.
 
 **Two ways to rank a route.** *Fastest* (the default) is the walk: fewest areas, then the tidiest
@@ -570,7 +570,7 @@ missing from `CATEGORY_TABS` raises its own note.
   **0 bubbles overlapped** even at three items, where the busiest bubble held 5 cards. Worst-case
   plan time was **17 ms**.
 - The rendered plan UI was checked with a preset plan: the bar lists the selected item first
-  (`sel`) then the bookmarks, card stars carry `aria-pressed` and stay hidden until hover, the route
+  (`sel`) then the bookmarks, card bookmarks carry `aria-pressed` and stay hidden until hover, the route
   header names the plan size, `h_fu + gauntlet` maps the union of both recipes (12 materials, with
   shared ones summed), and a plan containing `bread` names it instead of showing an empty list.
 - The inventory-aware run-through was swept over **274 plans** (random pairs and triples plus every

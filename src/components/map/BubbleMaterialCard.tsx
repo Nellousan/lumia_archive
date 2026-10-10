@@ -31,7 +31,7 @@ export interface BubbleMaterialCardProps {
  *
  * A card that can only be dropped by a wild animal is red and shows `◎` where a
  * spawn shows its quantity — the same trick the route steps use for a build's
- * star. There is no number to give: the drop is not a stack sitting in the area,
+ * sparkle. There is no number to give: the drop is not a stack sitting in the area,
  * it is a maybe. A guaranteed spawn that an animal also drops keeps its number
  * and only names the animal, since the pickup itself is not a gamble.
  *

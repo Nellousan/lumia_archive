@@ -24,7 +24,7 @@ export interface CatalogPanelProps {
   typeCounts: Record<string, number>;
   /** `null` while nothing is selected, so no card reads as active. */
   activeItemId: string | null;
-  /** Items in the plan, so their cards can show a filled star. */
+  /** Items in the plan, so their cards can show a filled bookmark. */
   bookmarkedIds: string[];
   onSelectItem: (itemId: string) => void;
   onToggleBookmark: (itemId: string) => void;

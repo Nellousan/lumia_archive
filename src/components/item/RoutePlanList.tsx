@@ -125,7 +125,7 @@ function BagSlots({ used }: { used: number }) {
  *
  * No marker for a build here: the builds have their own line under the area, so
  * the amber contour says it on its own. (The map's step bubbles mix both kinds on
- * one row, which is why they keep the star.)
+ * one row, which is why they keep the sparkle.)
  */
 function StepItemCard({
   item,

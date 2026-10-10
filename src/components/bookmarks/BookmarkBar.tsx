@@ -1,7 +1,7 @@
 "use client";
 
 import { ItemSprite } from "@/components/ui/ItemSprite";
-import { StarGlyph } from "@/components/ui/BookmarkButton";
+import { BookmarkGlyph } from "@/components/ui/BookmarkButton";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface BookmarkEntry {
@@ -18,10 +18,6 @@ export interface BookmarkBarProps {
   /** Selected entries are deselected; bookmarked ones are removed. */
   onEntryClick: (itemId: string) => void;
   onClearBookmarks: () => void;
-}
-
-function StarIcon({ filled }: { filled: boolean }) {
-  return <StarGlyph filled={filled} />;
 }
 
 /**
@@ -44,7 +40,7 @@ export function BookmarkBar({ entries, onEntryClick, onClearBookmarks }: Bookmar
 
       {entries.length === 0 ? (
         <p className="min-w-0 flex-1 truncate text-[11px] text-stone-500">
-          Star an item to keep it here — the island and the routes then cover everything in the plan.
+          Bookmark an item to keep it here — the island and the routes then cover everything in the plan.
         </p>
       ) : (
         <>
@@ -77,7 +73,7 @@ export function BookmarkBar({ entries, onEntryClick, onClearBookmarks }: Bookmar
                   </span>
                   {entry.bookmarked && (
                     <span className={entry.selected ? "text-amber-300" : "text-stone-500"}>
-                      <StarIcon filled />
+                      <BookmarkGlyph filled />
                     </span>
                   )}
                   {entry.selected && (

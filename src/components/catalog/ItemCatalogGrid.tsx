@@ -84,7 +84,7 @@ export function ItemCatalogGrid({
     <div>
       <div className="grid grid-cols-4 gap-2">
         {items.map((item) => (
-        // The star is a sibling of the card rather than a child: a button cannot
+        // The bookmark control is a sibling of the card rather than a child: a button cannot
         // nest inside the card's own button, and this way its click never
         // reaches the card's select handler.
           <div key={item.id} className="group relative">

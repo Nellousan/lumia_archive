@@ -67,7 +67,7 @@ function StepCard({ item, quantity, built, onSelectItem }: StepCardProps) {
  * The bubble for one step of a highlighted route.
  *
  * It replaces the material bubble while a route is highlighted: the header names
- * the area and its place in the walk, the amber cards marked with a star are what
+ * the area and its place in the walk, the amber cards marked with a sparkle are what
  * gets built once those materials are in the pack, and the plain cards are what
  * gets picked up.
  */

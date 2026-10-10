@@ -152,6 +152,15 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    */
   const [linkApplied, setLinkApplied] = useState(false);
 
+  /** The rail's "Used to craft" section, for a link that wants it at the top. */
+  const usedToCraftRef = useRef<HTMLDivElement | null>(null);
+  /**
+   * What the link that is being adopted asked the rail to show, until the panels
+   * it describes exist. Spent by the effect below; a ref rather than state because
+   * nothing renders from it.
+   */
+  const arrivalScroll = useRef<"crafting" | null>(null);
+
   const catalog = useCatalogQuery(dataset.items);
   const {
     item: activeItem,
@@ -188,6 +197,17 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     setStartingClothes(shared.startingClothes);
     setRouteMode(shared.mode);
     setLookAhead(shared.lookAhead);
+
+    /*
+     * What the arriving link is asking to be shown.
+     *
+     * An item is open, so the reader came for that item: the catalogue above is not
+     * what they want to read first, and the rail is brought down to its crafting
+     * work. A link that also names a route, though, asks for the route — the list
+     * scrolls to that itself, and the effect below stands aside for it. A plan of
+     * bookmarks alone has no item to open, so it keeps the default top.
+     */
+    arrivalScroll.current = shared.itemId !== null ? "crafting" : null;
 
     if (shared.routeNumber !== null) {
       // The plan the link describes, in the same order `plannedItems` will build:
@@ -313,6 +333,28 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const pinnedRouteId = readerRouteId === undefined ? linkedRouteId : readerRouteId;
   /** A link opens the list onto its route: the fold lifts, the row scrolls into view. */
   const revealRouteId = linkedRouteId;
+
+  /**
+   * Brings that section to the top of the rail.
+   *
+   * Adopting the link only *schedules* the plan; this runs in the commit after it,
+   * which is the first one that has the section on screen at all. The intent is
+   * spent on the way in, so a reader who scrolls afterwards is never pulled back to
+   * it, and a link that asked for nothing leaves the rail where it is.
+   *
+   * A route the link named outranks it: that is what the reader came to see, and
+   * the route list has already scrolled to it — child effects run before this one,
+   * so stepping aside here is enough to let it stand. A rank the list no longer
+   * reaches resolves to nothing, and the item the link also opened is then the
+   * thing to show.
+   */
+  useEffect(() => {
+    if (!linkApplied || arrivalScroll.current === null) return;
+    arrivalScroll.current = null;
+    if (revealRouteId !== null) return;
+    usedToCraftRef.current?.scrollIntoView({ block: "start" });
+  }, [linkApplied, revealRouteId]);
+
   const activeRouteId = pinnedRouteId ?? hoveredRouteId;
   const activeRoute = activeRouteId
     ? (route.routes.find((candidate) => candidate.id === activeRouteId) ?? null)
@@ -501,6 +543,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       // the recipe below it starts wherever the strip ends. Reserving the height
       // keeps that starting point put, whatever is selected.
       reserveHeight={collapsed}
+      sectionRef={usedToCraftRef}
     />
   ) : null;
 

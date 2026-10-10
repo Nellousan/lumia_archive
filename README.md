@@ -94,6 +94,14 @@ route opens the list onto itself: the fold lifts so the row is drawn, the row is
 it is pinned on the island — and clicking it lets it go, as any other pin does. Links are built from
 the origin you are reading on, so one copied from a dev server points at `localhost`.
 
+**Where the rail lands.** A link says what the reader came for, and the rail is scrolled to match. An
+item open — alone, or with a plan behind it — brings the **Used to craft** section flush to the top:
+that item is what the reader is here for, and the catalogue above it is what they scrolled past. A link
+that names a route is scrolled to the route instead, and the item scroll stands aside for it; if the
+rank no longer reaches, which is what an old link to a shrunken plan looks like, the item's crafting
+view is what stands. A plan of bookmarks alone has no item to open and keeps the default top. The
+scroll is spent on arrival: browsing on from there never pulls the rail back.
+
 ---
 
 ## What it does
@@ -608,7 +616,11 @@ missing from `CATEGORY_TABS` raises its own note.
   and were written back out of the address bar, leaving `?v=2`; the retired six-parameter link planned
   nothing at all; a one-item plan carried an 11-character payload; an item that is both open and
   bookmarked round-tripped its 36 routes and pinned rank 1; and Enter on an area chip inside a row
-  opened the area without pinning the route.
+  opened the area without pinning the route. Each arrival was then checked for where the rail lands: an
+  item open, alone or over a two-item plan, put the **Used to craft** section at offset **0** of the
+  rail's scrolled 617 px; a bookmarks-only link left it at `scrollTop 0`; a link naming a route had the
+  crafting strip **3 040 px** behind the pinned row; and picking another item after arriving left the
+  strip exactly where it was, so the scroll is spent rather than repeated.
 
 ---
 

@@ -1,5 +1,6 @@
 "use client";
 
+import type { RefObject } from "react";
 import { ItemCard } from "@/components/ui/ItemCard";
 import type { WikiItem } from "@/lib/wiki/types";
 
@@ -25,6 +26,12 @@ export interface UsedToCraftPanelProps {
    * otherwise start at a different place for every item browsed.
    */
   reserveHeight?: boolean;
+  /**
+   * The panel's own element, so a link that opens an item can bring this section
+   * to the top of the rail. A ref rather than an id: only the explorer ever needs
+   * to find it, and it is not a landmark anyone else should link to.
+   */
+  sectionRef?: RefObject<HTMLDivElement | null>;
 }
 
 /**
@@ -39,9 +46,10 @@ export function UsedToCraftPanel({
   activeItemId,
   onSelect,
   reserveHeight = false,
+  sectionRef,
 }: UsedToCraftPanelProps) {
   return (
-    <div className="border-b border-white/[0.07] px-4 py-3 sm:px-6">
+    <div ref={sectionRef} className="border-b border-white/[0.07] px-4 py-3 sm:px-6">
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">
           Used to craft

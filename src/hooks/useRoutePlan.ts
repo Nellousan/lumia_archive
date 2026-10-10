@@ -8,6 +8,7 @@ import {
   collectRecipeMaterials,
   mergeMaterials,
 } from "@/lib/wiki/recipe";
+import { planTrees } from "@/lib/wiki/plan";
 import { DEFAULT_LOOK_AHEAD, buildRoutes, type RouteMode } from "@/lib/wiki/routes";
 import { buildAreaBubbles, type MapOverlayMode } from "@/lib/wiki/route";
 import type { RecipeMaterial, RecipeNode, WikiDataset, WikiItem } from "@/lib/wiki/types";
@@ -72,13 +73,7 @@ export function useRoutePlan(
   const subtreeByItemId = useMemo(() => (tree ? buildSubtreeIndex(tree) : {}), [tree]);
 
   /** One tree per planned item; the routes have to satisfy all of them. */
-  const plannedTrees = useMemo(
-    () =>
-      plannedItems
-        .map((planned) => buildRecipeTree(dataset, planned.id))
-        .filter((planned): planned is RecipeNode => planned !== null),
-    [dataset, plannedItems],
-  );
+  const plannedTrees = useMemo(() => planTrees(dataset, plannedItems), [dataset, plannedItems]);
 
   /**
    * Everything the island maps: each planned item contributes its recipe

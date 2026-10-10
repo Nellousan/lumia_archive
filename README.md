@@ -46,7 +46,8 @@ NEXT_PUBLIC_SITE_URL=https://lumia.example npm run build
 
 Discord caches an embed for as long as the message lives, which is why re-posting it (or appending
 `?v=2` to the URL) is what makes it read the tags again — and why a link posted before the tags
-shipped keeps its blank card.
+shipped keeps its blank card. That is the card for the archive itself; a link that carries a plan gets
+a card of its own, described next.
 
 ### Sharing a route
 
@@ -104,6 +105,38 @@ that names a route is scrolled to the route instead, and the item scroll stands 
 rank no longer reaches, which is what an old link to a shrunken plan looks like, the item's crafting
 view is what stands. A plan of bookmarks alone has no item to open and keeps the default top. The
 scroll is spent on arrival: browsing on from there never pulls the rail back.
+
+### Link previews
+
+A shared link unfurls into a card that says what it points at, and an unfurler runs no JavaScript, so
+the card is built on the server from the same payload the browser decodes (`lib/wiki/preview.ts`).
+Four shapes, decided in this order:
+
+| the link carries            | title                                  | description                              | image |
+| --------------------------- | -------------------------------------- | ---------------------------------------- | ----- |
+| a route, as rank *N*        | `Lumia Archive - N items route (M Areas)` | the items, then `Alley → Town Hall → …` | Dr. Nadja |
+| a plan, several items       | `Lumia Archive - N items plan`          | the items, in plan order                 | the site's mark |
+| one bookmark, nothing open  | `Lumia Archive - 1 item plan`           | that item                                | the site's mark |
+| one item open, no plan      | `Lumia Archive - <item>`                | `Blade 46` and `Craft: Odachi + Blueprint` | the item's own sprite |
+
+An item card is two lines at most — what it is and what it is worth, then what it is made of — and
+either line drops when the data has nothing for it: `Scrap Metal` reads just `Ingredients`, and an
+item with a recipe but no sprite (`Egg Bun`) falls back to the site's card. The route's areas are the
+ones the solver picks, which means the server runs it for a route link: same inputs, same code, same
+list as the page, and the check compares the card's areas against the ones the page draws.
+
+`og:url` carries the URL that was shared, query and all — keying every card on the bare origin would
+tell an unfurler that all plans are the same page. The canonical link stays `/` for crawlers, so plans
+are not indexed as separate pages. Whatever the payload turns out to be — junk, an older format, a
+rank the plan no longer reaches — the card falls back to the site's own.
+
+Because the card depends on the query, the page is rendered per request rather than prerendered: a
+plan link costs about **20 ms** of server time and a route link about **200 ms**, which is the solver
+running — measured on `next start` with three requests each.
+
+The images are `public/og.png` (the archive's mark), `public/dr-nadja.png` (the route card, a square
+cropped from `assets/dr-nadja.png`) and, for an item, its own sprite at `/items/<id>.png` — declared at
+256×128, the size those sprites really are.
 
 ---
 
@@ -218,7 +251,7 @@ src/
   app/
     layout.tsx            # html shell, fonts (Manrope + Barlow Condensed), metadata
     icon.png              # favicon; Next's metadata file convention serves it
-    page.tsx              # server component: builds the dataset, renders the explorer
+    page.tsx              # server entry: dataset, the page's own social tags
     globals.css           # Tailwind v4 import, design tokens, map + base styles
   data/
     data.json             # items, areas, animals  (source of truth)
@@ -236,6 +269,8 @@ src/
       catalog.ts          # pure filter/sort/search rules for the rail
       taxonomy.ts         # category tabs, sub-tabs, type labels, rarity palette
       share.ts            # a plan, and one of its routes, as one packed parameter
+      plan.ts             # the plan's items in order + their recipe trees (shared code)
+      preview.ts          # what a shared link says when it unfurls
       geometry.ts         # polygon centroid/anchor/bounds helpers
       map-image.ts        # base map dimensions (must match the PNG)
     clipboard.ts          # copy-to-clipboard, with the pre-2018 fallback
@@ -261,11 +296,14 @@ src/
                regionStyles
     area/      AreaDetailPanel
     ui/        ItemCard, ItemSprite, BookmarkButton, Badge, PaneDivider
+assets/
+  dr-nadja.png            # source art for the route card (650 x 861, not served)
 public/
   lumia_island.png        # base map (1503 x 774)
   items/*.png             # 644 item sprites, served as /items/<itemId>.png
   aglaia.png              # header mark (644 x 644, served whole)
-  og.png                  # link-preview card image (256 x 256)
+  og.png                  # the archive's link-preview card (256 x 256)
+  dr-nadja.png            # the route card's mark (256 x 256, cropped from assets/)
 _reference_figma/         # the original Figma Make export + zip, kept for reference
 ```
 
@@ -478,7 +516,9 @@ missing from `CATEGORY_TABS` raises its own note.
 
 ## Verification performed
 
-- `tsc --noEmit`, `eslint .` and `next build` all pass clean; the page prerenders as static.
+- `tsc --noEmit`, `eslint .` and `next build` all pass clean. The icon and the not-found page
+  prerender; the archive itself renders per request, because its `<head>` answers for the plan in
+  the query — see [Link previews](#link-previews).
 - Server-rendered HTML verified against the real data: 22 polygons, the map PNG, sprite URLs, and the
   bubbles with correct anchors and quantities.
 - Every `<img>` in the rendered page was checked to sit inside a sized frame — no sprite can render
@@ -633,6 +673,20 @@ missing from `CATEGORY_TABS` raises its own note.
   a bookmarks-only link left the rail at `scrollTop 0`; a link naming a route left the crafting strip
   **3 040 px** behind the pinned row, header still at `0`; and picking another item after arriving left
   the strip exactly where it was, so the scroll is spent rather than repeated.
+- The link previews were read the way an unfurler reads them: raw HTTP, no JavaScript, `<head>` only
+  (`node _verify/check-preview.mjs`). One item open gave `Lumia Archive - Monohoshizao`, `Blade 46` /
+  `Craft: Odachi + Blueprint` on two lines, and its own sprite; a value-less, recipe-less item gave
+  `Lumia Archive - Scrap Metal` with the single line `Ingredients`; an item with no sprite (`Egg Bun`)
+  fell back to the site's card; a three-item plan gave `Lumia Archive - 3 items plan` listing
+  `Monohoshizao, Rocker's Jacket, Sword Stopper`; a single bookmark with nothing open gave
+  `Lumia Archive - 1 item plan`; and the same plan with rank 6 named gave
+  `Lumia Archive - 3 items route (5 Areas)` with `Alley → Town Hall → School → Forest → Temple` — the
+  very areas the browser draws for that route, so the server ran the solver to the same answer. Four
+  junk payloads (empty, `!!!!`, `AAAA`, 48 characters of `z`) all answered 200 with the site's card.
+  Every declared image was then fetched and measured: the sprite 256×128, `og.png` and `dr-nadja.png`
+  256×256, each matching its own `og:image:width/height`, each absolute and off-loopback. Theming
+  aside, the human got the same thing: the tab title matched the card title, and the page pinned the
+  same route the card described. The same run passed at 390 px.
 - The shell was checked against the void: on a page carrying a long route list, a real wheel over the
   island left `window.scrollY` at **0** and the header at **0**, with the rail's own scroll untouched —
   and taking the root clip off in the same session reproduced the report exactly, scrolling the page to

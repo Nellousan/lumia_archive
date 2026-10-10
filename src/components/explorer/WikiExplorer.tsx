@@ -16,6 +16,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useRoutePlan } from "@/hooks/useRoutePlan";
 import { useStepOverlay } from "@/hooks/useStepOverlay";
 import { copyText } from "@/lib/clipboard";
+import { plannedItemsFor } from "@/lib/wiki/plan";
 import { scrollWithinScroller } from "@/lib/scroll";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
@@ -229,16 +230,10 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * What the island and the routes cover: the selected item first — so it heads
    * the bookmark bar — then every bookmark in the order it was added.
    */
-  const plannedItems = useMemo(() => {
-    const planned: WikiItem[] = [];
-    if (activeItem) planned.push(activeItem);
-    for (const id of bookmarks.ids) {
-      if (id === activeItem?.id) continue;
-      const item = dataset.itemsById[id];
-      if (item) planned.push(item);
-    }
-    return planned;
-  }, [activeItem, bookmarks.ids, dataset.itemsById]);
+  const plannedItems = useMemo(
+    () => plannedItemsFor(dataset.itemsById, activeItem?.id ?? null, bookmarks.ids),
+    [activeItem?.id, bookmarks.ids, dataset.itemsById],
+  );
 
   const usedToCraft = activeItem
     ? (dataset.usedToCraftByItemId[activeItem.id] ?? NO_CRAFTABLES)

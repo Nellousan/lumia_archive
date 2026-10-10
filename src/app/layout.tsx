@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, Manrope } from "next/font/google";
+import { SITE_DESCRIPTION, SITE_IMAGE_ALT, SITE_TITLE } from "@/lib/wiki/preview";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -33,19 +34,19 @@ const siteUrl =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "https://lumia-archive.vercel.app");
 
-const TITLE = "Lumia Archive — Black Survival Wiki";
-const DESCRIPTION = "Interactive item and resource map for Black Survival Project Lumia";
-
 /**
- * The card as Discord draws it: `summary` with a square image is the shape that
- * puts the site's mark in the corner of the embed, which is what a shared link
- * looks like when it carries an icon. `summary_large_image` would stretch the
- * same file across the top of the card instead.
+ * The site's own card, for a visit with no plan in the URL. Every link that
+ * carries one gets its own card, built per request in `page.tsx` — see
+ * `lib/wiki/preview.ts` for what those say.
+ *
+ * The shape is `summary` with a square image: it puts the mark in the corner of
+ * the embed, and `summary_large_image` would stretch the same file across the top
+ * of the card instead.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: TITLE,
-  description: DESCRIPTION,
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   applicationName: "Lumia Archive",
   // One page, so it is its own canonical: this is also what fills `og:url`,
   // which some unfurlers use to key their cache.
@@ -54,21 +55,21 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "Lumia Archive",
-    title: TITLE,
-    description: DESCRIPTION,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: [
       {
         url: "/og.png",
         width: 256,
         height: 256,
-        alt: "Lumia Archive",
+        alt: SITE_IMAGE_ALT,
       },
     ],
   },
   twitter: {
     card: "summary",
-    title: TITLE,
-    description: DESCRIPTION,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: ["/og.png"],
   },
 };

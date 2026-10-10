@@ -60,6 +60,21 @@
   button {
     cursor: pointer;
   }
+
+  /*
+   * The focus ring belongs in this layer for the same reason as the resets
+   * above: unlayered it outranked the `outline-none` that four focusable
+   * controls ask for, so every one of them drew both its own focus styling and
+   * this ring. The search field showed it worst — the wrapper draws a ring on
+   * `focus-within`, so the input added a second, smaller box just inside it. In
+   * `@layer base` the utility wins again, and each control that opts out
+   * supplies its own signal: the wrapper border, an amber border, a lit
+   * polygon, a highlighted route.
+   */
+  :focus-visible {
+    outline: 2px solid rgba(52, 211, 153, 0.6);
+    outline-offset: 2px;
+  }
 }
 
 * {
@@ -70,11 +85,6 @@
 ::selection {
   color: var(--color-ink-950);
   background: #fcd34d;
-}
-
-:focus-visible {
-  outline: 2px solid rgba(52, 211, 153, 0.6);
-  outline-offset: 2px;
 }
 
 /* -------------------------------------------------------------------------- */

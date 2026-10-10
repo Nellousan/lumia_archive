@@ -243,6 +243,15 @@ Clicking the item that is already open in the rail also closes it (`selectionAft
 `hooks/useItemSelection.ts`), so the picker itself acts as a toggle. Nothing is selected on first
 load — the map opens empty and the rail shows a "No item selected" placeholder.
 
+**One focus ring per control.** The global `:focus-visible` ring lives in `@layer base` in
+`globals.css`, not beside the other top-level rules, and that placement is the feature: unlayered it
+outranked the `outline-none` that four controls ask for, so each of them painted its own focus
+styling *and* this ring on top of it. The search field showed it worst — the wrapper draws a ring on
+`focus-within`, so the input added a second, smaller box just inside it. In `@layer base` the utility
+wins again, and every control that opts out supplies its own signal: the wrapper border, an amber
+border, a lit polygon, a highlighted route. Nothing else changed; `outline-none` simply started doing
+what it said.
+
 ### Rarity palette
 
 | Tier      | Colour                                                        |
@@ -808,6 +817,16 @@ missing from `CATEGORY_TABS` raises its own note.
   was separately asserted to say *something* about the hovered item — its own card or its area's —
   across all five pickups of the first plan and the build card, and never to show it twice or claim
   an area it does not hold.
+- The focus ring was checked on `outline-style`, not on width, and with `:focus-visible` forced rather
+  than merely tabbed to (`node _verify/check-focus-ring.mjs`). The search field really clicked gave a
+  wrapper border equal to what `border-emerald-400/50` computes to and an input that draws nothing —
+  comparing against a probe wearing the utility, because Tailwind declares its palette in oklab. Forced
+  `:focus-visible` drew nothing on the search input, a route row or a map polygon, and still drew the
+  global `solid 2px` on a catalog card, so the fix narrowed the ring rather than removing it. The
+  stylesheet was read back through the CSSOM to confirm `:focus-visible` is declared once, inside
+  `layer:base`, next to a `.outline-none` that resolves to `outline-style: none`. Measure the style and
+  not the width: `outline-width` keeps reporting the cascaded value under `outline-style: none` — and
+  reports the untouched initial `medium` (3px) when no ring applies at all.
 
 ---
 

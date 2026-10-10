@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CatalogPanel } from "@/components/catalog/CatalogPanel";
 import { ItemDetailPanel } from "@/components/item/ItemDetailPanel";
 import { RoutePlanPanel } from "@/components/item/RoutePlanPanel";
@@ -28,6 +28,26 @@ import type {
   WikiDataset,
   WikiItem,
 } from "@/lib/wiki/types";
+
+/**
+ * The two panes a material hover cannot touch, held still while it happens.
+ *
+ * `focusedMaterialId` lives here because the map and the recipe tree have to agree
+ * on it, so hovering a card re-renders this whole island — including the catalogue
+ * and the route list, which have no idea a material was hovered. That is cheap in
+ * production and expensive in development, where React's element factory validates
+ * every prop it creates: on a plan whose shared link had lifted the route list's
+ * fold, one hover re-created a hundred route rows' worth of elements and blocked the
+ * main thread for a third of a second, while the same hover in a production build
+ * measured no long task at all.
+ *
+ * Memoized rather than moved: the state is cross-pane, which is what this component
+ * is for, and every prop below it is already stable — the hooks memoize their
+ * callbacks and their derived objects, and the one prop that was not
+ * (`unobtainableNames`) is now memoized too.
+ */
+const MemoCatalogPanel = memo(CatalogPanel);
+const MemoRoutePlanPanel = memo(RoutePlanPanel);
 
 /** Where the island and the item rail start sharing the row (Tailwind's `lg`). */
 const TWO_COLUMN_QUERY = "(min-width: 1024px)";
@@ -245,6 +265,12 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     islandWidth,
     showAnimalDrops,
   });
+
+  /** Named once per plan: the route panel is memoized, and a fresh array defeats it. */
+  const unobtainableNames = useMemo(
+    () => route.unobtainable.map((planned) => planned.name),
+    [route.unobtainable],
+  );
 
   /** The clothes on offer, resolved once so the selector can show artwork. */
   const startingOptions = useMemo(
@@ -515,7 +541,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * beside the island, or split across three when it is folded away.
    */
   const catalogPane = (
-    <CatalogPanel
+    <MemoCatalogPanel
       items={catalog.pageItems}
       matchedCount={catalog.visibleItems.length}
       page={catalog.page}
@@ -567,11 +593,11 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
 
   const routesPane =
     plannedItems.length > 0 ? (
-    <RoutePlanPanel
+    <MemoRoutePlanPanel
       routes={route.routes}
       plannedCount={plannedItems.length}
       truncated={route.routesTruncated}
-      unobtainableNames={route.unobtainable.map((planned) => planned.name)}
+      unobtainableNames={unobtainableNames}
       inventoryBlocked={route.inventoryBlocked}
       assumed={route.assumed}
       nothingToGather={route.nothingToGather}

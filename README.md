@@ -381,6 +381,17 @@ worth knowing: a visit is one pageview at `/` whatever plan it carries (counting
 explicit `track()` event), and off Vercel the script 404s — expected locally, and in production it
 means Web Analytics is not enabled for the project.
 
+**The hover is cross-pane, and it still must not re-render everything.** `focusedMaterialId` lives in
+`WikiExplorer` because the map and the recipe tree have to agree on it, so hovering a card re-renders
+the island — the catalogue included, which has no idea a material was hovered. The catalogue and the
+route list are therefore memoized, with every prop below them stable (the hooks already memoize their
+callbacks and derived objects; `unobtainableNames` was the one fresh array). That costs almost nothing
+in production and a great deal in development, where React's element factory validates every prop it
+creates: on a plan whose shared link had lifted the route list's fold, one hover re-created a hundred
+mounted route rows and blocked the main thread for about 230 ms, while the same hover in a production
+build measured no long task at all. Measured, the same hover now spends about 15 ms in dev-only element
+work instead of about 335 ms.
+
 **The image map is a real overlay.** `lumia-island.map.json` coordinates are pixel offsets into the
 PNG, so the `<img>`, the SVG `viewBox` and the dataset all use the same `1503 x 774` space — no
 scaling maths anywhere. The artwork already has every area name drawn on it, so the SVG draws none:
@@ -783,6 +794,12 @@ missing from `CATEGORY_TABS` raises its own note.
   Chain* turned it `×3` in emerald, and 3 is what Alley's card reports for Steel Chain in the area view;
   letting go gave back `×1` in amber. The check refuses a hovered number that is merely green by
   comparing it with the area's own figure.
+- The hover's *cost* was measured rather than assumed, in both builds, with the CPU profiler over one
+  hover. Production showed no long task at all; development spent about 335 ms inside React's
+  development element factory and prop validation, because a hover re-rendered every pane of the
+  island — a hundred mounted route rows on a plan whose shared link had lifted the route list's fold.
+  Memoizing the two panes a hover cannot touch took that to about 15 ms and the main thread's block from
+  232 ms to none, with the hover checks asserting the island behaves exactly as it did before.
 - The beside-a-stop card needed a plan built for it, because the case it covers is rare: a route that
   needs a material once has no reason to stop where else it lies. Measured, it takes a longer plan —
   *Ice Water* plus *Sorghum Wine* and *Steel*, whose route reaches Well after picking Water up at

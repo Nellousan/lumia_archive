@@ -521,9 +521,10 @@ missing from `CATEGORY_TABS` raises its own note.
   replaced, and the tab icon is the single `link[rel=icon]` Next emits — 126×126, served with a
   content hash, byte-identical to `src/app/icon.png`.
 - The island's panels were re-checked against `data.json` at 1512 and 390 px: the random-spawn box
-  names the animal that drops an item where the data knows one (Holy Blood → "found on Dr.
-  Wickeline, no fixed area"; Vital Sign Sensor → "found on Mr. Meiji, in Research Center") and falls
-  back to "found at random" for the four that are genuinely loose; the animal-drops switch's tooltip
+  names an animal only when that animal has no area of its own (Holy Blood → "found on Dr.
+  Wickeline, no fixed area") and says "found at random" otherwise — including for the Vital Sign
+  Sensor, which does drop off Mr. Meiji but only in the Research Center, an area that opens for the
+  alternative victory condition and that nobody visits to farm one; the animal-drops switch's tooltip
   carries no disclaimer in either state; the Research Center lists its animal and no prose about
   missing loot; neither the "N shown" count nor the "Recipe only" filter remains on any area; and
   the slide-over closes on a click outside it, stays open on a click inside, and still closes on

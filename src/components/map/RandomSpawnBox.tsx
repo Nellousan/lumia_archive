@@ -21,18 +21,18 @@ export interface RandomSpawnBoxProps {
 /**
  * Where a road-less item comes from, in the fewest words that are true.
  *
- * Four of the six are genuinely random; Wickeline's Holy Blood and Mr. Meiji's
- * Vital Sign Sensor are not, and the box should not tell the reader to wander
- * when the data knows the carrier.
+ * Only an animal with no area at all is worth naming, and for one reason: it
+ * says the item really does turn up wherever the match puts it, which is exactly
+ * what this box is for. An animal with a home area is a different promise — the
+ * Vital Sign Sensor does drop off Mr. Meiji, but he is in the Research Center,
+ * which opens only for the alternative victory condition. Nobody goes there to
+ * pick one up, and naming him would send a reader somewhere they are not going.
  */
 function sourceOf(item: WikiItem, animals: WikiAnimal[]): string {
-  if (animals.length === 0) return "found at random, no fixed area";
+  const loose = animals.filter((animal) => animal.areas.length === 0);
+  if (loose.length === 0) return "found at random, no fixed area";
 
-  const names = animals.map((animal) => animal.name).join(" and ");
-  const areas = [...new Set(animals.flatMap((animal) => animal.areas.map((area) => area.name)))];
-  return areas.length === 0
-    ? `found on ${names}, no fixed area`
-    : `found on ${names}, in ${areas.join(" and ")}`;
+  return `found on ${loose.map((animal) => animal.name).join(" and ")}, no fixed area`;
 }
 
 /**

@@ -50,40 +50,49 @@ shipped keeps its blank card.
 
 ### Sharing a route
 
-Every route in the list carries a **Share** control in its bottom right corner. It copies a link that
-carries the whole plan and the rank of the route within it:
+The address bar *is* the plan: one opaque parameter, `?p=…`, kept in step with what is on screen — the
+same thing a refresh, a bookmark, the browser's own "copy link" and handing the tab to another device
+all read back. Every route in the list also carries a **Share** control in its bottom right corner,
+which copies that URL with *its* rank in it, so one can point at a route without pinning it first.
 
-| key | meaning                                              |
-| --- | ---------------------------------------------------- |
-| `i` | the open item                                        |
-| `b` | bookmarked item ids, in the order they were added    |
-| `a` | starting armor, absent when the survivor starts bare |
-| `m` | `fastest` or `greedy`                                |
-| `l` | how many areas greedy looks ahead (1–6)              |
-| `r` | which route, counting from 1 in the ranked list      |
+The payload holds everything the solver reads — the open item, the bookmarks in the order they were
+added, the starting armor, the ranking mode, the look-ahead window — plus which route in the ranked
+list is highlighted. It is a pure function of exactly those values, and the ranking breaks every tie by
+name, so the same payload always produces the same list and the rank always names the same walk. The
+check does not take that on faith: every route's whole area sequence is compared, rank for rank,
+between the page a link was made on and the page it opens.
 
-Those six values are *all* the solver reads, and it is a pure function of them — no ties are broken by
-iteration order anywhere — so one link always produces one ranked list, and `r` always names the same
-walk. The check does not take that on faith: it opens a link and compares every route's whole area
-sequence against the list the link was made from, rank for rank.
+**Packed, not compressed.** Compression plus base64 was the obvious move and the measurement says no:
+these payloads are far below the size where deflate pays for itself, and base64 then adds a third back
+on. In characters of query string, over real plans (`node _verify/check-share-codec.cjs`):
 
-`m` is written even when it is the default, and `l` only when the mode actually reads it, so a link
-cannot quietly come to mean something else the day a default changes. What the link did not set — no
-bookmarks, no armor — is left out rather than written empty.
+| plan                                 | six parameters | deflate + base64 | packed here |
+| ------------------------------------ | -------------- | ---------------- | ----------- |
+| one item                             |             25 |               28 |      **14** |
+| three items, armor, greedy 3, rank 6 |             78 |               78 |      **22** |
+| ten items                            |            142 |              138 |      **50** |
 
-The parameters are a delivery, not a place to live. Opening a link adopts the plan and *then* takes
-those keys back out of the address bar, so a reload, or copying the URL straight from the browser,
-gives the plain archive rather than somebody else's route. Only the six keys above are removed — a
-campaign tag, or the `?v=2` Discord needs to read a cached embed again, travels on untouched. Nothing
-else writes the URL either: the address bar is never rewritten while you work, which is why the Share
-control exists rather than "copy the page URL".
+What shortens the link is not squeezing the ids but not spelling them out: an id averages 13 bytes and
+is filed under a 3-byte code here. It is five bytes of header (version, flags, armor, rank, count) and
+then three bytes per item, base64url'd so the whole plan rides in one URL-safe token.
 
-Ids are checked against `data.json` before they reach the solver and the rank against the list it
-points into, so a link naming an item that no longer exists simply does not plan it, and a rank past
-the end of the list pins nothing — an old link degrades into a shorter plan instead of an error. A
-shared route opens the list onto itself: the fold lifts so the row is drawn, the row is scrolled into
-view, and it is pinned on the island. Clicking it lets it go, as any other pin does. Links are built
-from the origin you are reading on, so one copied from a dev server points at `localhost`.
+**The code is derived from the id, never from its position** — the high 24 bits of an FNV-1a hash — so
+reordering or extending `data.json` cannot silently repoint a link. An id the data no longer has
+resolves to nothing and drops out of the plan, the same graceful degradation the ids-in-full form had.
+A code the data gives *twice* resolves to neither, because planning the wrong item silently is the one
+failure this format cannot see; the check asserts that no two of the current 629 ids collide, and
+`FORMAT` exists so the code can widen to 32 bits if that ever changes.
+
+Only that one key is ever touched: a campaign tag, or the `?v=2` Discord needs to read a cached embed
+again, sits beside it untouched. Writes go through `replaceState`, so nothing is pushed and Back still
+leaves the archive; hovering a route changes nothing (only the *pinned* one is in the payload); and a
+URL that already says the right thing is left alone rather than replaced with itself. A payload that is
+not a plan — truncated, tampered with, or from an older format — is ignored, and since the URL is
+written from the state it is then written back out, so junk does not accumulate in the address bar. The
+retired six-parameter form (`?i=&b=&a=&m=&l=&r=`) is not read any more; it was never released. A shared
+route opens the list onto itself: the fold lifts so the row is drawn, the row is scrolled into view, and
+it is pinned on the island — and clicking it lets it go, as any other pin does. Links are built from
+the origin you are reading on, so one copied from a dev server points at `localhost`.
 
 ---
 
@@ -105,9 +114,9 @@ line. *Greedy* is about not spending the trip naked — in this game a survivor 
 ingredient to one spot and crafts at the end is weak the whole way — so at **every** step it asks
 what the next N areas (2 by default, 1–6) can leave the survivor wearing, and ranks the resulting
 profile step by step. Each step prints the worn value beside its pack dots, so the curve being
-ranked is visible. Any route can be handed to someone else with the **Share** control in its bottom
-right corner, which copies a link to that exact plan and that exact rank — see
-[Sharing a route](#sharing-a-route).
+ranked is visible. The address bar carries the whole plan, and any route can be handed to someone
+else with the **Share** control in its bottom right corner, which copies that link with the row's own
+rank in it — see [Sharing a route](#sharing-a-route).
 
 **Right pane — Lumia Island.** The **plan bar** sits directly above the island and lists what the map
 and the routes answer for: the selected item, then every bookmark. Under it, the PNG artwork with the
@@ -215,7 +224,7 @@ src/
       inventory.ts        # bag/equipment slots, worn slots, starting clothes
       catalog.ts          # pure filter/sort/search rules for the rail
       taxonomy.ts         # category tabs, sub-tabs, type labels, rarity palette
-      share.ts            # a plan, and one of its routes, as query parameters
+      share.ts            # a plan, and one of its routes, as one packed parameter
       geometry.ts         # polygon centroid/anchor/bounds helpers
       map-image.ts        # base map dimensions (must match the PNG)
     clipboard.ts          # copy-to-clipboard, with the pre-2018 fallback
@@ -573,25 +582,33 @@ missing from `CATEGORY_TABS` raises its own note.
 - The startup line was verified on a real `next start`: it prints once, before the first request —
   `[lumia-archive] data ready — 201 items · 22 areas (22 mapped) · 39 craftable — 2 data note(s): …` —
   and the island pane no longer renders any data-notes strip.
-- The shared-route link was driven end to end in a real browser at 1512 and 390 px — real clicks,
-  real typing, and the real clipboard — on a plan of `Monohoshizao` + `Rocker's Jacket` +
-  `Sword Stopper`, windbreaker, greedy, 3 areas: the Share control sits inside every one of the
-  **100** route rows, in the right half, 11 px from the right edge and 9 px above the bottom, reads
-  `Copied` for a moment and goes back to `Share`, and clicking it does **not** pin the route.
-  The copied link was `?i=monohoshizao&b=rocker_s_jacket,sword_stopper&a=windbreaker&m=greedy&l=3&r=6`,
-  and nothing was written that the plan had not set. Opening it — with a foreign `?v=2` attached —
-  rebuilt all 100 routes in the **same order, label for label** (the compared label carries every
-  area, build and pickup), pinned rank 6, lifted the fold to reach it and scrolled it into view, and
-  left the address bar reading `?v=2`. Clicking the shared route let it go without refolding the
-  list. The address bar was asserted untouched (`""`) through a whole session of selecting,
-  bookmarking, switching mode and sharing, which is the point of the design: the app never writes it.
-  A junk link (`i=nope&b=nope,monohoshizao&a=nope&m=greedy&l=99&r=999`) opened nothing, restored the
-  armor as unset, clamped the window to 6, planned the one valid bookmark, pinned nothing and was
-  cleaned to `?v=2`; a plain fastest link carried only `i`, `m=fastest` and `r=1` — no empty
-  bookmarks, no armor, no look-ahead. Pressing Enter on an area chip inside a row opened the area
-  and left the route unpinned, which is what the new `event.target !== event.currentTarget` guard is
-  for. An item that is both open *and* bookmarked — so `i` and `b` name the same id — round-trips
-  too: 36 routes restored in the same order, pinned rank 1.
+- The share codec was checked on its own in node against the real 629 items
+  (`node _verify/check-share-codec.cjs`): **629 ids hash to 629 distinct codes**, so no two items can
+  ever be confused for one another; every state the payload can hold round-trips (each of the five
+  clothes and bare, both modes, look-ahead 1–6, ranks 1/100/255/none, an item that is also bookmarked,
+  a plan with no open item); a payload whose item the data no longer has drops just that item and keeps
+  the rest of the plan; the URL layer keeps foreign parameters, writes nothing for an empty plan, and
+  drops a payload that is not one. **4 000 random payloads and 57 bit-flipped ones** decoded to `null`
+  or to a valid plan — 53 of the flips came back as some plan — and none threw. The same harness prints
+  the lengths: 25 → **14** characters for a single item, 78 → **22** for three items with armor, greedy
+  and a rank, 142 → **50** for ten.
+- The shared-route link was then driven end to end in a real browser at 1512 and 390 px — real clicks,
+  real typing, and the real clipboard: on a plan of `Monohoshizao` + `Rocker's Jacket` + `Sword
+  Stopper`, windbreaker, greedy, 3 areas, the address bar read `?p=ARcCAAKhQvQT-YpTHyg` — **19
+  characters** — and its payload changed at *every* step that changed the plan (item opened, armor,
+  mode, each bookmark) and at no other: hovering a route left it byte-identical, and a change plus its
+  undo (bookmark Feather Boots, un-bookmark it; fastest and back) landed on exactly the same payload
+  again. Pinning rank 6 reached the URL, the Share control copied a link **byte-identical to the
+  address bar**, and it read `Copied` for a moment before going back to `Share`. Opening that link with
+  a foreign `?v=2` attached rebuilt all **100** routes in the same order, label for label, pinned rank
+  6, lifted the fold to reach it and scrolled it into view, and kept both the payload and `?v=2`;
+  reloading the page it produced gave the same list, the same pin and the same plan. Clicking the
+  pinned route let it go without refolding the list and without leaving the URL stale. Five junk
+  payloads (`!!!!`, empty, `AAAA`, `eA`, 48 characters of `z`) each planned nothing, crashed nothing,
+  and were written back out of the address bar, leaving `?v=2`; the retired six-parameter link planned
+  nothing at all; a one-item plan carried an 11-character payload; an item that is both open and
+  bookmarked round-tripped its 36 routes and pinned rank 1; and Enter on an area chip inside a row
+  opened the area without pinning the route.
 
 ---
 

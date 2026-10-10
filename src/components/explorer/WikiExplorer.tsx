@@ -19,7 +19,7 @@ import { copyText } from "@/lib/clipboard";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
 import { DEFAULT_LOOK_AHEAD, type RouteMode } from "@/lib/wiki/routes";
-import { buildSharedLink, clearSharedParams, readSharedPlan } from "@/lib/wiki/share";
+import { buildSharedUrl, readSharedUrl } from "@/lib/wiki/share";
 import type {
   AreaItemRef,
   WikiAnimal,
@@ -143,6 +143,14 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * {@link linkedRouteId}.
    */
   const [linkedRoute, setLinkedRoute] = useState<{ planKey: string; number: number } | null>(null);
+  /**
+   * False until the address bar has been read.
+   *
+   * The plan in it is adopted by the effect below, and written back by the one
+   * further down; without this gate that second effect would run first, in the same
+   * commit, and overwrite the query with the empty state it was about to replace.
+   */
+  const [linkApplied, setLinkApplied] = useState(false);
 
   const catalog = useCatalogQuery(dataset.items);
   const {
@@ -159,23 +167,20 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const { setBookmarks } = bookmarks;
 
   /**
-   * Adopts the plan a shared link carries, then takes its parameters back out of
-   * the address bar.
-   *
-   * The URL is a delivery, not a place to live: with the plan on screen the
-   * address bar names the archive alone again, so reloading or copying it gives
-   * the plain site rather than somebody else's route. Only the keys `share.ts`
-   * owns are removed, so a campaign tag or Discord's `?v=2` survives the visit.
+   * Adopts the plan a shared link carries.
    *
    * Every line below is a `setState` in an effect, which the compiler rules flag as
    * a cascading render — and here it is the honest shape: the query is an external
-   * system handing over one instruction, read once, with nothing to subscribe to.
-   * Running twice (StrictMode, in development) costs nothing, because the first
-   * pass has already cleaned the address bar.
+   * system handing over one instruction, read once on arrival, with nothing to
+   * subscribe to afterwards (the other direction is the effect further down).
+   * Running twice, which StrictMode does in development, costs nothing: the second
+   * pass reads the same query and adopts the same plan.
    */
   /* eslint-disable react-hooks/set-state-in-effect -- one-shot read of the address bar */
   useEffect(() => {
-    const shared = readSharedPlan(window.location.search, dataset);
+    setLinkApplied(true);
+
+    const shared = readSharedUrl(window.location.search, dataset);
     if (!shared) return;
 
     if (shared.itemId !== null) selectItem(shared.itemId);
@@ -196,8 +201,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
         number: shared.routeNumber,
       });
     }
-
-    window.history.replaceState(null, "", clearSharedParams(window.location.href));
   }, [dataset, selectItem, setBookmarks]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -315,6 +318,54 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     ? (route.routes.find((candidate) => candidate.id === activeRouteId) ?? null)
     : null;
 
+  /** The rank of the highlighted route, which is how the URL names it. */
+  const pinnedRank = useMemo(() => {
+    if (pinnedRouteId === null) return null;
+    const index = route.routes.findIndex((candidate) => candidate.id === pinnedRouteId);
+    return index === -1 ? null : index + 1;
+  }, [pinnedRouteId, route.routes]);
+
+  /**
+   * The address bar *is* the plan.
+   *
+   * One opaque parameter, rewritten in place: a refresh, a bookmark, the browser's
+   * own "copy link" and handing the tab to another device all reproduce what is on
+   * screen, and nothing is ever pushed, so Back still leaves the archive. Hovering
+   * cannot churn it — only the pinned route is in here, never the hovered one — and
+   * a URL that already says the right thing is left alone rather than replaced with
+   * itself.
+   *
+   * `history.state` is passed back rather than `null`: Next keeps its own routing
+   * state there, and throwing it away is how a soft-navigated app loses its place.
+   */
+  useEffect(() => {
+    if (!linkApplied) return;
+
+    const url = buildSharedUrl(
+      window.location.href,
+      {
+        itemId: activeItem?.id ?? null,
+        bookmarkIds: bookmarks.ids,
+        startingClothes,
+        mode: routeMode,
+        lookAhead,
+        routeNumber: pinnedRank,
+      },
+      dataset,
+    );
+
+    if (url !== window.location.href) window.history.replaceState(window.history.state, "", url);
+  }, [
+    linkApplied,
+    dataset,
+    activeItem?.id,
+    bookmarks.ids,
+    startingClothes,
+    routeMode,
+    lookAhead,
+    pinnedRank,
+  ]);
+
   /** Bubbles for a highlighted route: what is picked up and built at each step. */
   const stepOverlay = useStepOverlay(activeRoute, dataset.map, islandWidth);
 
@@ -332,23 +383,28 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * The link to the plan on screen, with `routeNumber` picking one walk out of the
    * list that plan produces.
    *
-   * It is built from the live state rather than from the address bar, which no
-   * longer describes the plan — but grafted onto the current URL so whatever else
-   * the page was opened with travels along.
+   * It is built from the live state rather than read back out of the address bar,
+   * because the bar carries the *pinned* route and this row may not be it. One
+   * function builds both, so the link that is copied and the URL that is shown
+   * cannot drift apart.
    */
   const handleShareRoute = useCallback(
     async (routeNumber: number) => {
-      const link = buildSharedLink(window.location.href, {
-        itemId: activeItem?.id ?? null,
-        bookmarkIds: bookmarks.ids,
-        startingClothes,
-        mode: routeMode,
-        lookAhead,
-        routeNumber,
-      });
+      const link = buildSharedUrl(
+        window.location.href,
+        {
+          itemId: activeItem?.id ?? null,
+          bookmarkIds: bookmarks.ids,
+          startingClothes,
+          mode: routeMode,
+          lookAhead,
+          routeNumber,
+        },
+        dataset,
+      );
       return copyText(link);
     },
-    [activeItem?.id, bookmarks.ids, startingClothes, routeMode, lookAhead],
+    [dataset, activeItem?.id, bookmarks.ids, startingClothes, routeMode, lookAhead],
   );
 
   /** Changing item, from either entry point, clears the map focus. */

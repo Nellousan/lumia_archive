@@ -178,16 +178,32 @@ material itself, soft amber for its ingredients, and everything unrelated dims b
 for intermediates that spawn nowhere — `iron_sheet` is not found anywhere on the island, so without
 the widening, focusing it would highlight nothing at all.
 
-A pinned route replaces the material bubbles with its step cards, and those cards answer the same
-question: pointing at *pick up scrap metal here* still lights up every other area holding scrap
-metal. That question is what a route *raises* — the walk sends you to one area, and the reader wants
-to know whether it had to — so a pinned route must not be what silences it. While a card is hovered
-the focus outranks the route tint rather than blending with it, because the route and material
-colours are both amber and near-identical and a blended answer would say nothing; the route stays
-legible through the takeover, since its numbered stops are drawn over the areas rather than in them.
-Letting go restores the route exactly. A build card is hoverable for the same reason, and it is the
-only way to ask about an intermediate: a crafted item has no spawn area, so it has no material card
-to hover with the route unpinned.
+A pinned route replaces the material bubbles with its step cards, and hovering one of those cards
+answers with the whole of the material view, not just its tints: the areas holding that material
+that the route does **not** stop at get their material bubbles back, while the steps with nothing to
+do with it fade to near-invisible. So the island behaves as it does with no route pinned — the
+question the hover answers is the one a route *raises*, since the walk sends you to one area and the
+reader wants to know whether it had to. A step that stays lit is the one whose area holds the
+material, or which itself picks up or builds it: a craft has no spawn area, so hovering *build iron
+sheet here* has to keep its own bubble. A build card is hoverable for the same reason, and it is the
+only way to ask about an intermediate.
+
+Three things about it are not obvious, and each was found by measuring rather than reasoning:
+
+- **The bubbles that come back must not be able to take the pointer.** They sit around the route's
+  cards, and one landing on the card being hovered ends the hover, which withdraws the answer, which
+  returns the pointer to that card — a cycle measured at 13ms, strobing the island. They are drawn
+  `pointer-events-none`: an answer must not be able to end the question that asked for it.
+- **Only the steps that stay lit are obstacles** for the solve that places them. A faded step is on
+  its way out, so a bubble settling over one costs nothing and the room it frees is what lets the
+  answer space itself out.
+- **A step bubble is not shaped like a material bubble.** A material bubble's width is pinned, so its
+  cards wrap at three and it grows downwards; a step bubble is content-sized, so its cards never wrap
+  and it grows sideways, one card tall whatever it holds. Reserving the wrapped box made every step
+  reservation half as wide and twice as tall as the bubble drawn — invisible until something is
+  placed against it, which is exactly what a hover does. Measured on route 1's Fire Station step: six
+  cards, reserved 246×252, drawn 488×158. Two of the four geometry constants were also 2 units short
+  each, which on its own is enough to put two bubbles a `gap` apart on top of each other.
 
 Keyboard: `/` search · `Esc` closes the area panel, then unpins the highlighted route, then clears the
 material focus.
@@ -731,6 +747,16 @@ missing from `CATEGORY_TABS` raises its own note.
   *Iron Sheet*, which spawns nowhere, reported its 8 ingredient areas instead. Every hovered card drew
   its own focus ring, no route tint survived a hover, and letting go restored the route's island
   exactly (compared region by region, state and dimming). Asserted at 1512 px and 1280 px.
+- The bubbles that come back under that hover were checked as a set, not by eye: with route 1 pinned,
+  hovering *Steel Chain* on Alley's step card brought back the material bubbles for Slums, Uptown and
+  Hotel — every one of them holding a *Steel Chain* card, none of them a route stop — kept Alley's own
+  step lit and faded the other two. Hovering *Build Iron Sheet* brought back six, and kept the two
+  steps that hold its ingredients. The pointer was then left standing still on a card and the DOM
+  sampled twice a second apart, because the failure mode here is a strobe rather than a wrong pixel:
+  the hover held, the bubble count held, and the faded steps held. Releasing restored the step bubbles
+  exactly, with no material bubble or fade left behind (asserted on the same counters, not on a
+  screenshot). No two bubbles that are both still lit overlap, at either width — an overlap with a
+  *faded* step is the behaviour, and is reported as such rather than counted as a failure.
 
 ---
 

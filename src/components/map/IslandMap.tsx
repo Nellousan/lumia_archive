@@ -10,10 +10,16 @@ import { RouteOverlay } from "./RouteOverlay";
 import { RouteStepBubbleCard } from "./RouteStepBubbleCard";
 import type { RegionState } from "./regionStyles";
 import { useElementWidth } from "@/hooks/useElementWidth";
-import { bubbleScaleFor, type BubblePlacement } from "@/lib/map-layout";
+import {
+  bubbleScaleFor,
+  estimateBubbleSize,
+  estimateStepBubbleSize,
+  resolveBubblePlacements,
+  type BubblePlacement,
+} from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
-import type { RoutePlan } from "@/lib/wiki/routes";
+import { stepCrafts, stepGathers, type RoutePlan } from "@/lib/wiki/routes";
 import type { MapImage, WikiAnimal, WikiArea, WikiItem } from "@/lib/wiki/types";
 
 /**
@@ -132,12 +138,6 @@ export function IslandMap({
     [bubbles],
   );
 
-  /** Areas the island is currently drawing a bubble over. */
-  const bubbledAreaIds = useMemo(() => {
-    if (stepOverlay) return new Set(stepOverlay.route.steps.map((step) => step.area.id));
-    return new Set(bubbles.map((bubble) => bubble.area.id));
-  }, [bubbles, stepOverlay]);
-
   /** Areas holding the focused material itself. */
   const primaryAreaIds = useMemo(() => {
     if (!focus) return null;
@@ -158,6 +158,118 @@ export function IslandMap({
         .map((bubble) => bubble.area.id),
     );
   }, [bubbles, focus]);
+
+  /**
+   * The focused item and everything needed to craft it, by id. `subtreeIds`
+   * already includes the item itself — see {@link MapFocus}.
+   */
+  const focusIds = useMemo(() => (focus ? new Set(focus.subtreeIds) : null), [focus]);
+
+  /** The areas whose bubble is a route step rather than a material. */
+  const stepAreaIds = useMemo(
+    () => new Set(stepOverlay ? stepOverlay.route.steps.map((step) => step.area.id) : []),
+    [stepOverlay],
+  );
+
+  /**
+   * The material bubbles that come back while a card is hovered under a pinned
+   * route: the relevant areas the route does **not** stop at.
+   *
+   * A route step keeps its own bubble, so no area ever draws two bubbles at once —
+   * the step already says what happens there, and the answer the reader asked for
+   * is about everywhere else. Those bubbles are drawn as the material view draws
+   * them: they are the material answer, so the route tint does not apply to them.
+   */
+  const hoveredMaterialBubbles = useMemo(() => {
+    if (!stepOverlay || !supportAreaIds) return [];
+    return bubbles.filter(
+      (bubble) => supportAreaIds.has(bubble.area.id) && !stepAreaIds.has(bubble.area.id),
+    );
+  }, [bubbles, stepAreaIds, stepOverlay, supportAreaIds]);
+
+  /**
+   * The steps that have nothing to do with the focused material, and so step back
+   * while it is focused — the route's own version of the way the other bubbles
+   * fade.
+   *
+   * A step stays lit when its area holds the material or something needed to craft
+   * it, and also when the step itself picks up or builds the focused item: a craft
+   * has no spawn area, so hovering *build iron sheet here* must not fade the very
+   * bubble the pointer is in.
+   */
+  const unrelatedStepAreaIds = useMemo(() => {
+    if (!stepOverlay || !supportAreaIds || !focusIds) return new Set<string>();
+    return new Set(
+      stepOverlay.route.steps
+        .filter((step) => {
+          if (supportAreaIds.has(step.area.id)) return false;
+          return ![...stepGathers(step), ...stepCrafts(step)].some((entry) =>
+            focusIds.has(entry.item.id),
+          );
+        })
+        .map((step) => step.area.id),
+    );
+  }, [focusIds, stepOverlay, supportAreaIds]);
+
+  /**
+   * Where those bubbles go. They are solved here rather than by the plan's own
+   * layout because the route's bubbles have to be kept out of the way, and only
+   * this component knows where the route solver put them.
+   *
+   * The route bubbles are passed as obstacles, not as part of the set: they are on
+   * screen and one of them holds the pointer, so a solve that moved them would
+   * slide the hovered card out from under the reader and drop the hover.
+   *
+   * Only the steps that *stay lit* are obstacles. A faded step is on its way out —
+   * that is the "irrelevant route bubbles vanish" half of the behaviour — so a
+   * material bubble settling over one costs nothing, and leaving those boxes out of
+   * the solve gives the answer the room it needs to space itself out.
+   */
+  const hoveredMaterialPlacements = useMemo(() => {
+    if (!stepOverlay || hoveredMaterialBubbles.length === 0) return {};
+    return resolveBubblePlacements(
+      hoveredMaterialBubbles.map((bubble) => ({
+        id: bubble.area.id,
+        x: bubble.area.anchor.x,
+        y: bubble.area.anchor.y,
+        ...estimateBubbleSize(bubble, bubbleScale),
+      })),
+      {
+        mapWidth: map.width,
+        mapHeight: map.height,
+        obstacles: stepOverlay.route.steps.flatMap((step) => {
+          if (unrelatedStepAreaIds.has(step.area.id)) return [];
+          const placement = stepOverlay.placements[step.area.id];
+          if (!placement) return [];
+          return [
+            {
+              id: step.area.id,
+              x: placement.x,
+              y: placement.y,
+              ...estimateStepBubbleSize(step, bubbleScale),
+            },
+          ];
+        }),
+      },
+    );
+  }, [
+    bubbleScale,
+    hoveredMaterialBubbles,
+    map.height,
+    map.width,
+    stepOverlay,
+    unrelatedStepAreaIds,
+  ]);
+
+  /** Areas the island is currently drawing a bubble over. */
+  const bubbledAreaIds = useMemo(() => {
+    if (stepOverlay) {
+      const ids = new Set(stepOverlay.route.steps.map((step) => step.area.id));
+      for (const bubble of hoveredMaterialBubbles) ids.add(bubble.area.id);
+      return ids;
+    }
+    return new Set(bubbles.map((bubble) => bubble.area.id));
+  }, [bubbles, hoveredMaterialBubbles, stepOverlay]);
 
   const hoveredArea = hoveredAreaId ? (areaById.get(hoveredAreaId) ?? null) : null;
   // Areas with a bubble already explain their contents, so no tooltip there.
@@ -291,8 +403,9 @@ export function IslandMap({
           visibility: overlayScale === null ? "hidden" : "visible",
         }}
       >
-        {stepOverlay
-          ? stepOverlay.route.steps.map((step) => {
+        {stepOverlay ? (
+          <>
+            {stepOverlay.route.steps.map((step) => {
               const placement = stepOverlay.placements[step.area.id];
               if (!placement) return null;
               return (
@@ -303,19 +416,53 @@ export function IslandMap({
                   bubbleScale={bubbleScale}
                   active={activeAreaId === step.area.id}
                   focusedItemId={focus?.itemId ?? null}
+                  dimmed={unrelatedStepAreaIds.has(step.area.id)}
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}
                   onSelectItem={onSelectItem}
                   onHoverItem={onHoverMaterial}
                 />
               );
-            })
-          : bubbles.map((bubble) => {
-              const placement = placements[bubble.area.id];
+            })}
+
+            {/*
+             * Last, so the bubbles the hover just brought back paint over the route
+             * steps: they are the answer, and the steps were already on screen.
+             */}
+            {hoveredMaterialBubbles.map((bubble) => {
+              const placement = hoveredMaterialPlacements[bubble.area.id];
               if (!placement) return null;
               return (
                 <AreaBubbleCard
                   key={bubble.area.id}
+                  bubble={bubble}
+                  placement={placement}
+                  bubbleScale={bubbleScale}
+                  active={activeAreaId === bubble.area.id}
+                  focus={focus}
+                  // Not a route stop, so it takes the material treatment rather
+                  // than the route's: the route has already said its piece in the
+                  // step bubbles above.
+                  routeActive={false}
+                  inRoute={false}
+                  // It is on screen only for as long as the pointer holds a step
+                  // card down, and it must not be able to take that pointer: see
+                  // the prop's own note on the strobe that costs.
+                  passThrough
+                  onHoverArea={onHoverArea}
+                  onSelectArea={onSelectArea}
+                  onHoverMaterial={onHoverMaterial}
+                />
+              );
+            })}
+          </>
+        ) : (
+          bubbles.map((bubble) => {
+            const placement = placements[bubble.area.id];
+            if (!placement) return null;
+            return (
+              <AreaBubbleCard
+                key={bubble.area.id}
                   bubble={bubble}
                   placement={placement}
                   bubbleScale={bubbleScale}
@@ -328,7 +475,8 @@ export function IslandMap({
                   onHoverMaterial={onHoverMaterial}
                 />
               );
-            })}
+            })
+        )}
 
         {tooltipArea && (
           <MapTooltip

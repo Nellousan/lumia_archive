@@ -37,11 +37,29 @@ const BUBBLE_DESIGN_CSS_WIDTH = 140;
 const BUBBLE_BORDER = 1; // bubble `border`
 const BUBBLE_PADDING = 6; // bubble `p-[6px]`
 const BUBBLE_CARD_GAP = 8; // card row `gap-[8px]`
-const BUBBLE_CARD_HEIGHT = 98; // square artwork + the quantity underneath
-const BUBBLE_CHROME_HEIGHT = 56; // bubble padding + area header
+/**
+ * Square artwork plus the quantity underneath. Measured off a rendered card, not
+ * read off the classes: it came out 2 units taller than the arithmetic suggested,
+ * and being 2 units short is enough to put two bubbles a `gap` apart on top of
+ * each other.
+ */
+const BUBBLE_CARD_HEIGHT = 100;
+/** Bubble padding plus the area header line. Measured the same way; was 56. */
+const BUBBLE_CHROME_HEIGHT = 58;
 
 /** How many item cards sit on one row before they wrap. */
 const CARDS_PER_ROW = 3;
+
+/**
+ * The line a step bubble draws when nothing is built there ("nothing built
+ * here"), in island pixels: `mt-[6px]` plus the 15px line itself.
+ *
+ * It is why a step is not the same shape as a material bubble with the same
+ * number of cards, and it only shows on the *shortest* bubbles — an estimate that
+ * forgot it reserved too little room for exactly the bubbles most likely to sit
+ * next to a neighbour.
+ */
+const BUBBLE_NOTICE_HEIGHT = 24;
 
 /** Width the header alone needs: room for an area name as long as "Research Center". */
 const BUBBLE_HEADER_WIDTH = 230;
@@ -116,12 +134,42 @@ export function estimateBubbleSize(
   return estimateCardsBubbleSize(bubble.cards.length, scale);
 }
 
-/** Same estimate for a route step, whose cards are what is gathered and built. */
+/**
+ * Same estimate for a route step.
+ *
+ * A step bubble is *not* shaped like a material bubble with the same cards, and
+ * the difference is the whole reason this is not one call to
+ * {@link estimateCardsBubbleSize}. A material bubble has its width pinned to
+ * {@link BUBBLE_WIDTH}, so its cards wrap at {@link CARDS_PER_ROW} and it grows
+ * downwards. A step bubble is content-sized — nothing sets its width — so its
+ * cards never wrap: it grows *sideways* instead, and stays one card tall however
+ * many it holds.
+ *
+ * Reserving the wrapped box instead made every step reservation half as wide and
+ * up to twice as tall as the bubble actually drawn, which is invisible until
+ * something is placed against it: the bubbles that come back under a hover were
+ * separated from a box 242 units narrower than the step they were avoiding, and
+ * landed under it. Measured on route 1's Fire Station step: six cards, reserved
+ * 246x252, drawn 488x158.
+ */
 export function estimateStepBubbleSize(
   step: RouteStep,
   scale = 1,
 ): { width: number; height: number } {
-  return estimateCardsBubbleSize(stepGathers(step).length + stepCrafts(step).length, scale);
+  const cards = stepGathers(step).length + stepCrafts(step).length;
+  const cardsWidth =
+    cards * BUBBLE_CARD_WIDTH +
+    Math.max(0, cards - 1) * BUBBLE_CARD_GAP +
+    2 * BUBBLE_PADDING +
+    2 * BUBBLE_BORDER;
+  const notice = stepCrafts(step).length === 0 ? BUBBLE_NOTICE_HEIGHT : 0;
+  return {
+    // The header sets a floor of its own, and a name is laid out rather than
+    // measured here, so the floor errs wide: over-reserving only spaces bubbles
+    // further apart, while under-reserving is what puts one on top of another.
+    width: Math.max(BUBBLE_HEADER_WIDTH, cardsWidth) * scale,
+    height: (BUBBLE_CHROME_HEIGHT + (cards > 0 ? BUBBLE_CARD_HEIGHT : 0) + notice) * scale,
+  };
 }
 
 export interface BubbleAnchor {
@@ -147,6 +195,16 @@ export interface BubbleLayoutOptions {
   /** Extra breathing room from the map edge. */
   edgePadding?: number;
   iterations?: number;
+  /**
+   * Boxes that are already on screen and must not move: they still take part in
+   * the separation, but only push the boxes being solved, which go around them.
+   *
+   * The route's step bubbles are passed this way while a material is hovered —
+   * they are already drawn and the pointer is sitting on one of them, so moving
+   * one would take the card out from under the reader and end the hover that
+   * asked for the layout in the first place.
+   */
+  obstacles?: BubbleAnchor[];
 }
 
 function overlaps(a: BubbleAnchor, b: BubbleAnchor, gap: number): boolean {
@@ -166,11 +224,13 @@ export function resolveBubblePlacements(
   const iterations = options.iterations ?? 60;
 
   // Work on mutable copies, already clamped so every box starts inside the map.
-  const boxes = anchors.map((anchor) => {
+  // The obstacles come last so the returned placements stay those of `anchors`.
+  const boxes = [...anchors, ...(options.obstacles ?? [])].map((anchor, index) => {
     const halfWidth = anchor.width / 2;
     const halfHeight = anchor.height / 2;
     return {
       ...anchor,
+      fixed: index >= anchors.length,
       x: clamp(anchor.x, halfWidth + edgePadding, mapWidth - halfWidth - edgePadding),
       y: clamp(anchor.y, halfHeight + edgePadding, mapHeight - halfHeight - edgePadding),
     };
@@ -202,16 +262,25 @@ export function resolveBubblePlacements(
         const overlapY = minY - Math.abs(dy);
 
         if (overlapX <= 0 || overlapY <= 0) continue;
+        // Two boxes that both have to stay put cannot be separated; the ones the
+        // solver owns are pushed away from them instead.
+        if (a.fixed && b.fixed) continue;
         moved = true;
 
+        // A fixed box takes none of the push, so the one that moves takes it all.
+        const share = (toward: number, axis: "x" | "y") => {
+          if (a.fixed) b[axis] += toward * 2;
+          else if (b.fixed) a[axis] -= toward * 2;
+          else {
+            a[axis] -= toward;
+            b[axis] += toward;
+          }
+        };
+
         if (overlapY <= overlapX) {
-          const push = (overlapY / 2 + 0.5) * (dy >= 0 ? 1 : -1);
-          a.y -= push;
-          b.y += push;
+          share((overlapY / 2 + 0.5) * (dy >= 0 ? 1 : -1), "y");
         } else {
-          const push = (overlapX / 2 + 0.5) * (dx >= 0 ? 1 : -1);
-          a.x -= push;
-          b.x += push;
+          share((overlapX / 2 + 0.5) * (dx >= 0 ? 1 : -1), "x");
         }
 
         clampBox(a);
@@ -222,7 +291,10 @@ export function resolveBubblePlacements(
     if (!moved) break;
   }
 
-  return Object.fromEntries(boxes.map((box) => [box.id, { x: box.x, y: box.y }]));
+  // Only the boxes the caller asked about: an obstacle comes back where it was.
+  return Object.fromEntries(
+    boxes.slice(0, anchors.length).map((box) => [box.id, { x: box.x, y: box.y }]),
+  );
 }
 
 /**

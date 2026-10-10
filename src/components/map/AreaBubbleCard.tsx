@@ -16,6 +16,18 @@ export interface AreaBubbleCardProps {
   routeActive: boolean;
   /** True when this bubble's area is one of the active route's stops. */
   inRoute: boolean;
+  /**
+   * True when the bubble is an answer rather than a control, so the pointer falls
+   * straight through it.
+   *
+   * The bubbles that come back under a hover while a route is pinned sit around
+   * the route's own cards, and if one of them took the pointer the card being
+   * hovered would lose it — which withdraws the answer, which returns the pointer
+   * to that card, which brings the answer back. Measured, that cycle runs every
+   * 13ms and the island strobes. Letting the pointer through makes the answer
+   * unable to end the question that asked for it.
+   */
+  passThrough?: boolean;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
   onHoverMaterial: (itemId: string | null) => void;
@@ -42,6 +54,7 @@ export function AreaBubbleCard({
   focus,
   routeActive,
   inRoute,
+  passThrough = false,
   onHoverArea,
   onSelectArea,
   onHoverMaterial,
@@ -58,7 +71,7 @@ export function AreaBubbleCard({
 
   return (
     <div
-      className={`pointer-events-auto absolute z-20 transition-opacity ${
+      className={`${passThrough ? "pointer-events-none" : "pointer-events-auto"} absolute z-20 transition-opacity ${
         dimmed ? "opacity-35" : "opacity-100"
       }`}
       style={{

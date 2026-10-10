@@ -14,6 +14,12 @@ export interface RouteStepBubbleCardProps {
   active: boolean;
   /** The material the pointer is on, if any; draws this card's own focus ring. */
   focusedItemId: string | null;
+  /**
+   * True while a material is focused that this step has nothing to do with. The
+   * step fades back rather than leaving, so the route stays on screen while the
+   * island answers about one of its stops.
+   */
+  dimmed: boolean;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
   onSelectItem: (itemId: string) => void;
@@ -99,6 +105,7 @@ export function RouteStepBubbleCard({
   bubbleScale,
   active,
   focusedItemId,
+  dimmed,
   onHoverArea,
   onSelectArea,
   onSelectItem,
@@ -111,7 +118,9 @@ export function RouteStepBubbleCard({
 
   return (
     <div
-      className="pointer-events-auto absolute z-20"
+      className={`pointer-events-auto absolute z-20 transition-opacity ${
+        dimmed ? "opacity-35" : "opacity-100"
+      }`}
       style={{
         left,
         top,

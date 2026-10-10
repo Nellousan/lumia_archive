@@ -19,13 +19,16 @@ export interface AreaBubbleCardProps {
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
   onHoverMaterial: (itemId: string | null) => void;
-  onSelectItem: (itemId: string) => void;
 }
 
 /**
  * Floating card anchored over an area that holds materials of the active
  * recipe. Its header names the area and opens the area panel; its body lists one
  * card per recipe material found there, with the quantity.
+ *
+ * The material cards themselves are read-only and hover-only — see
+ * `BubbleMaterialCard` — so the header is the one control in the bubble, and the
+ * count beside it is the number of materials the body draws.
  *
  * Every size below is in island pixels: the card is drawn inside the map's own
  * coordinate layer, so these numbers are also what the placement solver spaces
@@ -42,7 +45,6 @@ export function AreaBubbleCard({
   onHoverArea,
   onSelectArea,
   onHoverMaterial,
-  onSelectItem,
 }: AreaBubbleCardProps) {
   const { left, top } = toLayerPosition(placement, bubbleScale);
   const containsFocused = bubble.cards.some((card) => card.material.item.id === focus?.itemId);
@@ -110,7 +112,6 @@ export function AreaBubbleCard({
                 focus.subtreeIds.includes(card.material.item.id)
               }
               onHover={onHoverMaterial}
-              onSelect={onSelectItem}
             />
           ))}
         </div>

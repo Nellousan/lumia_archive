@@ -307,7 +307,6 @@ export function IslandMap({
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}
                   onHoverMaterial={onHoverMaterial}
-                  onSelectItem={onSelectItem}
                 />
               );
             })}

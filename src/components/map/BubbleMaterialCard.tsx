@@ -16,12 +16,18 @@ export interface BubbleMaterialCardProps {
   /** In the focused material's recipe subtree, but not the focused material. */
   related: boolean;
   onHover: (itemId: string | null) => void;
-  onSelect: (itemId: string) => void;
 }
 
 /**
  * The item card inside a map bubble: a square of trimmed artwork with the
  * quantity underneath, and nothing else.
+ *
+ * Hovering is the card's only interaction, and the reason it exists: it focuses
+ * the material, which lights up every other area that holds it and fades the rest
+ * of the island. Clicking used to open the item in the rail, which nobody wanted
+ * from a raw material and which testing read as a trap — a reader hovering to
+ * compare areas would click, lose the island, and have to come back. The card is
+ * therefore not interactive at all; the area's own header is what opens a panel.
  *
  * The bubble header already names the area, the artwork carries the identity and
  * `title`/`aria-label` spell out the item name — so the card stays square and the
@@ -51,7 +57,6 @@ export function BubbleMaterialCard({
   focused,
   related,
   onHover,
-  onSelect,
 }: BubbleMaterialCardProps) {
   const dropped = source === "animal";
   const droppers = animals.join(" or ");
@@ -81,7 +86,6 @@ export function BubbleMaterialCard({
       className="gap-[2px] px-[4px] pb-[4px] pt-[7px]"
       style={{ width: BUBBLE_CARD_WIDTH }}
       onHover={onHover}
-      onSelect={() => onSelect(material.item.id)}
       footnote={
         dropped ? (
           <span aria-hidden="true" className="text-[21px] leading-none text-red-400">

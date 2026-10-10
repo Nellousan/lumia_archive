@@ -18,6 +18,16 @@ import type { SpriteTrim, WikiItem } from "@/lib/wiki/types";
  * A missing sprite falls back to a monogram, and a sprite with no measured trim
  * falls back to `object-contain` inside the same square, so no combination
  * produces a broken image.
+ *
+ * The frame owns the geometry: it is always a definite box, and the artwork is
+ * taken out of flow to sit inside it. That is not decoration. A percentage height
+ * on an in-flow image inside a frame whose own height comes from `aspect-ratio`
+ * is cyclic, so the browser resolves it as `auto` and the image falls back to its
+ * intrinsic ratio — which then props the frame open. Fifteen sprites are wiki
+ * images rather than game assets and are not on the 2:1 canvas (441×275, 157×131,
+ * …): each one used to stand taller than its neighbours, and dragged its whole row
+ * of the shelf with it. Out of flow, the frame wins and the artwork letterboxes
+ * inside it instead.
  */
 
 export type SpriteSize = "xs" | "sm" | "md" | "lg" | "xl" | "hero" | "fill" | "tile";
@@ -92,12 +102,12 @@ export function ItemSprite({ item, size = "md", bare = false, className = "" }: 
   const chrome = bare ? "" : "border border-white/10 bg-black/25";
 
   if (item.sprite && !failed) {
-    const frame = `shrink-0 place-items-center ${FRAME[size]} ${chrome} ${className}`;
+    const frame = `relative shrink-0 place-items-center overflow-hidden ${FRAME[size]} ${chrome} ${className}`;
 
     // Square + measured trim: crop to the artwork and scale it up.
     if (size === "tile" && item.spriteTrim) {
       return (
-        <span className={`relative block overflow-hidden ${frame}`}>
+        <span className={`block ${frame}`}>
           {/* eslint-disable-next-line @next/next/no-img-element -- static sprite; the
               overlay must align with the exact rendered box, so no optimiser transform. */}
           <img
@@ -129,7 +139,7 @@ export function ItemSprite({ item, size = "md", bare = false, className = "" }: 
           decoding="async"
           draggable={false}
           onError={() => setFailed(true)}
-          className="h-full w-full object-contain"
+          className="absolute inset-0 size-full object-contain"
         />
       </span>
     );

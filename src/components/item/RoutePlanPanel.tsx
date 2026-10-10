@@ -40,6 +40,10 @@ export interface RoutePlanPanelProps {
   onSelectArea: (areaId: string) => void;
   /** Opens a food from a route's "also cookable" row. */
   onSelectItem: (itemId: string) => void;
+  /** The route a shared link named, so the list opens to it. */
+  revealRouteId: string | null;
+  /** Copies a link to the route at this 1-based rank. */
+  onShareRoute: (routeNumber: number) => Promise<boolean>;
 }
 
 /**
@@ -70,6 +74,8 @@ export function RoutePlanPanel({
   onSelectRoute,
   onSelectArea,
   onSelectItem,
+  revealRouteId,
+  onShareRoute,
 }: RoutePlanPanelProps) {
   const startingItem = startingClothes ? (startingOptions.find((item) => item.id === startingClothes) ?? null) : null;
   const lookAheadOptions = Array.from({ length: MAX_LOOK_AHEAD }, (_, index) => index + 1);
@@ -163,7 +169,10 @@ export function RoutePlanPanel({
       </div>
 
       <RoutePlanList
-        key={planKey}
+        // The reveal is part of the identity: a route arriving from a link mounts a
+        // list that already knows to open onto it, rather than one that has to be
+        // talked into it after the fact.
+        key={`${planKey}#${revealRouteId ?? ""}`}
         routes={routes}
         plannedCount={plannedCount}
         truncated={truncated}
@@ -179,6 +188,8 @@ export function RoutePlanPanel({
         onSelectRoute={onSelectRoute}
         onSelectArea={onSelectArea}
         onSelectItem={onSelectItem}
+        revealRouteId={revealRouteId}
+        onShareRoute={onShareRoute}
       />
     </section>
   );

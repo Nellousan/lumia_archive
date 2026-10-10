@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CatalogPanel } from "@/components/catalog/CatalogPanel";
 import { ItemDetailPanel } from "@/components/item/ItemDetailPanel";
 import { RoutePlanPanel } from "@/components/item/RoutePlanPanel";
@@ -15,9 +15,11 @@ import { useItemSelection } from "@/hooks/useItemSelection";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useRoutePlan } from "@/hooks/useRoutePlan";
 import { useStepOverlay } from "@/hooks/useStepOverlay";
+import { copyText } from "@/lib/clipboard";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
 import { DEFAULT_LOOK_AHEAD, type RouteMode } from "@/lib/wiki/routes";
+import { buildSharedLink, clearSharedParams, readSharedPlan } from "@/lib/wiki/share";
 import type {
   AreaItemRef,
   WikiAnimal,
@@ -32,6 +34,24 @@ const TWO_COLUMN_QUERY = "(min-width: 1024px)";
 const NO_ITEMS: AreaItemRef[] = [];
 const NO_ANIMALS: WikiAnimal[] = [];
 const NO_CRAFTABLES: WikiItem[] = [];
+
+/**
+ * What identifies a plan: the items it gathers, in order, then the three settings
+ * the solver reads.
+ *
+ * A pinned route, and the route a shared link names, only ever refer to one of
+ * these — so both are dropped the moment the plan moves on underneath them. The
+ * link's own key is worked out with this from the query alone, before the state it
+ * describes exists.
+ */
+function planKeyOf(
+  itemIds: string[],
+  startingClothes: string | null,
+  mode: RouteMode,
+  lookAhead: number,
+): string {
+  return `${itemIds.join("|")}#${startingClothes ?? ""}#${mode}${lookAhead}`;
+}
 
 export interface WikiExplorerProps {
   dataset: WikiDataset;
@@ -106,17 +126,80 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const [routeMode, setRouteMode] = useState<RouteMode>("fastest");
   const [lookAhead, setLookAhead] = useState(DEFAULT_LOOK_AHEAD);
   /**
-   * The pinned route travels with the plan it was pinned for: bookmarking or
-   * selecting something else changes the routes, so the highlight lets go
-   * without an effect that would fight the render.
+   * The route the reader pinned, if they have touched one for this plan.
+   *
+   * `routeId: null` is not "nothing" — it is the reader *clearing* the highlight,
+   * which has to outrank the route a shared link arrived with, or the one pin a
+   * link sets could never be dismissed.
    */
-  const [pinnedRoute, setPinnedRoute] = useState<{ planKey: string; routeId: string } | null>(null);
+  const [readerRoute, setReaderRoute] = useState<{ planKey: string; routeId: string | null } | null>(
+    null,
+  );
+  /**
+   * The route a shared link named, as a number in the list its plan produces.
+   *
+   * It is carried with the plan key worked out *from the link*, because the render
+   * that applies the link has not happened yet, and resolved to an id later — see
+   * {@link linkedRouteId}.
+   */
+  const [linkedRoute, setLinkedRoute] = useState<{ planKey: string; number: number } | null>(null);
 
   const catalog = useCatalogQuery(dataset.items);
-  const { item: activeItem, canGoBack, toggleFromCatalog, followLink, goBack, clearSelection } =
-    useItemSelection(dataset.items);
+  const {
+    item: activeItem,
+    canGoBack,
+    toggleFromCatalog,
+    selectItem,
+    followLink,
+    goBack,
+    clearSelection,
+  } = useItemSelection(dataset.items);
 
   const bookmarks = useBookmarks();
+  const { setBookmarks } = bookmarks;
+
+  /**
+   * Adopts the plan a shared link carries, then takes its parameters back out of
+   * the address bar.
+   *
+   * The URL is a delivery, not a place to live: with the plan on screen the
+   * address bar names the archive alone again, so reloading or copying it gives
+   * the plain site rather than somebody else's route. Only the keys `share.ts`
+   * owns are removed, so a campaign tag or Discord's `?v=2` survives the visit.
+   *
+   * Every line below is a `setState` in an effect, which the compiler rules flag as
+   * a cascading render — and here it is the honest shape: the query is an external
+   * system handing over one instruction, read once, with nothing to subscribe to.
+   * Running twice (StrictMode, in development) costs nothing, because the first
+   * pass has already cleaned the address bar.
+   */
+  /* eslint-disable react-hooks/set-state-in-effect -- one-shot read of the address bar */
+  useEffect(() => {
+    const shared = readSharedPlan(window.location.search, dataset);
+    if (!shared) return;
+
+    if (shared.itemId !== null) selectItem(shared.itemId);
+    setBookmarks(shared.bookmarkIds);
+    setStartingClothes(shared.startingClothes);
+    setRouteMode(shared.mode);
+    setLookAhead(shared.lookAhead);
+
+    if (shared.routeNumber !== null) {
+      // The plan the link describes, in the same order `plannedItems` will build:
+      // the open item first, then the bookmarks it is not already.
+      const planned =
+        shared.itemId === null
+          ? shared.bookmarkIds
+          : [shared.itemId, ...shared.bookmarkIds.filter((id) => id !== shared.itemId)];
+      setLinkedRoute({
+        planKey: planKeyOf(planned, shared.startingClothes, shared.mode, shared.lookAhead),
+        number: shared.routeNumber,
+      });
+    }
+
+    window.history.replaceState(null, "", clearSharedParams(window.location.href));
+  }, [dataset, selectItem, setBookmarks]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   /**
    * What the island and the routes cover: the selected item first — so it heads
@@ -157,7 +240,12 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * Identity of the current plan, so a pin never outlives what it pointed at.
    * The starting clothes are part of it: changing them changes the routes.
    */
-  const planKey = `${plannedItems.map((planned) => planned.id).join("|")}#${startingClothes ?? ""}#${routeMode}${lookAhead}`;
+  const planKey = planKeyOf(
+    plannedItems.map((planned) => planned.id),
+    startingClothes,
+    routeMode,
+    lookAhead,
+  );
 
   /**
    * What the island's random-spawn box highlights: everything the plan is about,
@@ -204,9 +292,24 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     ? (dataset.animalsByAreaId[selectedAreaId] ?? NO_ANIMALS)
     : NO_ANIMALS;
 
+  /**
+   * Where the route a link named sits in the list *this* plan produces. The number
+   * is a rank, so it only means something next to the plan it was ranked in; a plan
+   * that has moved on resolves to nothing and the highlight lets go on its own.
+   */
+  const linkedRouteId =
+    linkedRoute && linkedRoute.planKey === planKey
+      ? (route.routes[linkedRoute.number - 1]?.id ?? null)
+      : null;
+
+  /** `undefined` until the reader touches a route for this plan, `null` once they clear it. */
+  const readerRouteId =
+    readerRoute && readerRoute.planKey === planKey ? readerRoute.routeId : undefined;
+
   /** Hover wins over nothing; a pinned route outlives the pointer leaving the row. */
-  const pinnedRouteId =
-    pinnedRoute && pinnedRoute.planKey === planKey ? pinnedRoute.routeId : null;
+  const pinnedRouteId = readerRouteId === undefined ? linkedRouteId : readerRouteId;
+  /** A link opens the list onto its route: the fold lifts, the row scrolls into view. */
+  const revealRouteId = linkedRouteId;
   const activeRouteId = pinnedRouteId ?? hoveredRouteId;
   const activeRoute = activeRouteId
     ? (route.routes.find((candidate) => candidate.id === activeRouteId) ?? null)
@@ -218,13 +321,34 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   /** Clicking the highlight again lets it go; the pointer keeps it alive meanwhile. */
   const handleSelectRoute = useCallback(
     (routeId: string) => {
-      setPinnedRoute((previous) =>
-        previous?.planKey === planKey && previous.routeId === routeId
-          ? null
-          : { planKey, routeId },
-      );
+      // The highlight being clicked is the one to drop: whether it came from a link
+      // or from the reader, one click puts it back the way it was found.
+      setReaderRoute({ planKey, routeId: pinnedRouteId === routeId ? null : routeId });
     },
-    [planKey],
+    [planKey, pinnedRouteId],
+  );
+
+  /**
+   * The link to the plan on screen, with `routeNumber` picking one walk out of the
+   * list that plan produces.
+   *
+   * It is built from the live state rather than from the address bar, which no
+   * longer describes the plan — but grafted onto the current URL so whatever else
+   * the page was opened with travels along.
+   */
+  const handleShareRoute = useCallback(
+    async (routeNumber: number) => {
+      const link = buildSharedLink(window.location.href, {
+        itemId: activeItem?.id ?? null,
+        bookmarkIds: bookmarks.ids,
+        startingClothes,
+        mode: routeMode,
+        lookAhead,
+        routeNumber,
+      });
+      return copyText(link);
+    },
+    [activeItem?.id, bookmarks.ids, startingClothes, routeMode, lookAhead],
   );
 
   /** Changing item, from either entry point, clears the map focus. */
@@ -274,8 +398,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     onEscape: () => {
       if (selectedAreaId) {
         setSelectedAreaId(null);
-      } else if (pinnedRoute) {
-        setPinnedRoute(null);
+      } else if (pinnedRouteId) {
+        setReaderRoute({ planKey, routeId: null });
       } else if (focusedMaterialId) {
         setFocusedMaterialId(null);
       } else if (document.activeElement instanceof HTMLElement) {
@@ -365,6 +489,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       onSelectRoute={handleSelectRoute}
       onSelectArea={setSelectedAreaId}
       onSelectItem={handleFollowLink}
+      revealRouteId={revealRouteId}
+      onShareRoute={handleShareRoute}
     />
     ) : null;
 

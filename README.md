@@ -48,6 +48,43 @@ Discord caches an embed for as long as the message lives, which is why re-postin
 `?v=2` to the URL) is what makes it read the tags again — and why a link posted before the tags
 shipped keeps its blank card.
 
+### Sharing a route
+
+Every route in the list carries a **Share** control in its bottom right corner. It copies a link that
+carries the whole plan and the rank of the route within it:
+
+| key | meaning                                              |
+| --- | ---------------------------------------------------- |
+| `i` | the open item                                        |
+| `b` | bookmarked item ids, in the order they were added    |
+| `a` | starting armor, absent when the survivor starts bare |
+| `m` | `fastest` or `greedy`                                |
+| `l` | how many areas greedy looks ahead (1–6)              |
+| `r` | which route, counting from 1 in the ranked list      |
+
+Those six values are *all* the solver reads, and it is a pure function of them — no ties are broken by
+iteration order anywhere — so one link always produces one ranked list, and `r` always names the same
+walk. The check does not take that on faith: it opens a link and compares every route's whole area
+sequence against the list the link was made from, rank for rank.
+
+`m` is written even when it is the default, and `l` only when the mode actually reads it, so a link
+cannot quietly come to mean something else the day a default changes. What the link did not set — no
+bookmarks, no armor — is left out rather than written empty.
+
+The parameters are a delivery, not a place to live. Opening a link adopts the plan and *then* takes
+those keys back out of the address bar, so a reload, or copying the URL straight from the browser,
+gives the plain archive rather than somebody else's route. Only the six keys above are removed — a
+campaign tag, or the `?v=2` Discord needs to read a cached embed again, travels on untouched. Nothing
+else writes the URL either: the address bar is never rewritten while you work, which is why the Share
+control exists rather than "copy the page URL".
+
+Ids are checked against `data.json` before they reach the solver and the rank against the list it
+points into, so a link naming an item that no longer exists simply does not plan it, and a rank past
+the end of the list pins nothing — an old link degrades into a shorter plan instead of an error. A
+shared route opens the list onto itself: the fold lifts so the row is drawn, the row is scrolled into
+view, and it is pinned on the island. Clicking it lets it go, as any other pin does. Links are built
+from the origin you are reading on, so one copied from a dev server points at `localhost`.
+
 ---
 
 ## What it does
@@ -68,7 +105,9 @@ line. *Greedy* is about not spending the trip naked — in this game a survivor 
 ingredient to one spot and crafts at the end is weak the whole way — so at **every** step it asks
 what the next N areas (2 by default, 1–6) can leave the survivor wearing, and ranks the resulting
 profile step by step. Each step prints the worn value beside its pack dots, so the curve being
-ranked is visible.
+ranked is visible. Any route can be handed to someone else with the **Share** control in its bottom
+right corner, which copies a link to that exact plan and that exact rank — see
+[Sharing a route](#sharing-a-route).
 
 **Right pane — Lumia Island.** The **plan bar** sits directly above the island and lists what the map
 and the routes answer for: the selected item, then every bookmark. Under it, the PNG artwork with the
@@ -176,8 +215,10 @@ src/
       inventory.ts        # bag/equipment slots, worn slots, starting clothes
       catalog.ts          # pure filter/sort/search rules for the rail
       taxonomy.ts         # category tabs, sub-tabs, type labels, rarity palette
+      share.ts            # a plan, and one of its routes, as query parameters
       geometry.ts         # polygon centroid/anchor/bounds helpers
       map-image.ts        # base map dimensions (must match the PNG)
+    clipboard.ts          # copy-to-clipboard, with the pre-2018 fallback
     map-layout.ts         # bubble size estimates + collision-aware placement
   instrumentation.ts      # startup hook: logs the dataset summary to stdout
   hooks/
@@ -532,6 +573,25 @@ missing from `CATEGORY_TABS` raises its own note.
 - The startup line was verified on a real `next start`: it prints once, before the first request —
   `[lumia-archive] data ready — 201 items · 22 areas (22 mapped) · 39 craftable — 2 data note(s): …` —
   and the island pane no longer renders any data-notes strip.
+- The shared-route link was driven end to end in a real browser at 1512 and 390 px — real clicks,
+  real typing, and the real clipboard — on a plan of `Monohoshizao` + `Rocker's Jacket` +
+  `Sword Stopper`, windbreaker, greedy, 3 areas: the Share control sits inside every one of the
+  **100** route rows, in the right half, 11 px from the right edge and 9 px above the bottom, reads
+  `Copied` for a moment and goes back to `Share`, and clicking it does **not** pin the route.
+  The copied link was `?i=monohoshizao&b=rocker_s_jacket,sword_stopper&a=windbreaker&m=greedy&l=3&r=6`,
+  and nothing was written that the plan had not set. Opening it — with a foreign `?v=2` attached —
+  rebuilt all 100 routes in the **same order, label for label** (the compared label carries every
+  area, build and pickup), pinned rank 6, lifted the fold to reach it and scrolled it into view, and
+  left the address bar reading `?v=2`. Clicking the shared route let it go without refolding the
+  list. The address bar was asserted untouched (`""`) through a whole session of selecting,
+  bookmarking, switching mode and sharing, which is the point of the design: the app never writes it.
+  A junk link (`i=nope&b=nope,monohoshizao&a=nope&m=greedy&l=99&r=999`) opened nothing, restored the
+  armor as unset, clamped the window to 6, planned the one valid bookmark, pinned nothing and was
+  cleaned to `?v=2`; a plain fastest link carried only `i`, `m=fastest` and `r=1` — no empty
+  bookmarks, no armor, no look-ahead. Pressing Enter on an area chip inside a row opened the area
+  and left the route unpinned, which is what the new `event.target !== event.currentTarget` guard is
+  for. An item that is both open *and* bookmarked — so `i` and `b` name the same id — round-trips
+  too: 36 routes restored in the same order, pinned rank 1.
 
 ---
 
@@ -541,8 +601,9 @@ missing from `CATEGORY_TABS` raises its own note.
    `quality` field with real effect text — `12 Damage`, `70 Health`, `12 Armor` — for 192 of the 194
    items, plus a canonical rarity string. Wiring it in is a small, isolated change to `dataset.ts`.
    It was left out because you asked for `data.json` to be the only source.
-2. **URLs.** Deep links (`/items/[id]`, `/areas/[id]`) would make the wiki shareable and give
-   back/forward for free.
+2. **URLs.** A *plan* link exists now — the query string in
+   [Sharing a route](#sharing-a-route) — but item and area deep links (`/items/[id]`, `/areas/[id]`)
+   do not, and they are what would give back/forward for free.
 3. **Tests.** The `lib/wiki/*` and `lib/map-layout.ts` functions are pure and are the natural target
    for a unit-test setup (Vitest), replacing the throwaway diagnostics route used here.
 4. **Sprites.** Sources are 2:1 canvases with ~33% horizontal transparent padding. Trimming them to

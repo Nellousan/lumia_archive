@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { BAG_SLOTS } from "@/lib/wiki/inventory";
 import { RARITY_META, itemTypeLabel } from "@/lib/wiki/taxonomy";
@@ -41,6 +41,13 @@ export interface RoutePlanListProps {
   onSelectArea: (areaId: string) => void;
   /** Opens a food from a route's "also cookable" row in the item detail. */
   onSelectItem: (itemId: string) => void;
+  /**
+   * The route a shared link named, so the list can open its fold and scroll to
+   * it. `null` on every visit that did not arrive on a link.
+   */
+  revealRouteId: string | null;
+  /** Copies a link to the route at this 1-based rank, reporting whether it took. */
+  onShareRoute: (routeNumber: number) => Promise<boolean>;
 }
 
 /** Routes shown before the "show all" fold; steps make each row tall. */
@@ -296,6 +303,85 @@ function StepRow({
   );
 }
 
+/** The chain-link glyph on the share control. */
+function LinkGlyph({ className = "size-2.5" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
+/**
+ * Copies a link to one route.
+ *
+ * A link is worth having precisely because the ranked list is not: the same plan
+ * and the same settings always produce the same list, so the number of a route
+ * identifies it as surely as its area sequence does — see `lib/wiki/share.ts`.
+ *
+ * It lives inside the row, which is itself a click target, so it takes the click
+ * for itself: asking for the link is not choosing the route.
+ */
+function ShareRouteButton({
+  routeNumber,
+  onShare,
+}: {
+  routeNumber: number;
+  onShare: (routeNumber: number) => Promise<boolean>;
+}) {
+  const [outcome, setOutcome] = useState<"idle" | "copied" | "failed">("idle");
+
+  // A receipt rather than a state: it says what happened, then gets out of the way.
+  useEffect(() => {
+    if (outcome === "idle") return;
+    const timer = window.setTimeout(() => setOutcome("idle"), 1800);
+    return () => window.clearTimeout(timer);
+  }, [outcome]);
+
+  const short = outcome === "copied" ? "Copied" : outcome === "failed" ? "Failed" : "Share";
+  const spoken =
+    outcome === "copied"
+      ? `Link to route ${routeNumber} copied`
+      : outcome === "failed"
+        ? `Could not copy a link to route ${routeNumber}`
+        : `Copy a link to route ${routeNumber}`;
+
+  return (
+    <button
+      type="button"
+      title={spoken}
+      aria-label={spoken}
+      onClick={async (event) => {
+        event.stopPropagation();
+        setOutcome((await onShare(routeNumber)) ? "copied" : "failed");
+      }}
+      className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold transition ${
+        outcome === "copied"
+          ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-200"
+          : outcome === "failed"
+            ? "border-rose-400/50 text-rose-200"
+            : "border-white/10 text-stone-500 hover:border-amber-300/40 hover:bg-white/[0.04] hover:text-amber-200"
+      }`}
+    >
+      <LinkGlyph />
+      {short}
+      <span role="status" className="sr-only">
+        {outcome === "idle" ? "" : spoken}
+      </span>
+    </button>
+  );
+}
+
 /**
  * Every fastest way to gather the active plan, best first.
  *
@@ -321,8 +407,27 @@ export function RoutePlanList({
   onSelectRoute,
   onSelectArea,
   onSelectItem,
+  revealRouteId,
+  onShareRoute,
 }: RoutePlanListProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(revealRouteId !== null);
+  /** The row a shared link named, so it can be scrolled to once it exists. */
+  const activeRowRef = useRef<HTMLLIElement | null>(null);
+  /** Set once the arrival has been scrolled to, so folding later moves nothing. */
+  const revealed = useRef(false);
+
+  /*
+   * A shared route is opened *to*: the fold starts lifted so the row it names is
+   * drawn at all, and the row is then scrolled into view. Both belong to the
+   * arrival — the list is remounted for it (its `key` carries the reveal), so the
+   * reader's own fold, from then on, is never touched by it again.
+   */
+  useEffect(() => {
+    const row = activeRowRef.current;
+    if (revealRouteId === null || !expanded || revealed.current || row === null) return;
+    revealed.current = true;
+    row.scrollIntoView({ block: "center" });
+  }, [revealRouteId, expanded]);
 
   if (routes.length === 0 && nothingToGather) {
     return (
@@ -403,7 +508,7 @@ export function RoutePlanList({
           const active = route.id === activeRouteId;
           const peak = peakBagUse(route);
           return (
-            <li key={route.id}>
+            <li key={route.id} ref={active ? activeRowRef : undefined}>
               <div
                 role="button"
                 tabIndex={0}
@@ -420,6 +525,9 @@ export function RoutePlanList({
                 onBlur={() => onHoverRoute(null)}
                 onClick={() => onSelectRoute(route.id)}
                 onKeyDown={(event) => {
+                  // The chips, the cookable food and the share control inside this
+                  // row are focusable too, and their keys must not reach the row.
+                  if (event.target !== event.currentTarget) return;
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     onSelectRoute(route.id);
@@ -461,6 +569,11 @@ export function RoutePlanList({
                 </ol>
 
                 <CookableRow foods={route.cookable} onSelectItem={onSelectItem} />
+
+                {/* Bottom right of the row, under everything the route does. */}
+                <div className="mt-1.5 flex items-center justify-end">
+                  <ShareRouteButton routeNumber={index + 1} onShare={onShareRoute} />
+                </div>
               </div>
             </li>
           );

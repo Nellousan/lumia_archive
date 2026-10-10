@@ -29,9 +29,10 @@ export function selectionAfterCatalogClick(
  * Nothing is open on load: the rail starts unselected and the island map is
  * empty until the reader picks an item.
  *
- * Three ways in and out:
+ * Four ways in and out:
  *  - {@link toggleFromCatalog} picks from the rail, and unpicks the same item on a
  *    second click;
+ *  - {@link selectItem} opens one outright, for a plan restored from a link;
  *  - {@link followLink} pushes onto the trail so the detail panel can offer a
  *    "back" step through the crafting chain (a no-op on the already-open item,
  *    which is what spawn-mode bubbles point at);
@@ -51,6 +52,16 @@ export function useItemSelection(items: WikiItem[], initialItemId?: string) {
   /** Picking from the rail. Clicking the open item again clears it. */
   const toggleFromCatalog = useCallback((itemId: string) => {
     setSelection((previous) => selectionAfterCatalogClick(previous, itemId));
+  }, []);
+
+  /**
+   * Opens an item outright, with nothing behind it in the trail.
+   *
+   * This is how a shared plan arrives: there is no click to toggle against and no
+   * history to inherit, only a plan that says this item was the open one.
+   */
+  const selectItem = useCallback((itemId: string) => {
+    setSelection({ currentId: itemId, history: [] });
   }, []);
 
   const followLink = useCallback((itemId: string) => {
@@ -85,6 +96,7 @@ export function useItemSelection(items: WikiItem[], initialItemId?: string) {
     item,
     canGoBack: selection.history.length > 0,
     toggleFromCatalog,
+    selectItem,
     followLink,
     goBack,
     clearSelection,

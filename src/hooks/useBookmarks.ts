@@ -7,6 +7,8 @@ export interface BookmarksState {
   ids: string[];
   isBookmarked: (itemId: string) => boolean;
   toggleBookmark: (itemId: string) => void;
+  /** Replaces the plan outright — how a shared link arrives. */
+  setBookmarks: (itemIds: string[]) => void;
   clearBookmarks: () => void;
 }
 
@@ -26,10 +28,15 @@ export function useBookmarks(): BookmarksState {
     );
   }, []);
 
+  /** One id, once: a hand-edited link can repeat one, the plan cannot. */
+  const setBookmarks = useCallback((itemIds: string[]) => {
+    setIds([...new Set(itemIds)]);
+  }, []);
+
   const clearBookmarks = useCallback(() => setIds([]), []);
 
   const bookmarked = useMemo(() => new Set(ids), [ids]);
   const isBookmarked = useCallback((itemId: string) => bookmarked.has(itemId), [bookmarked]);
 
-  return { ids, isBookmarked, toggleBookmark, clearBookmarks };
+  return { ids, isBookmarked, toggleBookmark, setBookmarks, clearBookmarks };
 }

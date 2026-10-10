@@ -650,7 +650,11 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
          * the routes off the bottom of a shared column.
          */}
         {/*
-         * A quarter of the row, at every width — the island takes the other three.
+         * The share and the ceiling together are what the previous deployment drew: at
+         * the 1745 CSS px viewport it was measured at, and at every wider one, the cap
+         * binds and the rail is the 560px it always was; below that the share takes
+         * over and the rail shrinks with the window instead of holding 560px until the
+         * screen is too small for it.
          *
          * The fraction used to be capped in pixels (`max-w-[560px]`), which made the
          * rail a different size on every screen: 38% of a 1280 laptop, 29% of a
@@ -665,7 +669,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           id="pane-items"
           role="tabpanel"
           aria-labelledby="tab-items"
-          className={`${paneDisplay("items")} min-h-0 w-full flex-1 flex-col overflow-y-auto border-b border-white/[0.08] bg-ink-900 lg:flex lg:w-1/4 lg:flex-none lg:border-b-0 lg:border-r`}
+          className={`${paneDisplay("items")} min-h-0 w-full flex-1 flex-col overflow-y-auto border-b border-white/[0.08] bg-ink-900 lg:flex lg:w-[32.08%] lg:max-w-[560px] lg:flex-none lg:border-b-0 lg:border-r`}
         >
           {catalogPane}
 

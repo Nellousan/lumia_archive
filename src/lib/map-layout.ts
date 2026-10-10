@@ -29,28 +29,49 @@ import { stepCrafts, stepGathers, type RouteStep } from "./wiki/routes";
 export const BUBBLE_CARD_WIDTH = 72;
 
 /**
- * The share of the island's width a bubble is drawn at — at every size, with no
- * ceiling.
+ * A bubble is drawn {@link BUBBLE_DESIGN_CSS_WIDTH} wide on an island
+ * {@link BUBBLE_DESIGN_ISLAND_WIDTH} wide or wider, and a share of the island
+ * below that.
  *
- * A single pixel width cannot do this job: drawn at 140px whatever the pane, a
- * bubble took 16% of a small island and 5% of a large one, so a small screen got
- * a third again more clutter than a large one for no reason other than the
- * monitor. A share makes it the same picture at every size — a bubble covers the
- * same patch of Lumia on a laptop and on a 4K desk, which is what the island
- * pixels inside it already promise.
+ * Both numbers are the previous deployment's, measured off it rather than derived:
+ * a 140px bubble on the 1153px island a 1745 CSS px viewport draws — a 1920×1080
+ * screen at 110% zoom — which is also the size it held at 1920 and at 2560,
+ * because it used to be a pixel width with a ceiling and nothing else.
  *
- * Nothing caps it above because nothing needs to: the island box itself stops at
- * `max-w-[1400px]`, so {@link BUBBLE_DESIGN_ISLAND_WIDTH} is as wide as an island
- * ever gets and {@link BUBBLE_DESIGN_CSS_WIDTH} is therefore as wide as a bubble
- * ever gets.
+ * The ceiling is what makes the rendering *identical* to that deployment at every
+ * desktop width, rather than only at the one it was calibrated against; the share
+ * underneath is what makes it shrink on the smaller ones, which the deployment did
+ * not do: a bubble drawn at 140px whatever the pane took 16% of a small island and
+ * 5% of a large one, so a small screen got a third again more clutter than a large
+ * one for no reason other than the monitor.
  */
-const BUBBLE_WIDTH_SHARE = 0.1;
+const BUBBLE_DESIGN_CSS_WIDTH = 140;
 
-/** Widest the island box itself ever gets, in CSS pixels — its own `max-w-[1400px]`. */
-const BUBBLE_DESIGN_ISLAND_WIDTH = 1400;
+/** Island width that size was measured against; see above. */
+const BUBBLE_DESIGN_ISLAND_WIDTH = 1153;
 
-/** A bubble at that island width, in CSS pixels: the size the island's own chrome is laid out against. */
-const BUBBLE_DESIGN_CSS_WIDTH = BUBBLE_WIDTH_SHARE * BUBBLE_DESIGN_ISLAND_WIDTH;
+/**
+ * The share of the island a bubble takes once the island is narrower than
+ * {@link BUBBLE_DESIGN_ISLAND_WIDTH}.
+ *
+ * The island's own chrome — the random-spawn box and the animal-drop toggle, laid
+ * out in CSS pixels rather than island ones — hangs off {@link drawnBubbleWidth}
+ * as well, so the boxes beside the map always come out the size of the cards
+ * inside the bubbles.
+ */
+const BUBBLE_WIDTH_SHARE = BUBBLE_DESIGN_CSS_WIDTH / BUBBLE_DESIGN_ISLAND_WIDTH;
+
+/**
+ * How wide a bubble is actually drawn, in CSS pixels: the share of the island, up
+ * to the design width the previous deployment used.
+ *
+ * One function because three things have to agree on it — the placement solver,
+ * the bubbles themselves, and the corner chrome, which is laid out in CSS pixels
+ * and scaled by this size rather than by the island.
+ */
+function drawnBubbleWidth(islandWidth: number): number {
+  return Math.min(BUBBLE_WIDTH_SHARE * islandWidth, BUBBLE_DESIGN_CSS_WIDTH);
+}
 
 const BUBBLE_BORDER = 1; // bubble `border`
 const BUBBLE_PADDING = 6; // bubble `p-[6px]`
@@ -117,7 +138,9 @@ export const BUBBLE_WIDTH = Math.max(
  */
 export function islandControlScale(islandWidth: number | null): number {
   if (islandWidth === null || islandWidth <= 0) return 1;
-  return (BUBBLE_WIDTH_SHARE * islandWidth) / BUBBLE_DESIGN_CSS_WIDTH;
+  // The bubbles' own size over the size the chrome was laid out against: full size
+  // beside the 140px bubbles the deployment drew, proportionally smaller under them.
+  return drawnBubbleWidth(islandWidth) / BUBBLE_DESIGN_CSS_WIDTH;
 }
 
 /**
@@ -137,7 +160,7 @@ export function islandControlScale(islandWidth: number | null): number {
  */
 export function bubbleScaleFor(islandWidth: number | null, mapWidth: number): number {
   if (islandWidth === null || islandWidth <= 0) return 1;
-  const drawnWidth = BUBBLE_WIDTH_SHARE * islandWidth;
+  const drawnWidth = drawnBubbleWidth(islandWidth);
   // Back out the factor that turns the layer's own scaling into that width: the
   // layer draws `islandWidth / mapWidth` of an island pixel per CSS pixel, and a
   // bubble is `BUBBLE_WIDTH` island pixels wide.

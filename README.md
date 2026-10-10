@@ -451,22 +451,24 @@ missing from `CATEGORY_TABS` raises its own note.
   with the quantity available in that area; a material two planned items both need collapses into
   one card with the summed quantity. Bubbles are spread by a small collision solver
   (`lib/map-layout.ts`) and clamped inside the map.
-- **How big a bubble is.** A tenth of the island box, at every size — `BUBBLE_WIDTH_SHARE` in
-  `lib/map-layout.ts`, and the only number to touch to make them bigger or smaller. The size used to
-  be capped in pixels instead (140px outright), which made the *share* an accident of the monitor:
-  16% of a small island and 5% of a large one, so a laptop got a third again more clutter than a 4K
-  desk for no reason other than the screen. Nothing caps it now, because nothing has to: the island
-  box itself stops at `max-w-[1400px]`, so a tenth of it is 140px at the widest an island ever gets.
-  The island's own corner chrome — the random-spawn box and the animal-drop toggle, which are laid
-  out in CSS pixels rather than in the island's coordinate layer — hangs off the same constant via
-  `islandControlScale`, so its `w-10` cards come out the size of the cards inside the bubbles
-  (within a pixel, measured at seven widths) instead of half again bigger.
-- **The rail is a quarter of the window.** `lg:w-1/4` on the item pane, with no pixel cap: the map
-  takes the other three quarters, and the split is the same picture on a 1280 laptop and a 3440
-  monitor. It used to be `w-[38%] max-w-[560px]`, which meant 38% of a small screen and 16% of a
-  large one. Being a fraction of the viewport rather than a count of pixels is also what makes it
-  hold at 100% zoom and above — browser zoom scales both sides of the ratio. Below `lg` there is one
-  column and the pane is the whole screen.
+- **How big a bubble is.** A share of the island box — `BUBBLE_WIDTH_SHARE` in `lib/map-layout.ts`,
+  under the 140px ceiling the previous deployment drew — and both numbers come from *measuring* that
+  deployment rather than from taste: a 140px bubble on the 1153px island a 1745 CSS px viewport
+  draws, which is a 1920×1080 screen at 110% zoom. The ceiling is what makes the rendering identical
+  to it at every desktop width, not just at the one it was calibrated against; the share underneath
+  is what makes it shrink on the smaller ones, which the deployment did not do — a bubble drawn at
+  140px whatever the pane took 16% of a small island and 5% of a large one, so a laptop got a third
+  again more clutter than a 4K desk for no reason other than the screen. The island's own corner
+  chrome — the random-spawn box and the animal-drop toggle, which are laid out in CSS pixels rather
+  than in the island's coordinate layer — hangs off the same width via `islandControlScale`, so its
+  `w-10` cards come out the size of the cards inside the bubbles (within a pixel, measured at seven
+  widths) instead of half again bigger.
+- **The rail is 32.08% of the row, up to 560px.** `lg:w-[32.08%] lg:max-w-[560px]` on the item pane,
+  the map taking the rest. Read off the previous deployment again: it drew a 560px rail, which is
+  32.08% of the 1745px viewport above. The cap reproduces that at every wider window, where the old
+  `w-[38%] max-w-[560px]` also capped; the share is what stops the rail holding 560px on a window too
+  small for it, where the old rule gave 38% of a small screen and 16% of a large one. Below `lg`
+  there is one column and the pane is the whole screen.
 - **The page never scrolls.** The shell is exactly one viewport tall (`100dvh`) and every pane scrolls
   inside it, so the root is clipped (`overflow: hidden` on `html`). That is load-bearing rather than
   tidy: once the rail's content passes a certain height the document starts reporting a scrollable area
@@ -843,18 +845,29 @@ missing from `CATEGORY_TABS` raises its own note.
   `layer:base`, next to a `.outline-none` that resolves to `outline-style: none`. Measure the style and
   not the width: `outline-width` keeps reporting the cascaded value under `outline-style: none` — and
   reports the untouched initial `medium` (3px) when no ring applies at all.
-- The two layout shares were measured, not eyeballed, which is the only way a *share* can be checked:
+- The two layout sizes were measured, not eyeballed, which is the only way a *share* can be checked:
   a bubble's width is a number that looks plausible at any value. `node _verify/check-pane-width.mjs`
-  reads the rail and the island out of the DOM at nine widths (1024 → 3440) and got 0.25 / 0.75 every
-  time, with no sideways overflow in either pane, the same quarter with the island folded away, and
-  the full width at 390px where there is one column. `node _verify/check-bubble-scale.mjs` does the
-  same for seven widths: the drawn bubble came out at 10.0% of the island box every time (74px at
-  1024, 110px at 1512, 140px at 1920 and above, where the island's own `max-w-[1400px]` stops it), and
-  the random-spawn box at `158 ×` the same factor — which puts its `w-10` cards within a pixel of what
-  a bubble's 72-island-pixel card is drawn at (21 vs 21.5px at 1024, 40 vs 41px at 1920). Both checks
-  assert the share *and* that it does not drift between widths, since either alone would pass while
-  the other was wrong. The trade-off is asserted too rather than assumed: the area name inside a
-  bubble is text in island units, so it renders at 6.3px on a 736px island and 12px at 1400px.
+  reads the rail and the island out of the DOM at nine widths (1024 → 3440) and got
+  `min(32.08% of the row, 560px)` every time, with no sideways overflow in either pane, the same with
+  the island folded away, and the full width at 390px where there is one column.
+  `node _verify/check-bubble-scale.mjs` does the same for seven widths: the drawn bubble is the share
+  under the 140px ceiling at every one, and the random-spawn box `158 ×` the same width — which puts
+  its `w-10` cards within a pixel of what a bubble's 72-island-pixel card is drawn at (21 vs 21.5px at
+  1024, 41 vs 41 on the reference island).
+- The calibration itself was taken off the previous deployment rather than reasoned about, and its URL
+  could not be used to do it: the Vercel address is behind deployment protection and answers 302 to
+  `vercel.com/sso-api`, so the deployment's own commit was built locally instead and measured
+  (`node _verify/measure-layout.mjs`, which reads the rail, the island box, a bubble, its rendered
+  area name, an inner card and the corner box out of any build). The two builds then agreed on every
+  one of those numbers — 560 / 1153 / 140 / 11.95 / 41 / 158 / 10 — at 1745 (a 1920×1080 screen at
+  110% zoom, which is where the proportions were tuned), at 1920 and at 2560, because the deployment's
+  pixel ceilings are back on top of the shares. Below the reference they part company on purpose: at
+  1280 the rail is 411px against 486px and the bubble 102px against 125px, which is the responsiveness
+  the ceilings never had.
+- Two earlier attempts at this missed for lack of that measurement, and both are worth remembering:
+  the first calibrated at 1920 CSS px, which is 10% off on a screen viewed at 110% zoom, and the second
+  dropped the ceilings altogether, which made it match at exactly one viewport. What the numbers cannot
+  say on their own is which viewport the person looking at it is actually at.
 
 ---
 

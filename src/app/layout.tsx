@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, Manrope } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SITE_DESCRIPTION, SITE_IMAGE_ALT, SITE_TITLE } from "@/lib/wiki/preview";
 import "./globals.css";
 
@@ -77,7 +78,23 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${manrope.variable} ${barlowCondensed.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/*
+          Vercel Web Analytics. It is a client island that injects the platform's
+          script, so it sits in the layout rather than in a page: every route then
+          reports itself, including the 404. It carries its own Suspense boundary
+          and reads `usePathname()`, so it neither pushes the tree to the client
+          nor sees a query string — which matters here, because a shared plan
+          lives in `?p=` and a tally of decoded plans is not something a visitor
+          agreed to send.
+
+          It has no effect off Vercel: the script is served by the deployment
+          platform, so a local production run 404s on it, and in development it
+          points at a debug build that only logs to the console.
+        */}
+        <Analytics />
+      </body>
     </html>
   );
 }

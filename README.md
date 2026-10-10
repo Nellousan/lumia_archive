@@ -324,6 +324,15 @@ component below that is presentational.
 **Server/client split.** `app/page.tsx` is a server component that builds the dataset and hands it to
 `WikiExplorer`, the single client island.
 
+**Analytics is a platform feature, not an assumption.** `app/layout.tsx` renders Vercel Web
+Analytics (`@vercel/analytics/next`), which injects the platform's script client-side — the
+server-rendered HTML is unchanged. It reports `usePathname()`, so it sees `/` and never the query
+string: the plan in `?p=` is not something a visitor agreed to hand to an analytics vendor. It sits
+in the layout rather than a page so every route reports itself, including the 404. Two consequences
+worth knowing: a visit is one pageview at `/` whatever plan it carries (counting plans would take an
+explicit `track()` event), and off Vercel the script 404s — expected locally, and in production it
+means Web Analytics is not enabled for the project.
+
 **The image map is a real overlay.** `lumia-island.map.json` coordinates are pixel offsets into the
 PNG, so the `<img>`, the SVG `viewBox` and the dataset all use the same `1503 x 774` space — no
 scaling maths anywhere. The artwork already has every area name drawn on it, so the SVG draws none:
@@ -694,6 +703,14 @@ missing from `CATEGORY_TABS` raises its own note.
   with the page at 0, and focusing the last control in the rail revealed it by scrolling the rail
   (46 946) rather than the document. The same checks passed at 390 px, where the rail is the whole
   screen.
+
+- Vercel Web Analytics was verified from the browser rather than from the build: the injected tag is
+  the `@vercel/analytics/next` 2.0.1 script, `window.vam` resolves to `production` under
+  `next start`, and the client's undrained `window.vaq` queue held exactly `{ route: "/", path: "/" }`
+  — the queue is where a payload waits until the script drains it, and off Vercel the script never
+  loads, which is what makes the payload readable. Reloading a real share link (`?p=ARQAAAAT-Yo`) left
+  that payload out of the queue entirely (`[?&]p=` never appears in it) while the plan still restored
+  (Rocker's Jacket, 4 routes). Asserted at 1512 px and 390 px.
 
 ---
 

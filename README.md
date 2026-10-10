@@ -205,6 +205,17 @@ Three things about it are not obvious, and each was found by measuring rather th
   cards, reserved 246×252, drawn 488×158. Two of the four geometry constants were also 2 units short
   each, which on its own is enough to put two bubbles a `gap` apart on top of each other.
 
+A stop that **holds** the hovered item without gathering it shows it too, as the area's own card
+rather than as a step card: the route stops for a material once, but the reader following it wants to
+know where else it lies, and a stop they are already standing in is the most useful answer available.
+The card carries the area's quantity and the same label the material view gives it, so it cannot be
+read as something the route does there; the step's own pickups and builds are untouched beside it.
+
+That case needs a plan whose route reaches one area for one material while another of its stops holds
+something it already picked up. A single-item plan rarely manages it — a route that needs a material
+once has no reason to stop where else it lies — so it takes a longer plan; see the verification notes
+for the one that produces it.
+
 Keyboard: `/` search · `Esc` closes the area panel, then unpins the highlighted route, then clears the
 material focus.
 
@@ -757,6 +768,14 @@ missing from `CATEGORY_TABS` raises its own note.
   exactly, with no material bubble or fade left behind (asserted on the same counters, not on a
   screenshot). No two bubbles that are both still lit overlap, at either width — an overlap with a
   *faded* step is the behaviour, and is reported as such rather than counted as a failure.
+- The beside-a-stop card needed a plan built for it, because the case it covers is rare: a route that
+  needs a material once has no reason to stop where else it lies. Measured, it takes a longer plan —
+  *Ice Water* plus *Sorghum Wine* and *Steel*, whose route reaches Well after picking Water up at
+  Beach. With that pinned, hovering Water's card at Beach left Well lit and gave Well Water's card,
+  as an item frame rather than a step action, with Well's own two pickups untouched. Every lit stop
+  was separately asserted to say *something* about the hovered item — its own card or its area's —
+  across all five pickups of the first plan and the build card, and never to show it twice or claim
+  an area it does not hold.
 
 ---
 

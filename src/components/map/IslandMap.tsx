@@ -17,7 +17,7 @@ import {
   resolveBubblePlacements,
   type BubblePlacement,
 } from "@/lib/map-layout";
-import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
+import type { AreaBubble, BubbleCard, MapFocus } from "@/lib/wiki/route";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
 import { stepCrafts, stepGathers, type RoutePlan } from "@/lib/wiki/routes";
 import type { MapImage, WikiAnimal, WikiArea, WikiItem } from "@/lib/wiki/types";
@@ -212,6 +212,30 @@ export function IslandMap({
   }, [focusIds, stepOverlay, supportAreaIds]);
 
   /**
+   * The focused item's card in a step's own area, for the stops that hold it
+   * without gathering it.
+   *
+   * A material needed once is often found on several stops while the route picks it
+   * up at one of them, and the hover is exactly the question "where else is this?" —
+   * so a stop that holds it should say so while the pointer is on its card. A step
+   * that already lists the item as its own pickup or build is left alone: the card
+   * is there, and a second one would only say it twice.
+   */
+  const foundCardByStepAreaId = useMemo(() => {
+    const found = new Map<string, BubbleCard>();
+    if (!stepOverlay || !focus) return found;
+    for (const step of stepOverlay.route.steps) {
+      const own = [...stepGathers(step), ...stepCrafts(step)];
+      if (own.some((entry) => entry.item.id === focus.itemId)) continue;
+      const card = bubbleByAreaId
+        .get(step.area.id)
+        ?.cards.find((candidate) => candidate.material.item.id === focus.itemId);
+      if (card) found.set(step.area.id, card);
+    }
+    return found;
+  }, [bubbleByAreaId, focus, stepOverlay]);
+
+  /**
    * Where those bubbles go. They are solved here rather than by the plan's own
    * layout because the route's bubbles have to be kept out of the way, and only
    * this component knows where the route solver put them.
@@ -246,7 +270,11 @@ export function IslandMap({
               id: step.area.id,
               x: placement.x,
               y: placement.y,
-              ...estimateStepBubbleSize(step, bubbleScale),
+              ...estimateStepBubbleSize(
+                step,
+                bubbleScale,
+                foundCardByStepAreaId.has(step.area.id) ? 1 : 0,
+              ),
             },
           ];
         }),
@@ -257,6 +285,7 @@ export function IslandMap({
     hoveredMaterialBubbles,
     map.height,
     map.width,
+    foundCardByStepAreaId,
     stepOverlay,
     unrelatedStepAreaIds,
   ]);
@@ -415,7 +444,8 @@ export function IslandMap({
                   placement={placement}
                   bubbleScale={bubbleScale}
                   active={activeAreaId === step.area.id}
-                  focusedItemId={focus?.itemId ?? null}
+                  focus={focus}
+                  foundCard={foundCardByStepAreaId.get(step.area.id) ?? null}
                   dimmed={unrelatedStepAreaIds.has(step.area.id)}
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}

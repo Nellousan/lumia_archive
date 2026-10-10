@@ -1,8 +1,10 @@
 "use client";
 
+import { BubbleMaterialCard } from "./BubbleMaterialCard";
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { BUBBLE_CARD_WIDTH, toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
 import { stepCrafts, stepGathers, type RouteStep } from "@/lib/wiki/routes";
+import type { BubbleCard, MapFocus } from "@/lib/wiki/route";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RouteStepBubbleCardProps {
@@ -13,7 +15,14 @@ export interface RouteStepBubbleCardProps {
   /** True when this step's area panel is open. */
   active: boolean;
   /** The material the pointer is on, if any; draws this card's own focus ring. */
-  focusedItemId: string | null;
+  focus: MapFocus | null;
+  /**
+   * The focused material's card in this step's area, when the route does not pick
+   * it up here. The item is often found on more than one stop and gathered at only
+   * one of them, and the hover is precisely the question "where else is this?" — so
+   * a stop that holds it says so while the pointer stays on it.
+   */
+  foundCard: BubbleCard | null;
   /**
    * True while a material is focused that this step has nothing to do with. The
    * step fades back rather than leaving, so the route stays on screen while the
@@ -93,18 +102,22 @@ function StepCard({ item, quantity, built, focused, onSelectItem, onHoverItem }:
  * gets picked up.
  *
  * Hovering a card focuses its item, which is the same answer the material cards
- * give with no route on screen: every other area holding it lights up. A route
- * being pinned is no reason to stop answering "where else is this?" — that
- * question is what a reader asks precisely when the route sends them somewhere
- * inconvenient. The route stays readable while it is answered, because the
- * numbered stops are drawn over the areas rather than in them.
+ * give with no route on screen: every other area holding it lights up and gets its
+ * material bubble back. A stop that holds the focused item but does not gather it
+ * shows the item as well — see {@link RouteStepBubbleCardProps.foundCard} — so the
+ * answer covers the route's own stops too, not only the areas beside them: the item
+ * a reader is following is on several of them, and the route only stops for one.
+ *
+ * The route stays readable while it is answered, because the numbered stops are
+ * drawn over the areas rather than in them.
  */
 export function RouteStepBubbleCard({
   step,
   placement,
   bubbleScale,
   active,
-  focusedItemId,
+  focus,
+  foundCard,
   dimmed,
   onHoverArea,
   onSelectArea,
@@ -114,7 +127,7 @@ export function RouteStepBubbleCard({
   const { left, top } = toLayerPosition(placement, bubbleScale);
   const gathers = stepGathers(step);
   const crafts = stepCrafts(step);
-  const total = gathers.length + crafts.length;
+  const total = gathers.length + crafts.length + (foundCard ? 1 : 0);
 
   return (
     <div
@@ -158,7 +171,7 @@ export function RouteStepBubbleCard({
               item={built.item}
               quantity={built.quantity}
               built
-              focused={focusedItemId === built.item.id}
+              focused={focus?.itemId === built.item.id}
               onSelectItem={onSelectItem}
               onHoverItem={onHoverItem}
             />
@@ -171,11 +184,30 @@ export function RouteStepBubbleCard({
               item={picked.item}
               quantity={picked.quantity}
               built={false}
-              focused={focusedItemId === picked.item.id}
+              focused={focus?.itemId === picked.item.id}
               onSelectItem={onSelectItem}
               onHoverItem={onHoverItem}
             />
           ))}
+          {foundCard && (
+            // The same card the area's own bubble would draw, because it says the
+            // same thing: this area holds that many. Not a step card — nothing
+            // happens with it here — so hovering it only keeps the answer alive.
+            <BubbleMaterialCard
+              key={`found-${foundCard.material.item.id}`}
+              material={foundCard.material}
+              quantityInArea={foundCard.quantityInArea}
+              source={foundCard.source}
+              animals={foundCard.animals}
+              focused={focus?.itemId === foundCard.material.item.id}
+              related={
+                focus !== null &&
+                focus.itemId !== foundCard.material.item.id &&
+                focus.subtreeIds.includes(foundCard.material.item.id)
+              }
+              onHover={onHoverItem}
+            />
+          )}
         </div>
 
         {crafts.length === 0 && (

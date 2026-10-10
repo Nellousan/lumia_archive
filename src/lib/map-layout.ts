@@ -155,8 +155,14 @@ export function estimateBubbleSize(
 export function estimateStepBubbleSize(
   step: RouteStep,
   scale = 1,
+  /**
+   * Cards the hover adds to this step because its area holds the focused material
+   * too. They go on the same unwrapped row, so they widen the bubble — and this is
+   * the box other bubbles are kept away from, so it has to know about them.
+   */
+  extraCards = 0,
 ): { width: number; height: number } {
-  const cards = stepGathers(step).length + stepCrafts(step).length;
+  const cards = stepGathers(step).length + stepCrafts(step).length + extraCards;
   const cardsWidth =
     cards * BUBBLE_CARD_WIDTH +
     Math.max(0, cards - 1) * BUBBLE_CARD_GAP +

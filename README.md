@@ -216,6 +216,16 @@ something it already picked up. A single-item plan rarely manages it — a route
 once has no reason to stop where else it lies — so it takes a longer plan; see the verification notes
 for the one that produces it.
 
+The number under a card is coloured by what it counts: **amber is what the route needs, emerald is what
+the area holds**. That is the app's language everywhere — the material cards are emerald for the same
+reason — and it exists because the two numbers used to be the same colour while meaning different
+things, so a `×1` could not be read without knowing which view you were in. Pointing at a pickup card
+lends it the area's number, in emerald, so that everything on screen while a material is hovered is
+answering the same question; letting go puts the route's number and its amber back. The accessible
+name does not switch with it: it stays the action (`Pick up Iron Ore ×2 here`), because the number is a
+readout the card lends out, not what the button is. Anything the plan assumes is *carried* rather than
+found has no area card to borrow from, so it keeps its route amount throughout.
+
 Keyboard: `/` search · `Esc` closes the area panel, then unpins the highlighted route, then clears the
 material focus.
 
@@ -768,6 +778,11 @@ missing from `CATEGORY_TABS` raises its own note.
   exactly, with no material bubble or fade left behind (asserted on the same counters, not on a
   screenshot). No two bubbles that are both still lit overlap, at either width — an overlap with a
   *faded* step is the behaviour, and is reported as such rather than counted as a failure.
+- The amount colouring was checked against the app's own numbers rather than against a screenshot: with
+  route 1 pinned, every pickup card read its route amount in amber at rest; pointing at *Pick up Steel
+  Chain* turned it `×3` in emerald, and 3 is what Alley's card reports for Steel Chain in the area view;
+  letting go gave back `×1` in amber. The check refuses a hovered number that is merely green by
+  comparing it with the area's own figure.
 - The beside-a-stop card needed a plan built for it, because the case it covers is rare: a route that
   needs a material once has no reason to stop where else it lies. Measured, it takes a longer plan —
   *Ice Water* plus *Sorghum Wine* and *Steel*, whose route reaches Well after picking Water up at

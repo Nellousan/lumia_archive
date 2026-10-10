@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { BubbleMaterialCard } from "./BubbleMaterialCard";
 import { ItemSprite } from "@/components/ui/ItemSprite";
 import { BUBBLE_CARD_WIDTH, toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
@@ -24,6 +25,14 @@ export interface RouteStepBubbleCardProps {
    */
   foundCard: BubbleCard | null;
   /**
+   * What this stop's area holds, straight from the plan's material view.
+   *
+   * A pickup card's number is the amount the *route* needs, which is not the amount
+   * lying in the area — so the bubble reads the area's own card for it too, and a
+   * card being pointed at can report the area's number instead. See {@link StepCard}.
+   */
+  areaCards: BubbleCard[];
+  /**
    * True while a material is focused that this step has nothing to do with. The
    * step fades back rather than leaving, so the route stays on screen while the
    * island answers about one of its stops.
@@ -40,7 +49,14 @@ interface StepCardProps {
   itemId: string;
   name: string;
   item: WikiItem;
+  /** How much the route needs here: the number a route card carries. */
   quantity: number;
+  /**
+   * How much the area holds, from the plan's material view — or `null` when that
+   * view has no card for this item, which happens for anything the plan assumes is
+   * carried rather than found.
+   */
+  areaQuantity: number | null;
   /** True for something built here, false for something picked up. */
   built: boolean;
   /** True while this card's own item is the focused one. */
@@ -49,10 +65,41 @@ interface StepCardProps {
   onHoverItem: (itemId: string | null) => void;
 }
 
-function StepCard({ item, quantity, built, focused, onSelectItem, onHoverItem }: StepCardProps) {
+/**
+ * One thing the route does at a stop: a pickup, or a build.
+ *
+ * The number under a pickup is the amount the *route* needs there, which is not the
+ * amount the area holds — the two are different numbers that used to be the same
+ * colour, so a reader comparing cards could not tell which question a `×1` was
+ * answering. They are told apart by colour: amber is what the route needs, emerald
+ * is what the area holds, and that holds across the app — the material cards on the
+ * island are emerald for the same reason.
+ *
+ * Pointing at a card settles it: the number becomes the area's, in emerald, so that
+ * everything on screen while a material is hovered is answering the same question.
+ * Letting go puts the route's number and its amber back.
+ *
+ * The accessible name does not switch with it. It stays the action ("Pick up Iron
+ * Ore ×2 here"), because that is what the button *is* — the number is a readout that
+ * borrows the area's while the pointer is on it.
+ */
+function StepCard({
+  item,
+  quantity,
+  areaQuantity,
+  built,
+  focused,
+  onSelectItem,
+  onHoverItem,
+}: StepCardProps) {
+  const [pointing, setPointing] = useState(false);
   const label = built
     ? `Build ${item.name}${quantity > 1 ? ` ×${quantity}` : ""} here`
     : `Pick up ${item.name} ×${quantity} here`;
+  // An item the plan assumes is carried has no card in the area's view, so there is
+  // no area number to borrow and the route's stands.
+  const showsArea = pointing && areaQuantity !== null;
+  const amount = showsArea ? areaQuantity : quantity;
 
   return (
     <button
@@ -64,11 +111,24 @@ function StepCard({ item, quantity, built, focused, onSelectItem, onHoverItem }:
         onSelectItem(item.id);
       }}
       // Keyboard parity, the same as the other item frames: focusing the card
-      // with the keyboard asks the island the same question the pointer asks.
-      onMouseEnter={() => onHoverItem(item.id)}
-      onMouseLeave={() => onHoverItem(null)}
-      onFocus={() => onHoverItem(item.id)}
-      onBlur={() => onHoverItem(null)}
+      // with the keyboard asks the island the same question the pointer asks, and
+      // the number follows the same way.
+      onMouseEnter={() => {
+        setPointing(true);
+        onHoverItem(item.id);
+      }}
+      onMouseLeave={() => {
+        setPointing(false);
+        onHoverItem(null);
+      }}
+      onFocus={() => {
+        setPointing(true);
+        onHoverItem(item.id);
+      }}
+      onBlur={() => {
+        setPointing(false);
+        onHoverItem(null);
+      }}
       style={{ width: BUBBLE_CARD_WIDTH }}
       className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${
         focused
@@ -85,8 +145,12 @@ function StepCard({ item, quantity, built, focused, onSelectItem, onHoverItem }:
           ✦
         </span>
       ) : (
-        <span className="font-mono text-[20px] font-bold leading-none text-emerald-300">
-          ×{quantity}
+        <span
+          className={`font-mono text-[20px] font-bold leading-none transition-colors ${
+            showsArea ? "text-emerald-300" : "text-amber-300"
+          }`}
+        >
+          ×{amount}
         </span>
       )}
     </button>
@@ -118,6 +182,7 @@ export function RouteStepBubbleCard({
   active,
   focus,
   foundCard,
+  areaCards,
   dimmed,
   onHoverArea,
   onSelectArea,
@@ -128,6 +193,10 @@ export function RouteStepBubbleCard({
   const gathers = stepGathers(step);
   const crafts = stepCrafts(step);
   const total = gathers.length + crafts.length + (foundCard ? 1 : 0);
+
+  /** What the area holds of this item, or null when its view has no card for it. */
+  const areaQuantityOf = (itemId: string) =>
+    areaCards.find((card) => card.material.item.id === itemId)?.quantityInArea ?? null;
 
   return (
     <div
@@ -170,6 +239,7 @@ export function RouteStepBubbleCard({
               name={built.item.name}
               item={built.item}
               quantity={built.quantity}
+              areaQuantity={areaQuantityOf(built.item.id)}
               built
               focused={focus?.itemId === built.item.id}
               onSelectItem={onSelectItem}
@@ -183,6 +253,7 @@ export function RouteStepBubbleCard({
               name={picked.item.name}
               item={picked.item}
               quantity={picked.quantity}
+              areaQuantity={areaQuantityOf(picked.item.id)}
               built={false}
               focused={focus?.itemId === picked.item.id}
               onSelectItem={onSelectItem}

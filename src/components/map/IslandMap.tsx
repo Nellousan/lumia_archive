@@ -446,6 +446,7 @@ export function IslandMap({
                   active={activeAreaId === step.area.id}
                   focus={focus}
                   foundCard={foundCardByStepAreaId.get(step.area.id) ?? null}
+                  areaCards={bubbleByAreaId.get(step.area.id)?.cards ?? []}
                   dimmed={unrelatedStepAreaIds.has(step.area.id)}
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}

@@ -533,7 +533,9 @@ missing from `CATEGORY_TABS` raises its own note.
   position decides, not which element it entered, so a fast move that lands on a card no longer leaves
   the bubble at full strength on the area being clicked. The header is drawn as text rather than as a
   button when the pointer falls through it — a control only the keyboard could reach is a trap — and an
-  area's own panel is still reachable from the trace row's area chips in the rail.
+  area's own panel is still reachable from the trace row's area chips in the rail. The step back is
+  Manual's alone: with no walk on screen the bubble is what is being read, and a hover over it reports
+  its own area, so fading there would dim the very card the pointer is on.
 - **The lock is the trace's own switch, not a fourth mode.** Manual is a way of *choosing* a walk;
   locked is the reader saying they are done choosing, so the island goes back to answering like a
   computed route without the walk, the rail or the share link changing at all. It is drawn as the same

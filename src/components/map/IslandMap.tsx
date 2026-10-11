@@ -620,7 +620,14 @@ export function IslandMap({
             })}
 
             {/* Everything that is not a stop keeps its material bubble: those are
-                the areas the reader is choosing between. */}
+                the areas the reader is choosing between.
+
+                The step back is a tracing gesture and only that: while a walk is
+                being drawn the bubble has to get out of the way of the click that
+                toggles the stop underneath. With no walk on screen the bubble is
+                the thing being read — and it is the thing the pointer is on, since
+                a hover over it reports its own area — so fading it there would dim
+                the very card the reader is pointing at. */}
             {bubbles
               .filter((bubble) => !manualStepByAreaId.has(bubble.area.id))
               .map((bubble) => {
@@ -636,7 +643,7 @@ export function IslandMap({
                     focus={focus}
                     routeActive={routeAreaIds !== null}
                     inRoute={routeAreaIds?.has(bubble.area.id) ?? false}
-                    faded={hoveredAreaId === bubble.area.id}
+                    faded={manual && hoveredAreaId === bubble.area.id}
                     passThrough={manual}
                     onHoverArea={onHoverArea}
                     onSelectArea={onSelectArea}

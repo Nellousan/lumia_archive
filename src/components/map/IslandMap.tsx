@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { AreaBubbleCard } from "./AreaBubbleCard";
 import { MapAreaShape } from "./MapAreaShape";
 import { AnimalDropToggle } from "./AnimalDropToggle";
+import { RouteLockToggle } from "./RouteLockToggle";
 import { RandomSpawnBox } from "./RandomSpawnBox";
 import { RouteOverlay } from "./RouteOverlay";
 import { RouteStepBubbleCard } from "./RouteStepBubbleCard";
@@ -38,7 +39,15 @@ const MIN_ISLAND_WIDTH_CLASS = "min-w-[880px] lg:min-w-0";
 export interface ManualTrace {
   /** The stops so far, drawn like a computed route's. `null` before the first. */
   plan: RoutePlan | null;
+  /**
+   * True while the walk is held down: the island stops being a drawing board and
+   * answers like a computed route — clicks open areas, item cards take the
+   * pointer, and hovering one says where else the material is. A walk that
+   * arrived from a link is locked, because the reader came to read it.
+   */
+  locked: boolean;
   onToggleArea: (areaId: string) => void;
+  onToggleLocked: () => void;
 }
 
 export interface IslandMapProps {
@@ -156,6 +165,25 @@ export function IslandMap({
 
   /** The reader is tracing by hand: clicks toggle stops instead of opening areas. */
   const manual = manualTrace !== null;
+  /**
+   * The trace is held down. Only then does the island answer the way it answers a
+   * computed route — see {@link ManualTrace}.
+   */
+  const manualLocked = manualTrace?.locked === true;
+  /**
+   * The walk drawn as numbered steps, and the one the focused material is measured
+   * against: the route the rail highlighted, or the trace once it is locked. An
+   * unlocked trace is not in here — it is still being drawn, and its areas have to
+   * stay readable rather than be replaced by step cards.
+   */
+  const steppedOverlay = useMemo(
+    () =>
+      stepOverlay ??
+      (manualLocked && manualTrace?.plan
+        ? { route: manualTrace.plan, placements }
+        : null),
+    [manualLocked, manualTrace, placements, stepOverlay],
+  );
   const bubbleByAreaId = useMemo(
     () => new Map(bubbles.map((bubble) => [bubble.area.id, bubble])),
     [bubbles],
@@ -190,8 +218,8 @@ export function IslandMap({
 
   /** The areas whose bubble is a route step rather than a material. */
   const stepAreaIds = useMemo(
-    () => new Set(stepOverlay ? stepOverlay.route.steps.map((step) => step.area.id) : []),
-    [stepOverlay],
+    () => new Set(steppedOverlay ? steppedOverlay.route.steps.map((step) => step.area.id) : []),
+    [steppedOverlay],
   );
 
   /**
@@ -204,11 +232,11 @@ export function IslandMap({
    * them: they are the material answer, so the route tint does not apply to them.
    */
   const hoveredMaterialBubbles = useMemo(() => {
-    if (!stepOverlay || !supportAreaIds) return [];
+    if (!steppedOverlay || !supportAreaIds) return [];
     return bubbles.filter(
       (bubble) => supportAreaIds.has(bubble.area.id) && !stepAreaIds.has(bubble.area.id),
     );
-  }, [bubbles, stepAreaIds, stepOverlay, supportAreaIds]);
+  }, [bubbles, stepAreaIds, steppedOverlay, supportAreaIds]);
 
   /**
    * The steps that have nothing to do with the focused material, and so step back
@@ -221,9 +249,9 @@ export function IslandMap({
    * bubble the pointer is in.
    */
   const unrelatedStepAreaIds = useMemo(() => {
-    if (!stepOverlay || !supportAreaIds || !focusIds) return new Set<string>();
+    if (!steppedOverlay || !supportAreaIds || !focusIds) return new Set<string>();
     return new Set(
-      stepOverlay.route.steps
+      steppedOverlay.route.steps
         .filter((step) => {
           if (supportAreaIds.has(step.area.id)) return false;
           return ![...stepGathers(step), ...stepCrafts(step)].some((entry) =>
@@ -232,7 +260,7 @@ export function IslandMap({
         })
         .map((step) => step.area.id),
     );
-  }, [focusIds, stepOverlay, supportAreaIds]);
+  }, [focusIds, steppedOverlay, supportAreaIds]);
 
   /**
    * The focused item's card in a step's own area, for the stops that hold it
@@ -246,7 +274,7 @@ export function IslandMap({
    */
   const foundCardByStepAreaId = useMemo(() => {
     const found = new Map<string, BubbleCard>();
-    const steps = stepOverlay?.route.steps ?? manualTrace?.plan?.steps ?? [];
+    const steps = steppedOverlay?.route.steps ?? manualTrace?.plan?.steps ?? [];
     if (steps.length === 0 || !focus) return found;
     for (const step of steps) {
       const own = [...stepGathers(step), ...stepCrafts(step)];
@@ -257,7 +285,7 @@ export function IslandMap({
       if (card) found.set(step.area.id, card);
     }
     return found;
-  }, [bubbleByAreaId, focus, manualTrace, stepOverlay]);
+  }, [bubbleByAreaId, focus, manualTrace, steppedOverlay]);
 
   /**
    * Where those bubbles go. They are solved here rather than by the plan's own
@@ -274,7 +302,7 @@ export function IslandMap({
    * the solve gives the answer the room it needs to space itself out.
    */
   const hoveredMaterialPlacements = useMemo(() => {
-    if (!stepOverlay || hoveredMaterialBubbles.length === 0) return {};
+    if (!steppedOverlay || hoveredMaterialBubbles.length === 0) return {};
     return resolveBubblePlacements(
       hoveredMaterialBubbles.map((bubble) => ({
         id: bubble.area.id,
@@ -285,9 +313,9 @@ export function IslandMap({
       {
         mapWidth: map.width,
         mapHeight: map.height,
-        obstacles: stepOverlay.route.steps.flatMap((step) => {
+        obstacles: steppedOverlay.route.steps.flatMap((step) => {
           if (unrelatedStepAreaIds.has(step.area.id)) return [];
-          const placement = stepOverlay.placements[step.area.id];
+          const placement = steppedOverlay.placements[step.area.id];
           if (!placement) return [];
           return [
             {
@@ -310,7 +338,7 @@ export function IslandMap({
     map.height,
     map.width,
     foundCardByStepAreaId,
-    stepOverlay,
+    steppedOverlay,
     unrelatedStepAreaIds,
   ]);
 
@@ -341,7 +369,7 @@ export function IslandMap({
     // saying what is left to collect stay readable rather than being dimmed away
     // the way a computed route dims everything off its path. A hovered material
     // still answers here as it does with no route on screen, for the same reason.
-    if (manual && traceAreaIds?.has(area.id)) return "route";
+    if (manual && !manualLocked && traceAreaIds?.has(area.id)) return "route";
 
     // A hovered material is a question about the island — "where else is this?" —
     // and it outranks the route tint so it answers exactly what it answers with
@@ -360,7 +388,7 @@ export function IslandMap({
 
     // A highlighted route takes over the island: its areas are the answer, so
     // the recipe/material tints step aside until the route is unpinned.
-    if (routeAreaIds) return routeAreaIds.has(area.id) ? "route" : area.empty ? "empty" : "base";
+    if (drawnAreaIds) return drawnAreaIds.has(area.id) ? "route" : area.empty ? "empty" : "base";
 
     return bubbleByAreaId.has(area.id) ? "relevant" : area.empty ? "empty" : "base";
   };
@@ -368,11 +396,11 @@ export function IslandMap({
   const regionDimmed = (area: WikiArea) => {
     // A stop of the trace being drawn stays lit through a material hover: it is
     // the reader's own answer, and it is what they are in the middle of editing.
-    if (manual && traceAreaIds?.has(area.id)) return false;
+    if (manual && !manualLocked && traceAreaIds?.has(area.id)) return false;
     // Same order as the states above: what the reader is asking about decides
     // what stays lit.
     if (supportAreaIds) return !supportAreaIds.has(area.id);
-    if (routeAreaIds) return !routeAreaIds.has(area.id);
+    if (drawnAreaIds) return !drawnAreaIds.has(area.id);
     return false;
   };
 
@@ -381,6 +409,13 @@ export function IslandMap({
    * route the rail has highlighted. Only one of the two is ever set.
    */
   const drawnRoute = manualTrace?.plan ?? activeRoute;
+
+  /**
+   * The areas the island answers with. A locked walk is a route the reader drew,
+   * so it tints and dims exactly like a computed one; an unlocked trace leaves the
+   * island on the material view, because the next area is still being chosen.
+   */
+  const drawnAreaIds = manualLocked ? traceAreaIds : routeAreaIds;
 
   return (
     <div
@@ -423,6 +458,23 @@ export function IslandMap({
         </div>
       </div>
 
+      {/*
+       * The lock, in the opposite corner to the rest: it is the one control that
+       * belongs to the walk rather than to the map, and it only exists once there
+       * is a walk — with nothing traced there is nothing to hold down. Same inset
+       * and same sticky trick as the corner box below, mirrored.
+       */}
+      {manualTrace !== null && manualTrace.plan !== null && (
+        <div className="sticky left-3 top-3 z-40 mr-auto h-0 w-[158px]">
+          <div
+            className="absolute left-0 top-0 flex flex-col items-start gap-2"
+            style={{ transform: `scale(${controlsScale})`, transformOrigin: "top left" }}
+          >
+            <RouteLockToggle locked={manualTrace.locked} onToggle={manualTrace.onToggleLocked} />
+          </div>
+        </div>
+      )}
+
       {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size static map, the SVG
           overlay must align with the exact rendered box, so no optimiser transform. */}
       <img
@@ -450,7 +502,7 @@ export function IslandMap({
               dimmed={regionDimmed(area)}
               hovered={hoveredAreaId === area.id}
               onHover={onHoverArea}
-              onSelect={manualTrace ? manualTrace.onToggleArea : onSelectArea}
+              onSelect={manualTrace !== null && !manualLocked ? manualTrace.onToggleArea : onSelectArea}
             />
           ))}
       </svg>
@@ -472,10 +524,10 @@ export function IslandMap({
           visibility: overlayScale === null ? "hidden" : "visible",
         }}
       >
-        {stepOverlay ? (
+        {steppedOverlay ? (
           <>
-            {stepOverlay.route.steps.map((step) => {
-              const placement = stepOverlay.placements[step.area.id];
+            {steppedOverlay.route.steps.map((step) => {
+              const placement = steppedOverlay.placements[step.area.id];
               if (!placement) return null;
               return (
                 <RouteStepBubbleCard

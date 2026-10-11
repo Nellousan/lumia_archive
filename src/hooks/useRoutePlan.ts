@@ -60,6 +60,13 @@ export interface RoutePlanOptions {
    * in the other modes.
    */
   manualAreaIds?: string[];
+  /**
+   * True while a manual walk is held down. A locked walk is read rather than
+   * drawn, so the island answers like a computed route — including the hover that
+   * asks where else a material is, which needs the whole map of where things are
+   * rather than only what is left to collect.
+   */
+  manualLocked?: boolean;
 }
 
 export function useRoutePlan(
@@ -75,6 +82,7 @@ export function useRoutePlan(
     islandWidth = null,
     showAnimalDrops = false,
     manualAreaIds = NO_AREAS,
+    manualLocked = false,
   } = options;
   // `item` is null while nothing is selected: the detail-panel values collapse
   // to empty, which is what empties that half of the rail.
@@ -165,13 +173,13 @@ export function useRoutePlan(
    * so it is not on the island while a walk is being drawn.
    */
   const mapMaterials = useMemo(() => {
-    if (!manual) return materials;
+    if (!manual || manualLocked) return materials;
     return materials.filter((material) => {
       const collected = manual.gathered[material.item.id] ?? 0;
       const needed = manual.required[material.item.id] ?? 0;
       return collected < needed;
     });
-  }, [manual, materials]);
+  }, [manual, manualLocked, materials]);
 
   const bubbles = useMemo(
     () => buildAreaBubbles(dataset, mapMaterials, { includeAnimalDrops: showAnimalDrops }),

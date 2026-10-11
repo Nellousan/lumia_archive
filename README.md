@@ -58,8 +58,10 @@ which copies that URL with *its* stops in it, so one can point at a route withou
 
 The payload holds two things: the **plan** — the open item, the bookmarks in the order they were added,
 the starting armor — and the **walk**, the areas of the route that was on screen, in visit order.
-Opening such a link selects the **Manual** mode with that walk as the trace, so the reader arrives on
-the same route and can keep editing it: adding a stop, taking one out, and sharing the result again.
+Opening such a link selects the **Manual** mode with that walk as the trace, held down by the island's
+**lock** — so the reader arrives on the same route, reading it the way a computed route is read — and
+one click on the lock lets them keep editing it: adding a stop, taking one out, and sharing the result
+again.
 
 It used to carry a ranking mode, a look-ahead window and a *rank* instead — the position of a route in
 the list the plan produced. That made every link a promise about the solver: any change to how routes
@@ -178,9 +180,10 @@ the same walk either way — the solver runs underneath to say what each stop pi
 the trace is drawn with the same numbered stops and the same cards. Every walk in the rail can be
 handed to someone else with the **Share** control in its bottom right corner, which copies a link
 carrying *that walk's areas* — see [Sharing a route](#sharing-a-route) — and opening one lands in
-Manual mode with the trace prefilled and editable. A route the solver found can also be taken into
-manual directly, with **Open in manual** beside its Share control: the row's areas become the trace,
-and the reader edits from there rather than clicking the whole walk back in.
+Manual mode with the trace prefilled, **locked**, and one click from editable. A route the solver
+found can also be taken into manual directly, with **Open in manual** beside its Share control: the
+row's areas become the trace, and the reader edits from there rather than clicking the whole walk
+back in.
 
 **Right pane — Lumia Island.** The **plan bar** sits directly above the island and lists what the map
 and the routes answer for: the selected item, then every bookmark. Under it, the PNG artwork with the
@@ -212,6 +215,17 @@ same colour rule the step bubbles use). What the walk has already collected in f
 other bubble, so what is left on the island is what is left to collect. The trace also stays on
 screen while a material is focused from the rail — a stop is the reader's own answer, so it is never
 dimmed away.
+
+**Locking the walk hands the island back to the route.** The lock sits in the island's top-left
+corner, opposite the animal-drop toggle and wearing the same shape, and it appears once there is a
+walk to hold down. Locked, the trace stops being a drawing board and answers exactly the way a
+computed route does: a click on an area opens its panel instead of adding a stop, the step cards take
+the pointer, and pointing at one of them brings the material's other areas back with the unrelated
+regions dimmed behind them — including for materials the walk has already collected in full, since
+"where else is this?" is a question about the island rather than about what is left. Unlocked, every
+bubble lets the pointer through again and the areas are clickable. Arriving on a shared walk lands
+locked, because the reader came to read that walk first; **Open in manual** lands unlocked, because
+they came to edit. Clearing the trace unlocks it with it, and the lock only exists in Manual mode.
 
 **Focusing a material widens up the chain.** Hovering a material in the recipe tree highlights the
 areas holding it *and* the areas holding everything needed to craft it: strong amber for the
@@ -520,6 +534,14 @@ missing from `CATEGORY_TABS` raises its own note.
   the bubble at full strength on the area being clicked. The header is drawn as text rather than as a
   button when the pointer falls through it — a control only the keyboard could reach is a trap — and an
   area's own panel is still reachable from the trace row's area chips in the rail.
+- **The lock is the trace's own switch, not a fourth mode.** Manual is a way of *choosing* a walk;
+  locked is the reader saying they are done choosing, so the island goes back to answering like a
+  computed route without the walk, the rail or the share link changing at all. It is drawn as the same
+  `RouteStepBubbleCard` either way, which is what keeps the two states comparable — one control flips
+  only what a pointer may reach, and a walk read from a link and a walk read from the solver are the
+  same walk on screen. Locked also un-filters the material list used to answer a hover, so the answer
+  is "where else is this" as a pinned route answers it; unlocked keeps showing only what is left to
+  collect, which is what the next click is choosing between.
 - **How big a bubble is.** A share of the island box — `BUBBLE_WIDTH_SHARE` in `lib/map-layout.ts`,
   under the 140px ceiling the previous deployment drew — and both numbers come from *measuring* that
   deployment rather than from taste: a 140px bubble on the 1153px island a 1745 CSS px viewport

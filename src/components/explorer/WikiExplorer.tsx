@@ -157,6 +157,13 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * route *is* a trace, prefilled.
    */
   const [manualAreaIds, setManualAreaIds] = useState<string[]>([]);
+  /**
+   * True while the trace is held down and the island answers like a computed route
+   * — areas open, item cards hover. Off while the walk is being drawn, and turned on
+   * by a link that carries one, since the reader came to read that walk rather than
+   * to keep editing it before they have looked at it.
+   */
+  const [manualLocked, setManualLocked] = useState(false);
 
   /** A click on an area adds it to the trace, or takes it out. */
   const toggleManualArea = useCallback((areaId: string) => {
@@ -165,7 +172,14 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     );
   }, []);
 
-  const clearManualTrace = useCallback(() => setManualAreaIds([]), []);
+  const clearManualTrace = useCallback(() => {
+    setManualAreaIds([]);
+    // Nothing left to hold down: with no walk the lock would only stop the reader
+    // from drawing the next one.
+    setManualLocked(false);
+  }, []);
+
+  const toggleManualLocked = useCallback(() => setManualLocked((locked) => !locked), []);
 
   /**
    * Changing mode drops the hovered route with the list that drawn it: the rows
@@ -265,6 +279,9 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     if (shared.routeAreaIds.length > 0) {
       setManualAreaIds(shared.routeAreaIds);
       setRouteMode("manual");
+      // Locked, because the link named a walk to read: the island answers like a
+      // computed route until the reader unlocks it and starts editing.
+      setManualLocked(true);
       // The plan the link describes, in the order `plannedItems` will build it: the
       // open item first, then the bookmarks it is not already.
       const planned =
@@ -311,6 +328,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     islandWidth,
     showAnimalDrops,
     manualAreaIds,
+    manualLocked,
   });
 
   /** Named once per plan: the route panel is memoized, and a fresh array defeats it. */
@@ -433,8 +451,16 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const manualMode = routeMode === "manual";
   const railedRoute = manualMode ? route.manualRoute : activeRoute;
   const manualTrace = useMemo(
-    () => (manualMode ? { plan: route.manualRoute, onToggleArea: toggleManualArea } : null),
-    [manualMode, route.manualRoute, toggleManualArea],
+    () =>
+      manualMode
+        ? {
+            plan: route.manualRoute,
+            locked: manualLocked,
+            onToggleArea: toggleManualArea,
+            onToggleLocked: toggleManualLocked,
+          }
+        : null,
+    [manualLocked, manualMode, route.manualRoute, toggleManualArea, toggleManualLocked],
   );
 
   /** The pinned route itself, which is the walk the URL describes. */

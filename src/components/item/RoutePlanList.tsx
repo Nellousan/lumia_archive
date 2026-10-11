@@ -9,7 +9,7 @@ import {
   stepCrafts,
   stepGathers,
   type CookableFood,
-  type RouteMode,
+  type RouteModeChoice,
   type RoutePlan,
   type RouteStep,
 } from "@/lib/wiki/routes";
@@ -34,7 +34,7 @@ export interface RoutePlanListProps {
   /** Clothes worn from the first move, when one was picked. */
   startingItem: WikiItem | null;
   /** What the list is ranked by, and how far greedy looks ahead. */
-  mode: RouteMode;
+  mode: RouteModeChoice;
   lookAhead: number;
   onHoverRoute: (routeId: string | null) => void;
   /** Pins a route, or unpins it when clicked again. */
@@ -43,12 +43,36 @@ export interface RoutePlanListProps {
   /** Opens a food from a route's "also cookable" row in the item detail. */
   onSelectItem: (itemId: string) => void;
   /**
-   * The route a shared link named, so the list can open its fold and scroll to
-   * it. `null` on every visit that did not arrive on a link.
+   * Copies a link to one walk, named by its areas, reporting whether it took.
+   *
+   * The walk itself rather than its rank: the same plan and settings used to
+   * identify a route by where it sat in the list, which made the link a promise
+   * about how the list is computed.
    */
-  revealRouteId: string | null;
-  /** Copies a link to the route at this 1-based rank, reporting whether it took. */
-  onShareRoute: (routeNumber: number) => Promise<boolean>;
+  onShareRoute: (routeAreaIds: string[]) => Promise<boolean>;
+  /**
+   * Hands one computed walk to the manual mode, as the trace to start editing from.
+   *
+   * It is the same areas the Share control would put in a link: a route the solver
+   * found is a perfectly good first draft of the reader's own.
+   */
+  onOpenManual: (routeAreaIds: string[]) => void;
+  /**
+   * True while the plan is still the one an arriving link named a walk for: the
+   * trace row is what that link is about, so it is brought into view — once, on
+   * arrival. Adding a bookmark moves the plan on, which spends the reveal, so the
+   * rail is never pulled down again by the reader's own edits.
+   */
+  revealWalk?: boolean;
+  /**
+   * The row is the reader's own trace rather than a computed route: one stop per
+   * click, taken out by clicking it again, and nothing to compare it against.
+   */
+  manual?: boolean;
+  /** True when that trace finishes the plan. */
+  manualComplete?: boolean;
+  /** Empties the trace. */
+  onClearManual?: () => void;
 }
 
 /** Routes shown before the "show all" fold; steps make each row tall. */
@@ -324,21 +348,23 @@ function LinkGlyph({ className = "size-2.5" }: { className?: string }) {
 }
 
 /**
- * Copies a link to one route.
+ * Copies a link to one walk — a computed route or the reader's own trace.
  *
- * A link is worth having precisely because the ranked list is not: the same plan
- * and the same settings always produce the same list, so the number of a route
- * identifies it as surely as its area sequence does — see `lib/wiki/share.ts`.
+ * The link carries the walk's areas, so it says the same thing in a build that
+ * ranks routes differently; see `lib/wiki/share.ts`. `label` only names the walk
+ * in the receipt the button reads out, which is what "your trace" is for.
  *
  * It lives inside the row, which is itself a click target, so it takes the click
  * for itself: asking for the link is not choosing the route.
  */
 function ShareRouteButton({
-  routeNumber,
+  areaIds,
+  label,
   onShare,
 }: {
-  routeNumber: number;
-  onShare: (routeNumber: number) => Promise<boolean>;
+  areaIds: string[];
+  label: string;
+  onShare: (routeAreaIds: string[]) => Promise<boolean>;
 }) {
   const [outcome, setOutcome] = useState<"idle" | "copied" | "failed">("idle");
 
@@ -352,10 +378,10 @@ function ShareRouteButton({
   const short = outcome === "copied" ? "Copied" : outcome === "failed" ? "Failed" : "Share";
   const spoken =
     outcome === "copied"
-      ? `Link to route ${routeNumber} copied`
+      ? `Link to ${label} copied`
       : outcome === "failed"
-        ? `Could not copy a link to route ${routeNumber}`
-        : `Copy a link to route ${routeNumber}`;
+        ? `Could not copy a link to ${label}`
+        : `Copy a link to ${label}`;
 
   return (
     <button
@@ -364,7 +390,7 @@ function ShareRouteButton({
       aria-label={spoken}
       onClick={async (event) => {
         event.stopPropagation();
-        setOutcome((await onShare(routeNumber)) ? "copied" : "failed");
+        setOutcome((await onShare(areaIds)) ? "copied" : "failed");
       }}
       className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold transition ${
         outcome === "copied"
@@ -380,6 +406,52 @@ function ShareRouteButton({
         {outcome === "idle" ? "" : spoken}
       </span>
     </button>
+  );
+}
+
+/**
+ * Hands a route the solver found to the manual mode.
+ *
+ * The rail's two modes are not rivals: a reader who likes the shape of a computed
+ * route but wants to change one stop should not have to click the whole walk back
+ * in. This takes the row's areas and makes them the trace, which is the same thing
+ * a link to that route opens.
+ */
+function OpenManualButton({
+  areaIds,
+  label,
+  onOpen,
+}: {
+  areaIds: string[];
+  /** How the row is named in the receipt the reader hears: "route 3". */
+  label: string;
+  onOpen: (routeAreaIds: string[]) => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={`Take ${label} into manual mode and edit it`}
+      aria-label={`Open ${label} in manual mode`}
+      onClick={(event) => {
+        event.stopPropagation();
+        onOpen(areaIds);
+      }}
+      className="inline-flex items-center gap-1 rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-stone-500 transition hover:border-amber-300/40 hover:bg-white/[0.04] hover:text-amber-200"
+    >
+      <TraceGlyph />
+      Open in manual
+    </button>
+  );
+}
+
+/** A walk being drawn by hand: nodes on a line. */
+function TraceGlyph({ className = "size-2.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 12 12" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M1.6 9.4 5 6.2l2 1.6 3.4-3.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="1.6" cy="9.4" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="10.4" cy="4.2" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
   );
 }
 
@@ -408,30 +480,44 @@ export function RoutePlanList({
   onSelectRoute,
   onSelectArea,
   onSelectItem,
-  revealRouteId,
   onShareRoute,
+  onOpenManual,
+  revealWalk = false,
+  manual = false,
+  manualComplete = false,
+  onClearManual,
 }: RoutePlanListProps) {
-  const [expanded, setExpanded] = useState(revealRouteId !== null);
-  /** The row a shared link named, so it can be scrolled to once it exists. */
-  const activeRowRef = useRef<HTMLLIElement | null>(null);
-  /** Set once the arrival has been scrolled to, so folding later moves nothing. */
+  const [expanded, setExpanded] = useState(false);
+  /** The row the arriving link names, so it can be brought into view. */
+  const walkRowRef = useRef<HTMLLIElement | null>(null);
+  /** Set once the arrival has been scrolled to, so nothing pulls the rail back. */
   const revealed = useRef(false);
 
   /*
-   * A shared route is opened *to*: the fold starts lifted so the row it names is
-   * drawn at all, and the row is then brought to the middle of its own pane. Both
-   * belong to the arrival — the list is remounted for it (its `key` carries the
-   * reveal), so the reader's own fold, from then on, is never touched by it again.
-   *
-   * The scroll is confined to the pane the list sits in: `scrollIntoView` would
-   * also move the document and land the whole page under the header.
+   * A link that names a walk is opened *to*: the trace is the thing it carries, and
+   * it sits below the crafting half of the rail, so without this the reader lands on
+   * an item's recipe with their own route somewhere off screen below. The scroll is
+   * confined to the pane the row lives in — `scrollIntoView` would move the document
+   * and land the row under the header instead of against it — and it is spent on
+   * arrival, so browsing on from there never pulls it back.
    */
   useEffect(() => {
-    const row = activeRowRef.current;
-    if (revealRouteId === null || !expanded || revealed.current || row === null) return;
+    if (!manual || !revealWalk || revealed.current) return;
+    const row = walkRowRef.current;
+    if (!row) return;
     revealed.current = true;
     scrollWithinScroller(row, "center");
-  }, [revealRouteId, expanded]);
+  }, [manual, revealWalk]);
+
+  if (manual && routes.length === 0) {
+    return (
+      <p className="rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
+        <span className="text-stone-400">Trace your own route.</span> Click an area on the island to
+        add it as a stop, and click it again to take it out. Stops connect in the order you click
+        them, and what a stop picks up comes off the other bubbles.
+      </p>
+    );
+  }
 
   if (routes.length === 0 && nothingToGather) {
     return (
@@ -475,7 +561,12 @@ export function RoutePlanList({
   return (
     <div>
       <p className="mb-2.5 text-[11px] leading-relaxed text-stone-500">
-        {mode === "greedy" ? (
+        {manual ? (
+          <>
+            Your own route, walked in the order you clicked it — each stop picking up what it holds
+            and building what its materials allow, exactly like a computed one. Gathering {target}.
+          </>
+        ) : mode === "greedy" ? (
           <>
             Best equipped soonest: at every step, the most value worn within the next {lookAhead} area
             {lookAhead === 1 ? "" : "s"}, compared step by step — the fewest areas then breaking ties.
@@ -500,48 +591,76 @@ export function RoutePlanList({
           </>
         )}{" "}
         <span className="text-stone-400">
-          {truncated
-            ? `fastest ${routes.length} routes`
-            : `${routes.length} route${routes.length === 1 ? "" : "s"}`}
-          {routes.length > 1 && ` · from ${fastest.moves} move${fastest.moves === 1 ? "" : "s"}`}
+          {manual
+            ? `${fastest.moves} move${fastest.moves === 1 ? "" : "s"} · ${
+                manualComplete ? "everything in the plan gathered" : "plan not finished yet"
+              }`
+            : truncated
+              ? `fastest ${routes.length} routes`
+              : `${routes.length} route${routes.length === 1 ? "" : "s"}`}
+          {!manual && routes.length > 1 && ` · from ${fastest.moves} move${fastest.moves === 1 ? "" : "s"}`}
         </span>
       </p>
+
+      {manual && onClearManual && (
+        <button
+          type="button"
+          onClick={onClearManual}
+          className="mb-2.5 w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[11px] font-semibold text-stone-400 transition hover:border-white/20 hover:text-stone-100"
+        >
+          Clear the trace
+        </button>
+      )}
 
       <ul className="space-y-1.5">
         {visible.map((route, index) => {
           const active = route.id === activeRouteId;
           const peak = peakBagUse(route);
+          const walk =
+            `Route ${index + 1}: ${movesLabel(route)} — ` +
+            route.steps
+              .map((step) => {
+                const crafts = stepCrafts(step);
+                return `${step.area.name}${crafts.length > 0 ? `, build ${itemNames(crafts)}` : ""}`;
+              })
+              .join(", then ");
           return (
-            <li key={route.id} ref={active ? activeRowRef : undefined}>
+            <li key={route.id} ref={manual ? walkRowRef : undefined}>
               <div
-                role="button"
-                tabIndex={0}
-                aria-pressed={active}
-                aria-label={`Route ${index + 1}: ${movesLabel(route)} — ${route.steps
-                  .map((step) => {
-                    const crafts = stepCrafts(step);
-                    return `${step.area.name}${crafts.length > 0 ? `, build ${itemNames(crafts)}` : ""}`;
-                  })
-                  .join(", then ")}`}
-                onMouseEnter={() => onHoverRoute(route.id)}
-                onMouseLeave={() => onHoverRoute(null)}
-                onFocus={() => onHoverRoute(route.id)}
-                onBlur={() => onHoverRoute(null)}
-                onClick={() => onSelectRoute(route.id)}
-                onKeyDown={(event) => {
-                  // The chips, the cookable food and the share control inside this
-                  // row are focusable too, and their keys must not reach the row.
-                  if (event.target !== event.currentTarget) return;
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onSelectRoute(route.id);
-                  }
-                }}
-                className={`cursor-pointer rounded-lg border px-2.5 py-2 transition outline-none ${
+                /*
+                 * A trace is the reader's own walk, not a candidate to pin: it is
+                 * already what the island is drawing, and there is no second copy
+                 * of it to compare against. So it is a summary rather than a
+                 * control — no hover, no click, nothing to press.
+                 */
+                role={manual ? undefined : "button"}
+                tabIndex={manual ? undefined : 0}
+                aria-pressed={manual ? undefined : active}
+                aria-label={manual ? `Your route: ${movesLabel(route)}` : walk}
+                onMouseEnter={manual ? undefined : () => onHoverRoute(route.id)}
+                onMouseLeave={manual ? undefined : () => onHoverRoute(null)}
+                onFocus={manual ? undefined : () => onHoverRoute(route.id)}
+                onBlur={manual ? undefined : () => onHoverRoute(null)}
+                onClick={manual ? undefined : () => onSelectRoute(route.id)}
+                onKeyDown={
+                  manual
+                    ? undefined
+                    : (event) => {
+                        // The chips, the cookable food and the share control inside
+                        // this row are focusable too, and their keys must not reach
+                        // the row.
+                        if (event.target !== event.currentTarget) return;
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onSelectRoute(route.id);
+                        }
+                      }
+                }
+                className={`rounded-lg border px-2.5 py-2 transition outline-none ${
                   active
                     ? "border-amber-300/60 bg-amber-300/[0.07]"
-                    : "border-white/[0.07] bg-white/[0.025] hover:border-amber-300/30 hover:bg-white/[0.05]"
-                }`}
+                    : "border-white/[0.07] bg-white/[0.025]"
+                } ${manual ? "" : "cursor-pointer hover:border-amber-300/30 hover:bg-white/[0.05]"}`}
               >
                 <div className="flex items-center gap-2">
                   <span
@@ -574,9 +693,23 @@ export function RoutePlanList({
 
                 <CookableRow foods={route.cookable} onSelectItem={onSelectItem} />
 
-                {/* Bottom right of the row, under everything the route does. */}
-                <div className="mt-1.5 flex items-center justify-end">
-                  <ShareRouteButton routeNumber={index + 1} onShare={onShareRoute} />
+                {/* Bottom right of the row, under everything the walk does. A
+                    trace is shareable like any other walk — the link carries the
+                    stops, which is exactly what the trace is — and a computed walk
+                    can be handed to the manual mode to be edited. */}
+                <div className="mt-1.5 flex items-center justify-end gap-1.5">
+                  {!manual && (
+                    <OpenManualButton
+                      areaIds={route.areaIds}
+                      label={`route ${index + 1}`}
+                      onOpen={onOpenManual}
+                    />
+                  )}
+                  <ShareRouteButton
+                    areaIds={route.areaIds}
+                    label={manual ? "your trace" : `route ${index + 1}`}
+                    onShare={onShareRoute}
+                  />
                 </div>
               </div>
             </li>

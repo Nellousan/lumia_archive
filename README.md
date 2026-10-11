@@ -53,58 +53,68 @@ a card of its own, described next.
 
 The address bar *is* the plan: one opaque parameter, `?p=…`, kept in step with what is on screen — the
 same thing a refresh, a bookmark, the browser's own "copy link" and handing the tab to another device
-all read back. Every route in the list also carries a **Share** control in its bottom right corner,
-which copies that URL with *its* rank in it, so one can point at a route without pinning it first.
+all read back. Every walk in the rail also carries a **Share** control in its bottom right corner,
+which copies that URL with *its* stops in it, so one can point at a route without pinning it first.
 
-The payload holds everything the solver reads — the open item, the bookmarks in the order they were
-added, the starting armor, the ranking mode, the look-ahead window — plus which route in the ranked
-list is highlighted. It is a pure function of exactly those values, and the ranking breaks every tie by
-name, so the same payload always produces the same list and the rank always names the same walk. The
-check does not take that on faith: every route's whole area sequence is compared, rank for rank,
-between the page a link was made on and the page it opens.
+The payload holds two things: the **plan** — the open item, the bookmarks in the order they were added,
+the starting armor — and the **walk**, the areas of the route that was on screen, in visit order.
+Opening such a link selects the **Manual** mode with that walk as the trace, so the reader arrives on
+the same route and can keep editing it: adding a stop, taking one out, and sharing the result again.
+
+It used to carry a ranking mode, a look-ahead window and a *rank* instead — the position of a route in
+the list the plan produced. That made every link a promise about the solver: any change to how routes
+were ranked or ordered repointed every link ever posted, and both the reader's browser and the unfurl
+card had to run the whole search again to find out which route was meant. The walk is now named
+outright, so a link says the same thing whatever the solver does next, and nothing has to be computed
+to open one.
 
 **Packed, not compressed.** Compression plus base64 was the obvious move and the measurement says no:
 these payloads are far below the size where deflate pays for itself, and base64 then adds a third back
 on. In characters of query string, over real plans (`node _verify/check-share-codec.cjs`):
 
-| plan                                 | six parameters | deflate + base64 | packed here |
-| ------------------------------------ | -------------- | ---------------- | ----------- |
-| one item                             |             25 |               28 |      **14** |
-| three items, armor, greedy 3, rank 6 |             78 |               78 |      **22** |
-| ten items                            |            142 |              138 |      **50** |
+| plan                        | six parameters | packed here |
+| --------------------------- | -------------- | ----------- |
+| one item                    |             25 |      **14** |
+| item + two bookmarks        |             71 |      **19** |
+| ten items                   |            134 |      **50** |
+
+A walk costs three bytes a stop on top of that — 18 characters for a six-stop route, 34 for a
+thirteen-stop one — which is the whole price of nobody having to solve anything.
 
 What shortens the link is not squeezing the ids but not spelling them out: an id averages 13 bytes and
-is filed under a 3-byte code here. It is five bytes of header (version, flags, armor, rank, count) and
-then three bytes per item, base64url'd so the whole plan rides in one URL-safe token.
+is filed under a 3-byte code here. It is five bytes of header (version, flags, armor, bookmark count,
+stop count) and then three bytes per id, base64url'd so the whole thing rides in one URL-safe token.
 
 **The code is derived from the id, never from its position** — the high 24 bits of an FNV-1a hash — so
-reordering or extending `data.json` cannot silently repoint a link. An id the data no longer has
-resolves to nothing and drops out of the plan, the same graceful degradation the ids-in-full form had.
-A code the data gives *twice* resolves to neither, because planning the wrong item silently is the one
-failure this format cannot see; the check asserts that no two of the current 629 ids collide, and
-`FORMAT` exists so the code can widen to 32 bits if that ever changes.
+reordering or extending `data.json` cannot silently repoint a link. Items and areas share the code and
+the rule: an id the data no longer has resolves to nothing and drops out, so a link opens the part of
+its plan and the part of its walk that still exist. A code the data gives *twice* resolves to neither,
+because planning the wrong item silently is the one failure this format cannot see; the check asserts
+that no two of the current 629 item ids and no two of the 22 area ids collide, and `FORMAT` exists so
+the code can widen to 32 bits if that ever changes. The two tables are separate, so an item code and an
+area code that happen to match are harmless.
 
 Only that one key is ever touched: a campaign tag, or the `?v=2` Discord needs to read a cached embed
 again, sits beside it untouched. Writes go through `replaceState`, so nothing is pushed and Back still
 leaves the archive; hovering a route changes nothing (only the *pinned* one is in the payload); and a
 URL that already says the right thing is left alone rather than replaced with itself. A payload that is
 not a plan — truncated, tampered with, or from an older format — is ignored, and since the URL is
-written from the state it is then written back out, so junk does not accumulate in the address bar. The
-retired six-parameter form (`?i=&b=&a=&m=&l=&r=`) is not read any more; it was never released. A shared
-route opens the list onto itself: the fold lifts so the row is drawn, the row is scrolled into view, and
-it is pinned on the island — and clicking it lets it go, as any other pin does. Links are built from
-the origin you are reading on, so one copied from a dev server points at `localhost`.
+written from the state it is then written back out, so junk does not accumulate in the address bar.
+The retired six-parameter form (`?i=&b=&a=&m=&l=&r=`) is not read any more; it was never released.
+Nor is the version that followed it, which carried a rank: it names a route by its position in a list
+this build may no longer produce, which is exactly the fragility the walk replaced. Links are built
+from the origin you are reading on, so one copied from a dev server points at `localhost`.
 
-**Where the rail lands.** A link says what the reader came for, and the rail is scrolled to match. An
-item open — alone, or with a plan behind it — brings the **Used to craft** section flush against the
-header: that item is what the reader is here for, and the catalogue above it is what they scrolled past.
-The move is made on the rail's own `scrollTop` rather than with `scrollIntoView`, which walks *every*
-scrollable ancestor and would scroll the document too — landing the section under the header instead of
-against it (`lib/scroll.ts`). A link
-that names a route is scrolled to the route instead, and the item scroll stands aside for it; if the
-rank no longer reaches, which is what an old link to a shrunken plan looks like, the item's crafting
-view is what stands. A plan of bookmarks alone has no item to open and keeps the default top. The
-scroll is spent on arrival: browsing on from there never pulls the rail back.
+**Where the rail lands.** A link says what the reader came for, and the rail is scrolled to match. A
+link that names a walk scrolls to the **trace** — that is the thing it carries, and it sits below the
+catalogue, the crafting half of the item and the ranked list, so without the scroll a reader would land
+on an item's recipe with their own route off screen. An item open with no walk behind it brings the
+**Used to craft** section flush against the header instead: that item is what the reader is here for,
+and the catalogue above it is what they scrolled past. The move is made on the rail's own `scrollTop`
+rather than with `scrollIntoView`, which walks *every* scrollable ancestor and would scroll the
+document too — landing the section under the header instead of against it (`lib/scroll.ts`). A plan of
+bookmarks alone has no item to open and keeps the default top. The scroll is spent on arrival:
+browsing on from there never pulls the rail back.
 
 ### Link previews
 
@@ -112,27 +122,31 @@ A shared link unfurls into a card that says what it points at, and an unfurler r
 the card is built on the server from the same payload the browser decodes (`lib/wiki/preview.ts`).
 Four shapes, decided in this order:
 
-| the link carries            | title                                  | description                              | image |
-| --------------------------- | -------------------------------------- | ---------------------------------------- | ----- |
-| a route, as rank *N*        | `Lumia Archive - N items route (M Areas)` | the items, then `Alley → Town Hall → …` | Dr. Nadja |
-| a plan, several items       | `Lumia Archive - N items plan`          | the items, in plan order                 | the site's mark |
-| one bookmark, nothing open  | `Lumia Archive - 1 item plan`           | that item                                | the site's mark |
-| one item open, no plan      | `Lumia Archive - <item>`                | `Blade 46` and `Craft: Odachi + Blueprint` | the item's own sprite |
+| the link carries            | title                                     | description                              | image |
+| --------------------------- | ----------------------------------------- | ---------------------------------------- | ----- |
+| a walk, as its areas        | `Lumia Archive - N items route (M Areas)` | the items, then `Alley → Town Hall → …`  | Dr. Nadja |
+| a plan, several items       | `Lumia Archive - N items plan`            | the items, in plan order                 | the site's mark |
+| one bookmark, nothing open  | `Lumia Archive - 1 item plan`             | that item                                | the site's mark |
+| one item open, no plan      | `Lumia Archive - <item>`                  | `Blade 46` and `Craft: Odachi + Blueprint` | the item's own sprite |
 
 An item card is two lines at most — what it is and what it is worth, then what it is made of — and
 either line drops when the data has nothing for it: `Scrap Metal` reads just `Ingredients`, and an
 item with a recipe but no sprite (`Egg Bun`) falls back to the site's card. The route's areas are the
-ones the solver picks, which means the server runs it for a route link: same inputs, same code, same
-list as the page, and the check compares the card's areas against the ones the page draws.
+ones the link names, read straight out of `data.json`: **no unfurl runs the solver any more**, and the
+route card costs what a plan card costs — measured at **23 ms against 26 ms** for the same three-item
+plan on `next start`, where the ranked-route card it replaced took about 200 ms. The check times both
+so the difference cannot come back unnoticed, and compares the card's areas, area for area, with the
+ones the page draws as the trace.
 
 `og:url` carries the URL that was shared, query and all — keying every card on the bare origin would
 tell an unfurler that all plans are the same page. The canonical link stays `/` for crawlers, so plans
 are not indexed as separate pages. Whatever the payload turns out to be — junk, an older format, a
-rank the plan no longer reaches — the card falls back to the site's own.
+walk whose areas have since been renamed — the card falls back to the site's own.
 
 Because the card depends on the query, the page is rendered per request rather than prerendered: a
-plan link costs about **20 ms** of server time and a route link about **200 ms**, which is the solver
-running — measured on `next start` with three requests each.
+plan link costs about **26 ms** of server time and a route link the same, measured on `next start`
+with eight requests each, the first of each kind discarded. The dataset is built once per process and
+the card is a lookup in it.
 
 The images are `public/og.png` (the archive's mark), `public/dr-nadja.png` (the route card, a square
 cropped from `assets/dr-nadja.png`) and, for an item, its own sprite at `/items/<id>.png` — declared at
@@ -153,14 +167,20 @@ highest value, then alphabetically, and the counter above the grid reads *matche
 header — keeps an item in the plan. Selecting a card opens its detail: rarity, real data
 fields, the **crafting chain drawn as a tree**, and the **fastest routes**.
 
-**Two ways to rank a route.** *Fastest* (the default) is the walk: fewest areas, then the tidiest
-line. *Greedy* is about not spending the trip naked — in this game a survivor who hauls every
-ingredient to one spot and crafts at the end is weak the whole way — so at **every** step it asks
-what the next N areas (2 by default, 1–6) can leave the survivor wearing, and ranks the resulting
-profile step by step. Each step prints the worn value beside its pack dots, so the curve being
-ranked is visible. The address bar carries the whole plan, and any route can be handed to someone
-else with the **Share** control in its bottom right corner, which copies that link with the row's own
-rank in it — see [Sharing a route](#sharing-a-route).
+**Two ways to rank a route, and a third to walk your own.** *Fastest* (the default) is the walk:
+fewest areas, then the tidiest line. *Greedy* is about not spending the trip naked — in this game a
+survivor who hauls every ingredient to one spot and crafts at the end is weak the whole way — so at
+**every** step it asks what the next N areas (2 by default, 1–6) can leave the survivor wearing, and
+ranks the resulting profile step by step. Each step prints the worn value beside its pack dots, so the
+curve being ranked is visible. *Manual* ranks nothing: the reader clicks areas on the island and the
+walk is the order they clicked, one stop per click, taken back out by clicking the area again. It is
+the same walk either way — the solver runs underneath to say what each stop picks up and builds, and
+the trace is drawn with the same numbered stops and the same cards. Every walk in the rail can be
+handed to someone else with the **Share** control in its bottom right corner, which copies a link
+carrying *that walk's areas* — see [Sharing a route](#sharing-a-route) — and opening one lands in
+Manual mode with the trace prefilled and editable. A route the solver found can also be taken into
+manual directly, with **Open in manual** beside its Share control: the row's areas become the trace,
+and the reader edits from there rather than clicking the whole walk back in.
 
 **Right pane — Lumia Island.** The **plan bar** sits directly above the island and lists what the map
 and the routes answer for: the selected item, then every bookmark. Under it, the PNG artwork with the
@@ -179,6 +199,19 @@ built** at each one, numbered in walk order. Those step cards are hover-only for
 card that answers "where else is this?" while the pointer is on it must not also navigate when the
 hand moves a pixel first. The random-spawn box is the one place a card still opens something, and on
 purpose — nothing else can reach those items.
+
+**Tracing by hand turns the island into the question.** In Manual mode the bubbles are answers on a
+map whose only control is the polygons: every bubble lets the pointer through, and the one over the
+area the pointer is in fades to a third so the reader can see and click the area under it. That is
+also what makes the fade dependable — it follows *where the pointer is* rather than which element the
+pointer happened to land on, so arriving on a card at speed no longer leaves the bubble at full
+strength over the area being clicked. Clicking an area adds it to the walk and its bubble says what
+the stop does: the item built there as an amber sparkle card, and each material the walk takes from it
+as an amber `×needed` where a material card would have shown the area's own emerald `×in area` (the
+same colour rule the step bubbles use). What the walk has already collected in full comes off every
+other bubble, so what is left on the island is what is left to collect. The trace also stays on
+screen while a material is focused from the rail — a stop is the reader's own answer, so it is never
+dimmed away.
 
 **Focusing a material widens up the chain.** Hovering a material in the recipe tree highlights the
 areas holding it *and* the areas holding everything needed to craft it: strong amber for the
@@ -459,6 +492,34 @@ missing from `CATEGORY_TABS` raises its own note.
   with the quantity available in that area; a material two planned items both need collapses into
   one card with the summed quantity. Bubbles are spread by a small collision solver
   (`lib/map-layout.ts`) and clamped inside the map.
+- **A traced stop is a step of the walk, drawn like one.** A route the reader clicked and a route
+  the solver found are the same kind of thing, so they are drawn by the same component: the numbered
+  badge in the header, the amber outline, and the cards on one line rather than wrapped into the
+  material bubble's pinned width. An area that is a stop therefore draws no material bubble — one box
+  per area, as under a highlighted route — and everything that is not a stop keeps its material
+  bubble, because those are the areas the reader is choosing between. The walk's own cards are what a
+  stop shows: the builds in amber with a sparkle, and each material it takes with the amount the
+  *route* needs (`×needed`, amber) rather than the amount lying in the area (`×in area`, emerald) —
+  the same colour rule the pinned-route view uses.
+- **The walk's requirement decides what is left on the island.** A material the walk has collected as
+  much of as the plan needs leaves every bubble it was on, so what is left to collect is what the map
+  shows. **What "as much as the plan needs" means is the plan's own requirement** — `SimPlan.gather`,
+  the same map the walk collects against — and not the material list's totals. That list walks the
+  whole recipe tree, so it counts a craftable node beside the ingredients it could be built from and
+  sums a shared material once per planned item that wants it, which makes it a map of where things are
+  rather than a shopping list: counting a walk's pickups against it left Scrap Metal the walk had
+  already collected sitting on every other bubble. A material with no requirement at all is not
+  something a walk collects — an intermediate it builds, or the armour the survivor walks in with — so
+  it is not on the island while a walk is being drawn. The rule holds from the moment Manual is
+  picked, so nothing vanishes under the reader's hand mid-trace.
+- **A bubble lets the pointer through in Manual mode, and that is the fade's whole mechanism.** The
+  polygons are the only thing a click may reach while tracing, so every bubble is
+  `pointer-events-none` and the one over the hovered area drops to a third of its opacity. Reading the
+  hover off the polygon rather than off the bubble is what makes the fade reliable: the pointer's
+  position decides, not which element it entered, so a fast move that lands on a card no longer leaves
+  the bubble at full strength on the area being clicked. The header is drawn as text rather than as a
+  button when the pointer falls through it — a control only the keyboard could reach is a trap — and an
+  area's own panel is still reachable from the trace row's area chips in the rail.
 - **How big a bubble is.** A share of the island box — `BUBBLE_WIDTH_SHARE` in `lib/map-layout.ts`,
   under the 140px ceiling the previous deployment drew — and both numbers come from *measuring* that
   deployment rather than from taste: a 140px bubble on the 1153px island a 1745 CSS px viewport
@@ -494,6 +555,15 @@ missing from `CATEGORY_TABS` raises its own note.
   empty map for them would be useless, so those items fall back to mapping **where the item itself
   spawns**. `MapOverlayMode` marks the distinction, and the map eyebrow reads *Item spawn map* rather
   than *Live resource map* so the mode is never ambiguous. Set by `useRoutePlan`.
+- **The solve is remembered.** `buildRoutes` is the expensive half of the screen — it sweeps covers
+  and walks several orders per cover — and the same few answers are asked for over and over: switching
+  the ranking mode and back, entering manual mode (which solves the fastest list so a trace has a
+  number to be measured against), and returning to a plan already seen. `buildRoutesCached` keeps one
+  answer per set of trees, keyed by the settings the solve reads, and by the trees *by identity*: the
+  hook rebuilds them only when the plan changes, so a plan that has moved on takes its answers with it
+  and nothing needs evicting by hand. The result is shared and treated as read-only, which is what a
+  `RoutePlanSet` already was. `_verify/check-route-cache.cjs` asserts the contract in node: the same
+  question is the same object, and another mode, look-ahead, armor or plan each solves for itself.
 - **Fastest routes, not a spawn list.** The rail's bottom section lists the ways to gather everything
   the plan needs, best first, and highlights the picked one on the island when hovered or clicked
   (`Esc` releases it). It sits outside the item detail on purpose: the routes answer for the bookmarks
@@ -619,6 +689,10 @@ missing from `CATEGORY_TABS` raises its own note.
 
 ## Verification performed
 
+- The route cache was checked on its own in node (`node _verify/check-route-cache.cjs`): the same plan
+  and settings come back as **the same object**, while another mode, another look-ahead, another
+  starting armor and a fresh set of trees each solve for themselves, and the remembered answer is
+  identical to the one the uncached solver produces.
 - `tsc --noEmit`, `eslint .` and `next build` all pass clean. The icon and the not-found page
   prerender; the archive itself renders per request, because its `<head>` answers for the plan in
   the query — see [Link previews](#link-previews).
@@ -744,52 +818,63 @@ missing from `CATEGORY_TABS` raises its own note.
 - The startup line was verified on a real `next start`: it prints once, before the first request —
   `[lumia-archive] data ready — 201 items · 22 areas (22 mapped) · 39 craftable — 2 data note(s): …` —
   and the island pane no longer renders any data-notes strip.
-- The share codec was checked on its own in node against the real 629 items
-  (`node _verify/check-share-codec.cjs`): **629 ids hash to 629 distinct codes**, so no two items can
-  ever be confused for one another; every state the payload can hold round-trips (each of the five
-  clothes and bare, both modes, look-ahead 1–6, ranks 1/100/255/none, an item that is also bookmarked,
-  a plan with no open item); a payload whose item the data no longer has drops just that item and keeps
-  the rest of the plan; the URL layer keeps foreign parameters, writes nothing for an empty plan, and
-  drops a payload that is not one. **4 000 random payloads and 57 bit-flipped ones** decoded to `null`
-  or to a valid plan — 53 of the flips came back as some plan — and none threw. The same harness prints
-  the lengths: 25 → **14** characters for a single item, 78 → **22** for three items with armor, greedy
-  and a rank, 142 → **50** for ten.
+- The share codec was checked on its own in node against the real data
+  (`node _verify/check-share-codec.cjs`): **629 item ids hash to 629 distinct 24-bit codes and 22 area
+  ids to 22**, so no two items and no two areas can ever be confused for one another; every state the
+  payload can hold round-trips (each of the five clothes and bare, walks of 0 to 22 stops, an item that
+  is also bookmarked, a plan with no open item, a plan with no walk); a payload whose item the data no
+  longer has drops just that item and keeps the rest of the plan, and one whose *area* is gone drops
+  just that stop and keeps the walk; the URL layer keeps foreign parameters, writes nothing for an
+  empty plan, and drops a payload that is not one. **4 000 random payloads — a quarter of them given a
+  valid version byte and counts that fit their own length, so the parser past the version check is
+  exercised too — and 129 bit-flipped ones** decoded to `null` or to a valid plan (402 and 123 of them
+  came back as some plan) and none threw. The same harness prints the lengths: 25 → **14** characters
+  for a single item, 71 → **19** for an item with two bookmarks, 134 → **50** for ten, and a walk at
+  three bytes a stop — 18 characters for six stops, 34 for thirteen. A version 1 payload — the one that
+  named a route by its rank — decodes to `null`.
 - The shared-route link was then driven end to end in a real browser at 1512 and 390 px — real clicks,
-  real typing, and the real clipboard: on a plan of `Monohoshizao` + `Rocker's Jacket` + `Sword
-  Stopper`, windbreaker, greedy, 3 areas, the address bar read `?p=ARcCAAKhQvQT-YpTHyg` — **19
-  characters** — and its payload changed at *every* step that changed the plan (item opened, armor,
-  mode, each bookmark) and at no other: hovering a route left it byte-identical, and a change plus its
-  undo (bookmark Feather Boots, un-bookmark it; fastest and back) landed on exactly the same payload
-  again. Pinning rank 6 reached the URL, the Share control copied a link **byte-identical to the
-  address bar**, and it read `Copied` for a moment before going back to `Share`. Opening that link with
-  a foreign `?v=2` attached rebuilt all **100** routes in the same order, label for label, pinned rank
-  6, lifted the fold to reach it and scrolled it into view, and kept both the payload and `?v=2`;
-  reloading the page it produced gave the same list, the same pin and the same plan. Clicking the
-  pinned route let it go without refolding the list and without leaving the URL stale. Five junk
-  payloads (`!!!!`, empty, `AAAA`, `eA`, 48 characters of `z`) each planned nothing, crashed nothing,
-  and were written back out of the address bar, leaving `?v=2`; the retired six-parameter link planned
-  nothing at all; a one-item plan carried an 11-character payload; an item that is both open and
-  bookmarked round-tripped its 36 routes and pinned rank 1; and Enter on an area chip inside a row
-  opened the area without pinning the route. Each arrival was then checked for where the rail lands: an
-  item open, alone or over a two-item plan, put the **Used to craft** section **flush with the header**
-  (`|section.top − header.bottom| ≤ 1` after 617 px of rail scroll, header still at `top: 0`);
-  a bookmarks-only link left the rail at `scrollTop 0`; a link naming a route left the crafting strip
-  **3 040 px** behind the pinned row, header still at `0`; and picking another item after arriving left
-  the strip exactly where it was, so the scroll is spent rather than repeated.
+  real typing, and the real clipboard (`node _verify/check-share.mjs`): on a plan of `Monohoshizao` +
+  `Rocker's Jacket` + `Sword Stopper`, windbreaker, greedy, 3 areas, the address bar read
+  `?p=AgECAgChQvQT-YpTHyg` — **19 characters** — and its payload changed at every step that changed
+  the *plan* (item opened, armor, each bookmark) and at no other: hovering a route left it
+  byte-identical, and a change plus its undo (bookmark Feather Boots, un-bookmark it) landed on exactly
+  the same payload again. Switching the ranking mode now changes **nothing** in the URL, which is the
+  visible half of the mode no longer being in the payload at all. Pinning rank 6 reached the URL, the
+  Share control copied a link **byte-identical to the address bar**, and the link's payload decoded to
+  exactly the areas that row's steps name. Opening that link with a foreign `?v=2` attached selected
+  **Manual**, showed a trace of exactly those areas in that order, drew the same number of numbered
+  stops on the island, listed **no ranked routes at all**, kept the payload and `?v=2`, and scrolled
+  the trace row into view (`0 ≤ top < 950`); reloading the page it produced gave the same walk and the
+  same mode. The trace's own Share control copied the same walk back, and **Clear the trace** emptied
+  it from the screen, the island and the URL. Five junk payloads (`!!!!`, empty, `AAAA`, `eA`, 48
+  characters of `z`) each planned nothing, crashed nothing, and were written back out of the address
+  bar, leaving `?v=2`; the retired six-parameter link planned nothing at all; a one-item plan carried a
+  14-character payload and a route link off it restored that row's walk; an item that is both open and
+  bookmarked walked its single-item plan rather than a two-item one; an address-bar link — no walk in
+  it — opened on the defaults (`Fastest`, no trace), which is what proves the mode is no longer
+  restored from a link; and Enter on an area chip inside a row opened the area without pinning the
+  route. Each arrival was then checked for where the rail lands: an item open, alone or over a two-item
+  plan, put the **Used to craft** section **flush with the header** (`|section.top − header.bottom| ≤ 1`
+  after 617 px of rail scroll, header still at `top: 0`); a bookmarks-only link left the rail at
+  `scrollTop 0`; a link naming a walk brought the trace itself into view instead; and picking another
+  item after arriving left the strip exactly where it was, so the scroll is spent rather than repeated.
 - The link previews were read the way an unfurler reads them: raw HTTP, no JavaScript, `<head>` only
   (`node _verify/check-preview.mjs`). One item open gave `Lumia Archive - Monohoshizao`, `Blade 46` /
   `Craft: Odachi + Blueprint` on two lines, and its own sprite; a value-less, recipe-less item gave
   `Lumia Archive - Scrap Metal` with the single line `Ingredients`; an item with no sprite (`Egg Bun`)
   fell back to the site's card; a three-item plan gave `Lumia Archive - 3 items plan` listing
   `Monohoshizao, Rocker's Jacket, Sword Stopper`; a single bookmark with nothing open gave
-  `Lumia Archive - 1 item plan`; and the same plan with rank 6 named gave
+  `Lumia Archive - 1 item plan`; and a link naming a walk gave
   `Lumia Archive - 3 items route (5 Areas)` with `Alley → Town Hall → School → Forest → Temple` — the
-  very areas the browser draws for that route, so the server ran the solver to the same answer. Four
-  junk payloads (empty, `!!!!`, `AAAA`, 48 characters of `z`) all answered 200 with the site's card.
-  Every declared image was then fetched and measured: the sprite 256×128, `og.png` and `dr-nadja.png`
-  256×256, each matching its own `og:image:width/height`, each absolute and off-loopback. Theming
-  aside, the human got the same thing: the tab title matched the card title, and the page pinned the
-  same route the card described. The same run passed at 390 px.
+  very areas the page draws as that trace, which it now reads out of the payload rather than solving
+  for. Four junk payloads (empty, `!!!!`, `AAAA`, 48 characters of `z`) all answered 200 with the site's
+  card. Every declared image was then fetched and measured: the sprite 256×128, `og.png` and
+  `dr-nadja.png` 256×256, each matching its own `og:image:width/height`, each absolute and off-loopback.
+  Theming aside, the human got the same thing: the tab title matched the card title, and the page drew
+  the same five-stop trace the card described. **The cost of an unfurl was measured against itself**:
+  eight requests each, first discarded, medians **26 ms for a plan link and 23 ms for a route link** —
+  where the ranked-route card this replaced took about 200 ms, because it ran the solver. The same run
+  passed at 390 px.
 - The shell was checked against the void: on a page carrying a long route list, a real wheel over the
   island left `window.scrollY` at **0** and the header at **0**, with the rail's own scroll untouched —
   and taking the root clip off in the same session reproduced the report exactly, scrolling the page to
@@ -885,6 +970,35 @@ missing from `CATEGORY_TABS` raises its own note.
   either surface. The checks had to follow: they used to tell the two apart by tag, since step cards
   were `<button>`s and material cards were `<span role="img">`, and now tell them apart by label —
   material labels name the area's stock, step labels are the action.
+- Manual mode was checked in a real browser against a plan of `steel` (Iron Ore + Scrap Metal), with
+  the two areas clicked found in `data.json` rather than named in the check
+  (`node _verify/check-manual-route.mjs`): Manual is offered as the third mode and an empty trace
+  explains what to do. One long mouse move onto an area — the case that used to leave the bubble at
+  full strength, because the pointer landed on a card — left that area's bubble at **opacity 0.35** with
+  `pointer-events: none`, and the click that followed reached the polygon underneath and added the stop
+  (one numbered stop on the island, a walk in the URL, `1 area · no travel` in the rail). The second
+  stop, the one that completes the craft, drew **`✦ Build Steel ×2 here`** on the area's own bubble
+  beside **`Pick up Iron Ore ×1 here`** — the amount the *route* needs, where the same card read `×7`
+  before the stop was traced and the number is a different colour from the material cards' emerald,
+  measured off the rendered text. What the trace collected came off the other bubbles (no other bubble
+  still held Scrap Metal, and the island was down from 8 bubbles to 2), clicking the first area again
+  took its stop out, and **Clear the trace** emptied the walk from the island, the rail and the URL and
+  put all 8 bubbles back. A second scenario covers the count itself, on a plan whose recipe trees
+  mention a material more often than the plan needs it (`Rocker's Jacket` + `Sword Stopper` + `Blade
+  Boots`, worn with a Windbreaker): one stop at Slums collects both Scrap Metal the plan asks for, and
+  **no bubble still holds Scrap Metal** while Hammer and Iron Ore — not yet collected — are still on
+  the map, and Windbreaker is nowhere, because the survivor walks in with it. A third scenario covers
+  the way into a trace and what moves the rail: **Open in manual** on a solved route's row hands that
+  row's four areas over as the trace — the rail's own chips and the island's stops agree with the row,
+  and the address bar picks the walk up — and bookmarking an item *after* that leaves the rail at
+  `scrollTop 0`, which is the bug the reveal-by-plan-key fixed (it used to be spent on the plan the
+  link described, and a bookmark moved the plan on). Arriving on a link that names a walk still
+  scrolls: `scrollTop 512` with the trace on screen. Each stop is asserted to be drawn as a step of the
+  walk rather than as a material bubble — amber outline, the amber number badge reading 1 for the first
+  stop, and **all four of its cards on one row** — which is the same reader a pinned route's step
+  bubbles produce. The checks that read a bubble header had to stop assuming it is a `<button>`:
+  a bubble the pointer falls through draws it as text, since a control only the keyboard could reach
+  would be a trap.
 
 ---
 

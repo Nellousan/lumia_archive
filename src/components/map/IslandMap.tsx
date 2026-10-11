@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { AreaBubbleCard } from "./AreaBubbleCard";
 import { MapAreaShape } from "./MapAreaShape";
-import { MapTooltip } from "./MapTooltip";
 import { AnimalDropToggle } from "./AnimalDropToggle";
 import { RandomSpawnBox } from "./RandomSpawnBox";
 import { RouteOverlay } from "./RouteOverlay";
@@ -31,6 +30,16 @@ import type { MapImage, WikiAnimal, WikiArea, WikiItem } from "@/lib/wiki/types"
  * lands around 135px wide, the point at which its label stops being readable.
  */
 const MIN_ISLAND_WIDTH_CLASS = "min-w-[880px] lg:min-w-0";
+
+/**
+ * The reader is tracing their own route: a click on an area adds it to the trace
+ * or takes it out, instead of opening the area panel.
+ */
+export interface ManualTrace {
+  /** The stops so far, drawn like a computed route's. `null` before the first. */
+  plan: RoutePlan | null;
+  onToggleArea: (areaId: string) => void;
+}
 
 export interface IslandMapProps {
   /**
@@ -62,6 +71,11 @@ export interface IslandMapProps {
   activeAreaId: string | null;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
+  /**
+   * Set while the reader is tracing a route by hand. The trace is drawn over the
+   * island and clicks toggle stops; `null` in every other mode.
+   */
+  manualTrace: ManualTrace | null;
   onHoverMaterial: (itemId: string | null) => void;
   onSelectItem: (itemId: string) => void;
   /** The items with no fixed area, listed in the island's own corner. */
@@ -103,6 +117,7 @@ export function IslandMap({
   activeAreaId,
   onHoverArea,
   onSelectArea,
+  manualTrace,
   onHoverMaterial,
   onSelectItem,
   randomSpawnItems,
@@ -139,7 +154,8 @@ export function IslandMap({
    */
   const controlsScale = islandControlScale(renderWidth);
 
-  const areaById = useMemo(() => new Map(areas.map((area) => [area.id, area])), [areas]);
+  /** The reader is tracing by hand: clicks toggle stops instead of opening areas. */
+  const manual = manualTrace !== null;
   const bubbleByAreaId = useMemo(
     () => new Map(bubbles.map((bubble) => [bubble.area.id, bubble])),
     [bubbles],
@@ -230,8 +246,9 @@ export function IslandMap({
    */
   const foundCardByStepAreaId = useMemo(() => {
     const found = new Map<string, BubbleCard>();
-    if (!stepOverlay || !focus) return found;
-    for (const step of stepOverlay.route.steps) {
+    const steps = stepOverlay?.route.steps ?? manualTrace?.plan?.steps ?? [];
+    if (steps.length === 0 || !focus) return found;
+    for (const step of steps) {
       const own = [...stepGathers(step), ...stepCrafts(step)];
       if (own.some((entry) => entry.item.id === focus.itemId)) continue;
       const card = bubbleByAreaId
@@ -240,7 +257,7 @@ export function IslandMap({
       if (card) found.set(step.area.id, card);
     }
     return found;
-  }, [bubbleByAreaId, focus, stepOverlay]);
+  }, [bubbleByAreaId, focus, manualTrace, stepOverlay]);
 
   /**
    * Where those bubbles go. They are solved here rather than by the plan's own
@@ -297,37 +314,35 @@ export function IslandMap({
     unrelatedStepAreaIds,
   ]);
 
-  /** Areas the island is currently drawing a bubble over. */
-  const bubbledAreaIds = useMemo(() => {
-    if (stepOverlay) {
-      const ids = new Set(stepOverlay.route.steps.map((step) => step.area.id));
-      for (const bubble of hoveredMaterialBubbles) ids.add(bubble.area.id);
-      return ids;
-    }
-    return new Set(bubbles.map((bubble) => bubble.area.id));
-  }, [bubbles, hoveredMaterialBubbles, stepOverlay]);
-
-  const hoveredArea = hoveredAreaId ? (areaById.get(hoveredAreaId) ?? null) : null;
-  // Areas with a bubble already explain their contents, so no tooltip there.
-  const tooltipArea =
-    hoveredArea && !bubbledAreaIds.has(hoveredArea.id) && placements[hoveredArea.id]
-      ? hoveredArea
-      : null;
-
-  const tooltipMaterialNames = useMemo(() => {
-    if (!hoveredArea) return [];
-    return bubbles
-      .filter((bubble) => bubble.area.id === hoveredArea.id)
-      .flatMap((bubble) => bubble.cards.map((card) => card.material.item.name));
-  }, [bubbles, hoveredArea]);
-
   /** Areas on the highlighted route, if any. */
   const routeAreaIds = useMemo(
     () => (activeRoute ? new Set(activeRoute.areaIds) : null),
     [activeRoute],
   );
 
+  /** Areas the reader has clicked into their own trace. */
+  const traceAreaIds = useMemo(
+    () => (manualTrace?.plan ? new Set(manualTrace.plan.areaIds) : null),
+    [manualTrace],
+  );
+
+  /**
+   * The trace's stop in each area, so the bubble drawn there can say what the
+   * walk does — see {@link AreaBubbleCard}'s `step`.
+   */
+  const manualStepByAreaId = useMemo(
+    () => new Map((manualTrace?.plan?.steps ?? []).map((step) => [step.area.id, step])),
+    [manualTrace],
+  );
+
   const regionState = (area: WikiArea): RegionState => {
+    // A trace tints its own stops but leaves the rest of the island on the
+    // material view: the reader is choosing where to walk next, so the bubbles
+    // saying what is left to collect stay readable rather than being dimmed away
+    // the way a computed route dims everything off its path. A hovered material
+    // still answers here as it does with no route on screen, for the same reason.
+    if (manual && traceAreaIds?.has(area.id)) return "route";
+
     // A hovered material is a question about the island — "where else is this?" —
     // and it outranks the route tint so it answers exactly what it answers with
     // no route on screen. It has to come first rather than be blended in: the
@@ -351,12 +366,21 @@ export function IslandMap({
   };
 
   const regionDimmed = (area: WikiArea) => {
+    // A stop of the trace being drawn stays lit through a material hover: it is
+    // the reader's own answer, and it is what they are in the middle of editing.
+    if (manual && traceAreaIds?.has(area.id)) return false;
     // Same order as the states above: what the reader is asking about decides
     // what stays lit.
     if (supportAreaIds) return !supportAreaIds.has(area.id);
     if (routeAreaIds) return !routeAreaIds.has(area.id);
     return false;
   };
+
+  /**
+   * What the numbered overlay follows: the trace being drawn by hand, or the
+   * route the rail has highlighted. Only one of the two is ever set.
+   */
+  const drawnRoute = manualTrace?.plan ?? activeRoute;
 
   return (
     <div
@@ -426,7 +450,7 @@ export function IslandMap({
               dimmed={regionDimmed(area)}
               hovered={hoveredAreaId === area.id}
               onHover={onHoverArea}
-              onSelect={onSelectArea}
+              onSelect={manualTrace ? manualTrace.onToggleArea : onSelectArea}
             />
           ))}
       </svg>
@@ -503,38 +527,77 @@ export function IslandMap({
             })}
           </>
         ) : (
-          bubbles.map((bubble) => {
-            const placement = placements[bubble.area.id];
-            if (!placement) return null;
-            return (
-              <AreaBubbleCard
-                key={bubble.area.id}
-                  bubble={bubble}
+          <>
+            {/*
+             * The stops of the trace, drawn exactly like the steps of a highlighted
+             * route: the numbered badge, the amber outline, the cards on one line.
+             * A walk the reader clicked is a walk, and it should not look like a
+             * different kind of thing from one the solver found.
+             *
+             * Every bubble here is an answer on a map whose only control is the
+             * polygons: it takes no pointer, so a click always reaches the area
+             * under it, and the one over the area the pointer is in steps back to a
+             * third of its opacity. Reading the hover off the polygon is what makes
+             * that fade dependable — it follows *where the pointer is*, where
+             * letting a card take the pointer would let it swallow the entry and
+             * leave the bubble at full strength over the area being clicked.
+             */}
+            {(manualTrace?.plan?.steps ?? []).map((step) => {
+              const placement = placements[step.area.id];
+              if (!placement) return null;
+              return (
+                <RouteStepBubbleCard
+                  key={step.area.id}
+                  step={step}
                   placement={placement}
                   bubbleScale={bubbleScale}
-                  active={activeAreaId === bubble.area.id}
+                  active={activeAreaId === step.area.id}
                   focus={focus}
-                  routeActive={routeAreaIds !== null}
-                  inRoute={routeAreaIds?.has(bubble.area.id) ?? false}
+                  foundCard={foundCardByStepAreaId.get(step.area.id) ?? null}
+                  areaCards={bubbleByAreaId.get(step.area.id)?.cards ?? []}
+                  // The fade *is* this prop: it is the same step back the hover
+                  // answer draws, and a traced stop that the pointer is inside has
+                  // to get out of the way of the click that toggles it.
+                  dimmed={hoveredAreaId === step.area.id}
+                  passThrough
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}
-                  onHoverMaterial={onHoverMaterial}
+                  onHoverItem={onHoverMaterial}
                 />
               );
-            })
+            })}
+
+            {/* Everything that is not a stop keeps its material bubble: those are
+                the areas the reader is choosing between. */}
+            {bubbles
+              .filter((bubble) => !manualStepByAreaId.has(bubble.area.id))
+              .map((bubble) => {
+                const placement = placements[bubble.area.id];
+                if (!placement) return null;
+                return (
+                  <AreaBubbleCard
+                    key={bubble.area.id}
+                    bubble={bubble}
+                    placement={placement}
+                    bubbleScale={bubbleScale}
+                    active={activeAreaId === bubble.area.id}
+                    focus={focus}
+                    routeActive={routeAreaIds !== null}
+                    inRoute={routeAreaIds?.has(bubble.area.id) ?? false}
+                    faded={hoveredAreaId === bubble.area.id}
+                    passThrough={manual}
+                    onHoverArea={onHoverArea}
+                    onSelectArea={onSelectArea}
+                    onHoverMaterial={onHoverMaterial}
+                  />
+                );
+              })}
+          </>
         )}
 
-        {tooltipArea && (
-          <MapTooltip
-            area={tooltipArea}
-            anchor={placements[tooltipArea.id]}
-            bubbleScale={bubbleScale}
-            materialNames={tooltipMaterialNames}
-          />
-        )}
       </div>
 
-      {activeRoute && (
+      {drawnRoute && (
         // Above the bubbles (z-30) so the numbered stops cannot be hidden behind
         // a bubble card, and pointer-transparent so the island stays clickable.
         <svg
@@ -542,7 +605,7 @@ export function IslandMap({
           preserveAspectRatio="none"
           className="pointer-events-none absolute inset-0 z-30 h-full w-full"
         >
-          <RouteOverlay route={activeRoute} />
+          <RouteOverlay route={drawnRoute} />
         </svg>
       )}
     </div>

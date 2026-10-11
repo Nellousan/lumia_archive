@@ -10,11 +10,12 @@ import { decodeSharedPlan } from "@/lib/wiki/share";
  * source can later become async (CMS, API) without touching the components.
  *
  * The page also answers for its own `<head>`: a shared link unfurls into a card
- * that says what it points at — the item, the plan, or the route — and an unfurler
+ * that says what it points at — the item, the plan, or the walk — and an unfurler
  * runs no JavaScript, so the card has to be built here, from the same payload the
  * browser decodes. That is what makes this route dynamic: the answer depends on the
  * query, so every request renders. The dataset is built once per process, and the
- * solver only runs for a link that names a route.
+ * card is a lookup in it rather than a solve: the link carries the walk's own
+ * areas, so a route link costs no more than a plan link does.
  */
 
 interface PageProps {

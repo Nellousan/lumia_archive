@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { bubbleScaleFor, estimateBubbleSize, resolveBubblePlacements } from "@/lib/map-layout";
+import {
+  bubbleScaleFor,
+  estimateBubbleSize,
+  estimateStepBubbleSize,
+  resolveBubblePlacements,
+} from "@/lib/map-layout";
 import {
   buildRecipeTree,
   buildSubtreeIndex,
@@ -9,9 +14,17 @@ import {
   mergeMaterials,
 } from "@/lib/wiki/recipe";
 import { planTrees } from "@/lib/wiki/plan";
-import { DEFAULT_LOOK_AHEAD, buildRoutes, type RouteMode } from "@/lib/wiki/routes";
+import {
+  DEFAULT_LOOK_AHEAD,
+  buildManualRoute,
+  buildRoutesCached,
+  type RouteModeChoice,
+} from "@/lib/wiki/routes";
 import { buildAreaBubbles, type MapOverlayMode } from "@/lib/wiki/route";
 import type { RecipeMaterial, RecipeNode, WikiDataset, WikiItem } from "@/lib/wiki/types";
+
+/** Stable empty so a plan with no trace does not re-solve on every render. */
+const NO_AREAS: string[] = [];
 
 /**
  * Turns the planning set — the selected item plus every bookmark — into
@@ -28,7 +41,7 @@ import type { RecipeMaterial, RecipeNode, WikiDataset, WikiItem } from "@/lib/wi
 export interface RoutePlanOptions {
   /** Clothes picked before the match; null means the survivor starts bare. */
   startingClothes?: string | null;
-  mode?: RouteMode;
+  mode?: RouteModeChoice;
   lookAhead?: number;
   /**
    * Rendered width of the island, in CSS pixels, measured by the map. The bubble
@@ -42,6 +55,11 @@ export interface RoutePlanOptions {
    * the routes ignore animal loot either way.
    */
   showAnimalDrops?: boolean;
+  /**
+   * The areas the reader has clicked in `manual` mode, in visit order. Ignored
+   * in the other modes.
+   */
+  manualAreaIds?: string[];
 }
 
 export function useRoutePlan(
@@ -56,6 +74,7 @@ export function useRoutePlan(
     lookAhead = DEFAULT_LOOK_AHEAD,
     islandWidth = null,
     showAnimalDrops = false,
+    manualAreaIds = NO_AREAS,
   } = options;
   // `item` is null while nothing is selected: the detail-panel values collapse
   // to empty, which is what empties that half of the rail.
@@ -114,23 +133,84 @@ export function useRoutePlan(
     ? "recipe"
     : "spawn";
 
-  const bubbles = useMemo(
-    () => buildAreaBubbles(dataset, materials, { includeAnimalDrops: showAnimalDrops }),
-    [dataset, materials, showAnimalDrops],
+  /**
+   * The stops the reader clicked, walked like a route. `null` outside manual mode;
+   * inside it, `route` is `null` until the first stop exists while `required` — the
+   * plan's own gathering requirement — is there from the first render, so the island
+   * can say what a walk would have to collect before there is one.
+   */
+  const manual = useMemo(
+    () =>
+      mode === "manual" && plannedTrees.length > 0
+        ? buildManualRoute(dataset, plannedTrees, manualAreaIds, { startingClothes })
+        : null,
+    [dataset, manualAreaIds, mode, plannedTrees, startingClothes],
   );
 
+  /**
+   * What the island still has to show in manual mode: a material the walk has
+   * collected as much of as the plan needs comes off every bubble that held it —
+   * the area it was collected in included, which is the point, since what is left
+   * to collect is what the bubbles are for. An area left with no cards loses its
+   * bubble with them; a traced stop that emptied its own area gets its bubble back
+   * below, because the stop is on the map either way.
+   *
+   * The count is against the *plan's* requirement, not the material list's totals.
+   * That list walks the whole recipe tree — both a craftable node and the
+   * ingredients it could be built from, once per planned item that wants it — so it
+   * is a map of where things are, not a shopping list; comparing a walk's pickups
+   * against it left materials the walk had already collected sitting on every other
+   * bubble. A material with no requirement at all is not something the walk
+   * collects — an intermediate it builds, or the armor the survivor walks in with —
+   * so it is not on the island while a walk is being drawn.
+   */
+  const mapMaterials = useMemo(() => {
+    if (!manual) return materials;
+    return materials.filter((material) => {
+      const collected = manual.gathered[material.item.id] ?? 0;
+      const needed = manual.required[material.item.id] ?? 0;
+      return collected < needed;
+    });
+  }, [manual, materials]);
+
+  const bubbles = useMemo(
+    () => buildAreaBubbles(dataset, mapMaterials, { includeAnimalDrops: showAnimalDrops }),
+    [dataset, mapMaterials, showAnimalDrops],
+  );
+
+  /**
+   * Where every box on the island goes.
+   *
+   * Both shapes are solved together, because an area is one box: a stop of the walk
+   * is drawn as a step — the numbered header, the cards on one line — so it is
+   * reserved the step's size, and every other area keeps the material bubble's
+   * pinned width, where the cards wrap. Solving them in one pass is also what keeps
+   * them apart: an area is never both, so no two boxes can claim the same id.
+   */
   const placements = useMemo(() => {
     const bubbleScale = bubbleScaleFor(islandWidth, dataset.map.width);
+    const steps = manual?.route?.steps ?? [];
+    const stepAreaIds = new Set(steps.map((step) => step.area.id));
     return resolveBubblePlacements(
-      bubbles.map((bubble) => ({
-        id: bubble.area.id,
-        x: bubble.area.anchor.x,
-        y: bubble.area.anchor.y,
-        ...estimateBubbleSize(bubble, bubbleScale),
-      })),
+      [
+        ...steps.map((step) => ({
+          id: step.area.id,
+          x: step.area.anchor.x,
+          y: step.area.anchor.y,
+          ...estimateStepBubbleSize(step, bubbleScale),
+        })),
+        ...bubbles
+          .filter((bubble) => !stepAreaIds.has(bubble.area.id))
+          .map((bubble) => ({
+            id: bubble.area.id,
+            x: bubble.area.anchor.x,
+            y: bubble.area.anchor.y,
+            ...estimateBubbleSize(bubble, bubbleScale),
+          })),
+      ],
       { mapWidth: dataset.map.width, mapHeight: dataset.map.height },
     );
-  }, [bubbles, dataset.map.height, dataset.map.width, islandWidth]);
+  }, [bubbles, dataset.map.height, dataset.map.width, islandWidth, manual]);
 
   /** Distinct areas that hold at least one material. */
   const areaCount = useMemo(() => {
@@ -154,9 +234,22 @@ export function useRoutePlan(
    * Routes that obtain every planned item, fastest first. Built from the trees
    * so the OR structure survives: a craftable material may be gathered instead
    * of crafted, which is often the whole point of the fastest route.
+   *
+   * `manual` is not a way of ranking, so it solves as `fastest`: the rail shows
+   * the trace instead of the list, but the number the reader compares against —
+   * and the empty states above it — should still be the shortest walk there is.
+   *
+   * Cached, so the same plan solved again — a mode switched and switched back, the
+   * fastest list a trace is measured against — is answered from memory instead of
+   * swept a second time; see `buildRoutesCached`.
    */
   const routePlans = useMemo(
-    () => buildRoutes(dataset, plannedTrees, { startingClothes, mode, lookAhead }),
+    () =>
+      buildRoutesCached(dataset, plannedTrees, {
+        startingClothes,
+        mode: mode === "manual" ? "fastest" : mode,
+        lookAhead,
+      }),
     [dataset, plannedTrees, startingClothes, mode, lookAhead],
   );
 
@@ -172,7 +265,7 @@ export function useRoutePlan(
       const plannedTree = buildRecipeTree(dataset, planned.id);
       return (
         plannedTree !== null &&
-        buildRoutes(dataset, [plannedTree], { startingClothes }).routes.length === 0
+        buildRoutesCached(dataset, [plannedTree], { startingClothes }).routes.length === 0
       );
     });
   }, [dataset, plannedItems, routePlans, startingClothes]);
@@ -188,6 +281,10 @@ export function useRoutePlan(
     areaCount,
     recipeAreaCount,
     routes: routePlans.routes,
+    /** The reader's own trace, in `manual` mode; `null` otherwise. */
+    manualRoute: manual?.route ?? null,
+    /** True when that trace finishes the plan. */
+    manualComplete: manual?.complete ?? false,
     routesTruncated: routePlans.truncated,
     inventoryBlocked: routePlans.inventoryBlocked,
     assumed: routePlans.assumed,

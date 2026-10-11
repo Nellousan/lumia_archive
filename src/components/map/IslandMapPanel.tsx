@@ -4,6 +4,7 @@ import { AreaDetailPanel } from "@/components/area/AreaDetailPanel";
 import type { BookmarkEntry } from "@/components/bookmarks/BookmarkBar";
 import { BookmarkBar } from "@/components/bookmarks/BookmarkBar";
 import { IslandMap } from "./IslandMap";
+import type { ManualTrace } from "./IslandMap";
 import type { StepOverlay } from "@/hooks/useStepOverlay";
 import type { BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus, MapOverlayMode } from "@/lib/wiki/route";
@@ -40,6 +41,8 @@ export interface IslandMapPanelProps {
   activeRoute: RoutePlan | null;
   /** The active route's steps, whose bubbles replace the material ones. */
   stepOverlay: StepOverlay | null;
+  /** Set while the reader traces their own route by clicking areas. */
+  manualTrace: ManualTrace | null;
   activeItemId: string | null;
   /** The planning set, shown above the island. */
   bookmarks: BookmarkEntry[];
@@ -77,6 +80,7 @@ export function IslandMapPanel({
   focus,
   activeRoute,
   stepOverlay,
+  manualTrace,
   activeItemId,
   bookmarks,
   onBookmarkEntryClick,
@@ -141,6 +145,7 @@ export function IslandMapPanel({
             focus={focus}
             activeRoute={activeRoute}
             stepOverlay={stepOverlay}
+            manualTrace={manualTrace}
             hoveredAreaId={hoveredAreaId}
             activeAreaId={selectedArea?.id ?? null}
             onHoverArea={onHoverArea}

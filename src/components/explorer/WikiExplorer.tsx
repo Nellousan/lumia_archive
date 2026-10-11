@@ -20,7 +20,7 @@ import { plannedItemsFor } from "@/lib/wiki/plan";
 import { scrollWithinScroller } from "@/lib/scroll";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
-import { DEFAULT_LOOK_AHEAD, type RouteMode } from "@/lib/wiki/routes";
+import { DEFAULT_LOOK_AHEAD, type RouteModeChoice } from "@/lib/wiki/routes";
 import { buildSharedUrl, readSharedUrl } from "@/lib/wiki/share";
 import type {
   AreaItemRef,
@@ -56,20 +56,22 @@ const TWO_COLUMN_QUERY = "(min-width: 1024px)";
 const NO_ITEMS: AreaItemRef[] = [];
 const NO_ANIMALS: WikiAnimal[] = [];
 const NO_CRAFTABLES: WikiItem[] = [];
+/** No walk on screen: a stable empty, so the URL effect does not rewrite itself. */
+const NO_AREAS: string[] = [];
 
 /**
  * What identifies a plan: the items it gathers, in order, then the three settings
  * the solver reads.
  *
- * A pinned route, and the route a shared link names, only ever refer to one of
- * these — so both are dropped the moment the plan moves on underneath them. The
- * link's own key is worked out with this from the query alone, before the state it
- * describes exists.
+ * A pinned route only ever refers to one of these, so it is dropped the moment the
+ * plan moves on underneath it — the walk a shared link names lives in its own
+ * state and is not keyed by this, because a walk is a set of areas rather than a
+ * position in a list, and the reader keeps editing it as the plan changes.
  */
 function planKeyOf(
   itemIds: string[],
   startingClothes: string | null,
-  mode: RouteMode,
+  mode: RouteModeChoice,
   lookAhead: number,
 ): string {
   return `${itemIds.join("|")}#${startingClothes ?? ""}#${mode}${lookAhead}`;
@@ -144,8 +146,37 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   const [hoveredRouteId, setHoveredRouteId] = useState<string | null>(null);
   /** Clothes picked before the match; empty means the survivor starts bare. */
   const [startingClothes, setStartingClothes] = useState<string | null>(null);
-  /** Fastest by distance, or greedy for value worn early. */
-  const [routeMode, setRouteMode] = useState<RouteMode>("fastest");
+  /** Fastest by distance, greedy for value worn early, or the reader's own trace. */
+  const [routeMode, setRouteMode] = useState<RouteModeChoice>("fastest");
+  /**
+   * The areas the reader clicked while tracing by hand, in visit order.
+   *
+   * Kept apart from the mode rather than inside it: switching to `fastest` and
+   * back should find the trace where it was left, and the solver keeps answering
+   * for the plan either way. A link that names a walk arrives here too — a shared
+   * route *is* a trace, prefilled.
+   */
+  const [manualAreaIds, setManualAreaIds] = useState<string[]>([]);
+
+  /** A click on an area adds it to the trace, or takes it out. */
+  const toggleManualArea = useCallback((areaId: string) => {
+    setManualAreaIds((previous) =>
+      previous.includes(areaId) ? previous.filter((id) => id !== areaId) : [...previous, areaId],
+    );
+  }, []);
+
+  const clearManualTrace = useCallback(() => setManualAreaIds([]), []);
+
+  /**
+   * Changing mode drops the hovered route with the list that drawn it: the rows
+   * unmount without a mouseleave, and a hover left behind would keep a route
+   * tinted on an island that is no longer showing one.
+   */
+  const handleModeChange = useCallback((mode: RouteModeChoice) => {
+    setHoveredRouteId(null);
+    setRouteMode(mode);
+  }, []);
+
   const [lookAhead, setLookAhead] = useState(DEFAULT_LOOK_AHEAD);
   /**
    * The route the reader pinned, if they have touched one for this plan.
@@ -158,14 +189,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     null,
   );
   /**
-   * The route a shared link named, as a number in the list its plan produces.
-   *
-   * It is carried with the plan key worked out *from the link*, because the render
-   * that applies the link has not happened yet, and resolved to an id later — see
-   * {@link linkedRouteId}.
-   */
-  const [linkedRoute, setLinkedRoute] = useState<{ planKey: string; number: number } | null>(null);
-  /**
    * False until the address bar has been read.
    *
    * The plan in it is adopted by the effect below, and written back by the one
@@ -173,6 +196,18 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
    * commit, and overwrite the query with the empty state it was about to replace.
    */
   const [linkApplied, setLinkApplied] = useState(false);
+  /**
+   * The plan an arriving link named a walk for, by its plan key.
+   *
+   * Held as the *identity of the plan the link described* rather than as a flag to
+   * be cleared: the trace is drawn far down the rail — below the catalogue, the
+   * crafting half of the item and the routes panel — so a link that carries one
+   * scrolls the rail to it rather than leaving the reader at an item's recipe with
+   * their route off screen. Booking a bookmark moves the plan on, which is what
+   * spends the reveal: the rail is scrolled once, on arrival, and never again by
+   * the reader's own edits.
+   */
+  const [linkedWalk, setLinkedWalk] = useState<string | null>(null);
 
   /** The rail's "Used to craft" section, for a link that wants it at the top. */
   const usedToCraftRef = useRef<HTMLDivElement | null>(null);
@@ -217,32 +252,43 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     if (shared.itemId !== null) selectItem(shared.itemId);
     setBookmarks(shared.bookmarkIds);
     setStartingClothes(shared.startingClothes);
-    setRouteMode(shared.mode);
-    setLookAhead(shared.lookAhead);
+
+    /*
+     * A link that names a walk opens on it: the manual mode, with the walk's areas
+     * as the trace. That is the whole of what the link says about the route — the
+     * ranking mode and the look-ahead are not in the payload any more, so a link
+     * that names no walk leaves this screen on the defaults it would have had.
+     *
+     * The reader can then keep editing the trace, which is the point: a shared
+     * route is a route to start from, not a picture of one.
+     */
+    if (shared.routeAreaIds.length > 0) {
+      setManualAreaIds(shared.routeAreaIds);
+      setRouteMode("manual");
+      // The plan the link describes, in the order `plannedItems` will build it: the
+      // open item first, then the bookmarks it is not already.
+      const planned =
+        shared.itemId === null
+          ? shared.bookmarkIds
+          : [shared.itemId, ...shared.bookmarkIds.filter((id) => id !== shared.itemId)];
+      // The look-ahead is the default, because the payload no longer carries one:
+      // the arriving screen is on it, and this has to key the same plan the render
+      // below will compute — hence the constant rather than the state, which would
+      // make this one-shot read of the address bar depend on a value it sets.
+      setLinkedWalk(planKeyOf(planned, shared.startingClothes, "manual", DEFAULT_LOOK_AHEAD));
+    }
 
     /*
      * What the arriving link is asking to be shown.
      *
      * An item is open, so the reader came for that item: the catalogue above is not
      * what they want to read first, and the rail is brought down to its crafting
-     * work. A link that also names a route, though, asks for the route — the list
-     * scrolls to that itself, and the effect below stands aside for it. A plan of
-     * bookmarks alone has no item to open, so it keeps the default top.
+     * work. A plan of bookmarks alone has no item to open, so it keeps the default
+     * top. A walk outranks both: that is the thing the link is about, and the trace
+     * row scrolls itself into view — standing aside here is what lets it.
      */
-    arrivalScroll.current = shared.itemId !== null ? "crafting" : null;
-
-    if (shared.routeNumber !== null) {
-      // The plan the link describes, in the same order `plannedItems` will build:
-      // the open item first, then the bookmarks it is not already.
-      const planned =
-        shared.itemId === null
-          ? shared.bookmarkIds
-          : [shared.itemId, ...shared.bookmarkIds.filter((id) => id !== shared.itemId)];
-      setLinkedRoute({
-        planKey: planKeyOf(planned, shared.startingClothes, shared.mode, shared.lookAhead),
-        number: shared.routeNumber,
-      });
-    }
+    arrivalScroll.current =
+      shared.routeAreaIds.length > 0 ? null : shared.itemId !== null ? "crafting" : null;
   }, [dataset, selectItem, setBookmarks]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -264,6 +310,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     lookAhead,
     islandWidth,
     showAnimalDrops,
+    manualAreaIds,
   });
 
   /** Named once per plan: the route panel is memoized, and a fresh array defeats it. */
@@ -291,6 +338,13 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     routeMode,
     lookAhead,
   );
+
+  /**
+   * True while the screen is still showing the plan an arriving link named a walk
+   * for — the one visit that scrolls the rail down to the trace; see
+   * {@link linkedWalk}.
+   */
+  const revealWalk = linkedWalk !== null && linkedWalk === planKey;
 
   /**
    * What the island's random-spawn box highlights: everything the plan is about,
@@ -337,38 +391,20 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     ? (dataset.animalsByAreaId[selectedAreaId] ?? NO_ANIMALS)
     : NO_ANIMALS;
 
-  /**
-   * Where the route a link named sits in the list *this* plan produces. The number
-   * is a rank, so it only means something next to the plan it was ranked in; a plan
-   * that has moved on resolves to nothing and the highlight lets go on its own.
-   */
-  const linkedRouteId =
-    linkedRoute && linkedRoute.planKey === planKey
-      ? (route.routes[linkedRoute.number - 1]?.id ?? null)
-      : null;
-
   /** `undefined` until the reader touches a route for this plan, `null` once they clear it. */
   const readerRouteId =
     readerRoute && readerRoute.planKey === planKey ? readerRoute.routeId : undefined;
 
   /** Hover wins over nothing; a pinned route outlives the pointer leaving the row. */
-  const pinnedRouteId = readerRouteId === undefined ? linkedRouteId : readerRouteId;
-  /** A link opens the list onto its route: the fold lifts, the row scrolls into view. */
-  const revealRouteId = linkedRouteId;
+  const pinnedRouteId = readerRouteId ?? null;
 
   /**
-   * Brings that section to the top of the rail.
+   * Brings the crafting section to the top of the rail.
    *
    * Adopting the link only *schedules* the plan; this runs in the commit after it,
    * which is the first one that has the section on screen at all. The intent is
    * spent on the way in, so a reader who scrolls afterwards is never pulled back to
    * it, and a link that asked for nothing leaves the rail where it is.
-   *
-   * A route the link named outranks it: that is what the reader came to see, and
-   * the route list has already scrolled to it — child effects run before this one,
-   * so stepping aside here is enough to let it stand. A rank the list no longer
-   * reaches resolves to nothing, and the item the link also opened is then the
-   * thing to show.
    *
    * The move is confined to the pane the section lives in. `scrollIntoView` would
    * scroll the document as well, which is how the section ended up under the header
@@ -377,21 +413,48 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   useEffect(() => {
     if (!linkApplied || arrivalScroll.current === null) return;
     arrivalScroll.current = null;
-    if (revealRouteId !== null) return;
     scrollWithinScroller(usedToCraftRef.current, "start");
-  }, [linkApplied, revealRouteId]);
+  }, [linkApplied]);
 
   const activeRouteId = pinnedRouteId ?? hoveredRouteId;
   const activeRoute = activeRouteId
     ? (route.routes.find((candidate) => candidate.id === activeRouteId) ?? null)
     : null;
 
-  /** The rank of the highlighted route, which is how the URL names it. */
-  const pinnedRank = useMemo(() => {
-    if (pinnedRouteId === null) return null;
-    const index = route.routes.findIndex((candidate) => candidate.id === pinnedRouteId);
-    return index === -1 ? null : index + 1;
-  }, [pinnedRouteId, route.routes]);
+  /**
+   * Tracing by hand: the rail shows the trace instead of the route list, and the
+   * island draws it itself rather than through the `activeRoute` machinery.
+   *
+   * The two are kept apart on purpose. `activeRoute` is an *answer* — it dims
+   * everything off its path and replaces the material bubbles with its steps —
+   * while a trace is still being chosen, so the areas the reader might click next
+   * have to stay lit and readable. Only the trace's own stops are tinted.
+   */
+  const manualMode = routeMode === "manual";
+  const railedRoute = manualMode ? route.manualRoute : activeRoute;
+  const manualTrace = useMemo(
+    () => (manualMode ? { plan: route.manualRoute, onToggleArea: toggleManualArea } : null),
+    [manualMode, route.manualRoute, toggleManualArea],
+  );
+
+  /** The pinned route itself, which is the walk the URL describes. */
+  const pinnedRoute = useMemo(
+    () => (pinnedRouteId ? (route.routes.find((candidate) => candidate.id === pinnedRouteId) ?? null) : null),
+    [pinnedRouteId, route.routes],
+  );
+
+  /**
+   * The walk the URL describes: the trace being drawn by hand, or the computed
+   * route the reader pinned. One slot, whichever is on screen — a shared link
+   * names a walk, and both kinds of walk are the same thing to the reader.
+   *
+   * The trace is written from the *walked* areas rather than the clicked ones, so
+   * a link that named an area this build cannot draw is written back without it
+   * rather than carrying a stop that is not there.
+   */
+  const sharedRouteAreaIds = manualMode
+    ? (route.manualRoute?.areaIds ?? NO_AREAS)
+    : (pinnedRoute?.areaIds ?? NO_AREAS);
 
   /**
    * The address bar *is* the plan.
@@ -415,9 +478,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
         itemId: activeItem?.id ?? null,
         bookmarkIds: bookmarks.ids,
         startingClothes,
-        mode: routeMode,
-        lookAhead,
-        routeNumber: pinnedRank,
+        routeAreaIds: sharedRouteAreaIds,
       },
       dataset,
     );
@@ -429,13 +490,19 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     activeItem?.id,
     bookmarks.ids,
     startingClothes,
-    routeMode,
-    lookAhead,
-    pinnedRank,
+    sharedRouteAreaIds,
   ]);
 
-  /** Bubbles for a highlighted route: what is picked up and built at each step. */
-  const stepOverlay = useStepOverlay(activeRoute, dataset.map, islandWidth);
+  /**
+   * Bubbles for a highlighted route: what is picked up and built at each step.
+   *
+   * A trace gets none: its stops are the areas the reader just clicked, and the
+   * map's own bubbles are what they are choosing between — replacing those with
+   * step cards would take the question away while it is being asked. What the trace
+   * does at a stop is drawn *into* that stop's material bubble instead; see
+   * `AreaBubbleCard`'s `step`.
+   */
+  const stepOverlay = useStepOverlay(manualMode ? null : activeRoute, dataset.map, islandWidth);
 
   /** Clicking the highlight again lets it go; the pointer keeps it alive meanwhile. */
   const handleSelectRoute = useCallback(
@@ -448,32 +515,42 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
   );
 
   /**
-   * The link to the plan on screen, with `routeNumber` picking one walk out of the
-   * list that plan produces.
+   * The link to one walk.
    *
    * It is built from the live state rather than read back out of the address bar,
-   * because the bar carries the *pinned* route and this row may not be it. One
+   * because the bar carries the *pinned* walk and this row may not be it. One
    * function builds both, so the link that is copied and the URL that is shown
-   * cannot drift apart.
+   * cannot drift apart — and it takes the walk's areas rather than a position in
+   * the list, because a position is only meaningful next to the code that ranked
+   * it.
    */
   const handleShareRoute = useCallback(
-    async (routeNumber: number) => {
+    async (routeAreaIds: string[]) => {
       const link = buildSharedUrl(
         window.location.href,
         {
           itemId: activeItem?.id ?? null,
           bookmarkIds: bookmarks.ids,
           startingClothes,
-          mode: routeMode,
-          lookAhead,
-          routeNumber,
+          routeAreaIds,
         },
         dataset,
       );
       return copyText(link);
     },
-    [dataset, activeItem?.id, bookmarks.ids, startingClothes, routeMode, lookAhead],
+    [dataset, activeItem?.id, bookmarks.ids, startingClothes],
   );
+
+  /**
+   * A route the solver found, handed to the manual mode: its areas become the trace
+   * and the reader edits from there. The panel does not move — the trace takes the
+   * list's place where the list already was — so nothing is scrolled.
+   */
+  const handleOpenManual = useCallback((routeAreaIds: string[]) => {
+    setHoveredRouteId(null);
+    setManualAreaIds(routeAreaIds);
+    setRouteMode("manual");
+  }, []);
 
   /** Changing item, from either entry point, clears the map focus. */
   const handleSelectFromCatalog = useCallback(
@@ -601,21 +678,25 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       inventoryBlocked={route.inventoryBlocked}
       assumed={route.assumed}
       nothingToGather={route.nothingToGather}
-      activeRouteId={activeRoute?.id ?? null}
+      activeRouteId={railedRoute?.id ?? null}
       planKey={planKey}
       startingClothes={startingClothes}
       startingOptions={startingOptions}
       onStartingClothesChange={setStartingClothes}
       mode={routeMode}
-      onModeChange={setRouteMode}
+      onModeChange={handleModeChange}
       lookAhead={lookAhead}
       onLookAheadChange={setLookAhead}
       onHoverRoute={setHoveredRouteId}
       onSelectRoute={handleSelectRoute}
       onSelectArea={setSelectedAreaId}
       onSelectItem={handleFollowLink}
-      revealRouteId={revealRouteId}
       onShareRoute={handleShareRoute}
+      manualRoute={route.manualRoute}
+      manualComplete={route.manualComplete}
+      onClearManual={clearManualTrace}
+      onOpenManual={handleOpenManual}
+      revealWalk={revealWalk}
     />
     ) : null;
 
@@ -722,8 +803,9 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           overlayMode={route.overlayMode}
           hasPlan={plannedItems.length > 0}
           focus={focus}
-          activeRoute={activeRoute}
-          stepOverlay={stepOverlay}
+          activeRoute={manualMode ? null : activeRoute}
+          stepOverlay={manualMode ? null : stepOverlay}
+          manualTrace={manualTrace}
           activeItemId={activeItem?.id ?? null}
           bookmarks={bookmarkEntries}
           onBookmarkEntryClick={handleBookmarkEntryClick}

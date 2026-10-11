@@ -3,7 +3,7 @@
 import { RoutePlanList } from "./RoutePlanList";
 import { PaneDivider } from "@/components/ui/PaneDivider";
 import { ItemSprite } from "@/components/ui/ItemSprite";
-import { MAX_LOOK_AHEAD, type RouteMode, type RoutePlan } from "@/lib/wiki/routes";
+import { MAX_LOOK_AHEAD, type RouteModeChoice, type RoutePlan } from "@/lib/wiki/routes";
 import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RoutePlanPanelProps {
@@ -29,9 +29,17 @@ export interface RoutePlanPanelProps {
   /** The clothes that can be picked as a starting piece. */
   startingOptions: WikiItem[];
   onStartingClothesChange: (itemId: string | null) => void;
-  /** `fastest` walks the fewest areas; `greedy` gets value worn soonest. */
-  mode: RouteMode;
-  onModeChange: (mode: RouteMode) => void;
+  /** `fastest` walks the fewest areas; `greedy` gets value worn soonest; `manual` is the reader's own trace. */
+  mode: RouteModeChoice;
+  onModeChange: (mode: RouteModeChoice) => void;
+  /** The stops the reader clicked, in `manual` mode. `null` before the first. */
+  manualRoute: RoutePlan | null;
+  /** True when that trace finishes the plan. */
+  manualComplete: boolean;
+  /** Empties the trace. */
+  onClearManual: () => void;
+  /** True on the visit that arrived on a link naming a walk; see the list. */
+  revealWalk: boolean;
   /** How many areas greedy looks ahead, counting the first. */
   lookAhead: number;
   onLookAheadChange: (lookAhead: number) => void;
@@ -40,10 +48,15 @@ export interface RoutePlanPanelProps {
   onSelectArea: (areaId: string) => void;
   /** Opens a food from a route's "also cookable" row. */
   onSelectItem: (itemId: string) => void;
-  /** The route a shared link named, so the list opens to it. */
-  revealRouteId: string | null;
-  /** Copies a link to the route at this 1-based rank. */
-  onShareRoute: (routeNumber: number) => Promise<boolean>;
+  /**
+   * Copies a link to one walk, named by its areas.
+   *
+   * Areas rather than a rank: the link has to mean the same thing in a build that
+   * ranks routes differently, which a position in the list cannot promise.
+   */
+  onShareRoute: (routeAreaIds: string[]) => Promise<boolean>;
+  /** Hands one computed walk to the manual mode, as the trace to start editing from. */
+  onOpenManual: (routeAreaIds: string[]) => void;
 }
 
 /**
@@ -68,21 +81,28 @@ export function RoutePlanPanel({
   onStartingClothesChange,
   mode,
   onModeChange,
+  manualRoute,
+  manualComplete,
+  onClearManual,
+  revealWalk,
   lookAhead,
   onLookAheadChange,
   onHoverRoute,
   onSelectRoute,
   onSelectArea,
   onSelectItem,
-  revealRouteId,
   onShareRoute,
+  onOpenManual,
 }: RoutePlanPanelProps) {
   const startingItem = startingClothes ? (startingOptions.find((item) => item.id === startingClothes) ?? null) : null;
   const lookAheadOptions = Array.from({ length: MAX_LOOK_AHEAD }, (_, index) => index + 1);
+  const manual = mode === "manual";
 
   return (
     <section className="shrink-0 px-4 pb-6 sm:px-6">
-      <PaneDivider label={mode === "greedy" ? "Greedy routes" : "Fastest routes"} />
+      <PaneDivider
+        label={manual ? "Manual route" : mode === "greedy" ? "Greedy routes" : "Fastest routes"}
+      />
 
       {/* What the survivor is already wearing on the first move changes which
           areas are worth visiting, so it belongs with the routes, not with the
@@ -123,6 +143,7 @@ export function RoutePlanPanel({
               [
                 ["fastest", "Fastest"],
                 ["greedy", "Greedy"],
+                ["manual", "Manual"],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -133,7 +154,9 @@ export function RoutePlanPanel({
                 title={
                   value === "fastest"
                     ? "Walk the fewest areas"
-                    : "Be worth the most, soonest — a longer walk can win"
+                    : value === "greedy"
+                      ? "Be worth the most, soonest — a longer walk can win"
+                      : "Trace your own route by clicking areas on the island"
                 }
                 className={`flex-1 rounded-md border px-2 py-1 text-[11px] font-semibold transition ${
                   mode === value
@@ -169,18 +192,17 @@ export function RoutePlanPanel({
       </div>
 
       <RoutePlanList
-        // The reveal is part of the identity: a route arriving from a link mounts a
-        // list that already knows to open onto it, rather than one that has to be
-        // talked into it after the fact.
-        key={`${planKey}#${revealRouteId ?? ""}`}
-        routes={routes}
+        // The plan is the identity: a new one starts on its own fold, rather than
+        // inheriting the one the reader left open on the plan before it.
+        key={planKey}
+        routes={manual ? (manualRoute ? [manualRoute] : []) : routes}
         plannedCount={plannedCount}
-        truncated={truncated}
+        truncated={manual ? false : truncated}
         unobtainableNames={unobtainableNames}
         inventoryBlocked={inventoryBlocked}
         assumed={assumed}
         nothingToGather={nothingToGather}
-        activeRouteId={activeRouteId}
+        activeRouteId={manual ? (manualRoute?.id ?? null) : activeRouteId}
         startingItem={startingItem}
         mode={mode}
         lookAhead={lookAhead}
@@ -188,8 +210,12 @@ export function RoutePlanPanel({
         onSelectRoute={onSelectRoute}
         onSelectArea={onSelectArea}
         onSelectItem={onSelectItem}
-        revealRouteId={revealRouteId}
         onShareRoute={onShareRoute}
+        onOpenManual={onOpenManual}
+        revealWalk={revealWalk}
+        manual={manual}
+        manualComplete={manualComplete}
+        onClearManual={onClearManual}
       />
     </section>
   );

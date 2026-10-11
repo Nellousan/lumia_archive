@@ -131,6 +131,17 @@ export interface RoutePlan {
  */
 export type RouteMode = "fastest" | "greedy";
 
+/**
+ * What the reader picked above the list.
+ *
+ * `manual` is not a way of ranking: nothing is searched and nothing is compared —
+ * the areas are the ones the reader clicked, and {@link buildManualRoute} walks
+ * them in that order. It is kept out of {@link RouteMode} deliberately, so a
+ * `manual` that leaked into {@link buildRoutes} cannot typecheck while quietly
+ * meaning fastest.
+ */
+export type RouteModeChoice = RouteMode | "manual";
+
 export interface RouteOptions {
   /**
    * Clothes the survivor is already wearing on the first move, or `null`. It
@@ -881,6 +892,34 @@ class Pack {
 }
 
 /**
+ * True when these steps have picked up and built everything the plan asks for.
+ *
+ * Crafts are counted as *crafts*, not as the units they hand over: one craft
+ * makes `defaultQuantity` of an item, which is what `craftNeed` counts.
+ */
+function planDone(plan: SimPlan, steps: RouteStep[]): boolean {
+  const gathered = new Map<string, number>();
+  const crafted = new Map<string, number>();
+  for (const step of steps) {
+    for (const collection of stepGathers(step)) {
+      gathered.set(collection.item.id, (gathered.get(collection.item.id) ?? 0) + collection.quantity);
+    }
+    for (const action of step.actions) {
+      if (action.kind !== "craft") continue;
+      crafted.set(action.craft.item.id, (crafted.get(action.craft.item.id) ?? 0) + 1);
+    }
+  }
+
+  for (const [itemId, need] of plan.gather) {
+    if ((gathered.get(itemId) ?? 0) < need.quantity) return false;
+  }
+  for (const [itemId, need] of plan.craftNeed) {
+    if ((crafted.get(itemId) ?? 0) < need) return false;
+  }
+  return true;
+}
+
+/**
  * Walks one area order, gathering and building as it goes.
  *
  * The rule is *build as soon as the ingredients are in the pack*, which is both
@@ -888,8 +927,10 @@ class Pack {
  * shows at each step. Nothing is ever packed beyond six bag slots; gear that can
  * be worn is worn to make room, and gear whose slot is taken just sits in the bag.
  *
- * Returns `null` when the order cannot finish the plan — either an area holding
- * something still needed had no room for it, or a craft never became possible.
+ * Returns `null` when the order cannot finish the plan — unless `allowIncomplete`
+ * is set, which is how a reader tracing their own route is shown the stops they
+ * have clicked so far rather than an empty map. The steps themselves are the same
+ * either way: an unfinished trace is a prefix of the walk, not a different one.
  */
 function runRoute(
   dataset: WikiDataset,
@@ -898,6 +939,7 @@ function runRoute(
   startingClothes: string | null,
   assumed: ReadonlyMap<string, WikiItem>,
   weaponTypes: ReadonlySet<string>,
+  allowIncomplete = false,
 ): RouteStep[] | null {
   const pack = new Pack(dataset, weaponTypes);
   if (startingClothes && dataset.itemsById[startingClothes]) pack.startWearing(startingClothes);
@@ -972,12 +1014,7 @@ function runRoute(
     });
   }
 
-  for (const [itemId, need] of plan.gather) {
-    if ((gathered.get(itemId) ?? 0) < need.quantity) return null;
-  }
-  for (const [itemId, need] of plan.craftNeed) {
-    if ((crafted.get(itemId) ?? 0) < need) return null;
-  }
+  if (!planDone(plan, steps) && !allowIncomplete) return null;
 
   return steps;
 }
@@ -1290,6 +1327,65 @@ function* orderings(cover: WikiArea[], budget: { left: number }): Generator<Wiki
 }
 
 /**
+ * The same solve, remembered — one answer per plan, per set of settings.
+ *
+ * `buildRoutes` is the expensive half of this screen: it sweeps covers and walks
+ * several orders per cover, and a three-item plan costs a visible moment of it. The
+ * same questions are asked over and over — switching the ranking mode and back,
+ * entering manual mode (which solves the fastest list so a trace has a number to be
+ * measured against), and returning to a plan already seen — and every one of those
+ * was a fresh sweep.
+ *
+ * A plan is identified by **what it asks for**, not by the array it arrives in: the
+ * recipe trees are a pure function of the dataset and the planned item ids, so two
+ * trees built for the same plan are the same question, and a development double
+ * render rebuilding the array must not cost a second sweep. The settings key is the
+ * rest of what the solve reads, so another mode, look-ahead or starting armor is a
+ * different question and gets its own entry. The datasets are keyed apart by
+ * identity, which costs nothing and keeps one process holding two of them honest.
+ *
+ * The result is shared, so it is treated as read-only by everyone who gets it —
+ * which is what a `RoutePlanSet` already is: nothing in the app mutates one.
+ */
+const SOLVED = new WeakMap<WikiDataset, Map<string, Map<string, RoutePlanSet>>>();
+
+/**
+ * Plans kept per dataset. A session works through a handful — the item it opened,
+ * the bookmarks it tried — and an unbounded map would hold every plan ever solved
+ * for the life of the page. Oldest first: the plan a reader has moved away from is
+ * the one they are least likely to ask for again.
+ */
+const MAX_SOLVED_PLANS = 24;
+
+export function buildRoutesCached(
+  dataset: WikiDataset,
+  trees: RecipeNode[],
+  options: RouteOptions = {},
+): RoutePlanSet {
+  const planKey = trees.map((tree) => `${tree.item.id}x${tree.quantity}`).join("|");
+  const settings = `${options.startingClothes ?? ""}#${options.mode ?? "fastest"}#${options.lookAhead ?? DEFAULT_LOOK_AHEAD}`;
+
+  let byPlan = SOLVED.get(dataset);
+  if (!byPlan) {
+    byPlan = new Map();
+    SOLVED.set(dataset, byPlan);
+  }
+  let bySettings = byPlan.get(planKey);
+  if (!bySettings) {
+    bySettings = new Map();
+    byPlan.set(planKey, bySettings);
+    if (byPlan.size > MAX_SOLVED_PLANS) byPlan.delete(byPlan.keys().next().value as string);
+  }
+
+  const hit = bySettings.get(settings);
+  if (hit) return hit;
+
+  const solved = buildRoutes(dataset, trees, options);
+  bySettings.set(settings, solved);
+  return solved;
+}
+
+/**
  * Fewest areas needed to obtain every item behind `trees`, sorted fastest first.
  *
  * Returns every inclusion-minimal cover that a survivor can actually walk: a
@@ -1423,5 +1519,113 @@ export function buildRoutes(
     inventoryBlocked: routes.length === 0 && masks.length > 0 && unreachable === 0,
     assumed: [...assumed.values()].sort((a, b) => a.name.localeCompare(b.name)),
     nothingToGather: false,
+  };
+}
+
+/** A route the reader traced by clicking areas, walked exactly like a computed one. */
+export interface ManualRoute {
+  /** The stops so far, in click order, in the same shape the solver returns. */
+  route: RoutePlan | null;
+  /**
+   * Units of each item the trace has picked up so far, by item id — what the
+   * island takes off its bubbles as the reader walks.
+   */
+  gathered: Record<string, number>;
+  /**
+   * Units of each item the plan has to *gather*, by item id — the walk's own
+   * requirement, and the number the island counts a material against.
+   *
+   * It is deliberately not the material list's totals. That list walks the whole
+   * recipe tree, so it counts both a craftable node and the ingredients it could be
+   * built from, and a material several planned items share is summed again for each
+   * of them; the plan, by contrast, has picked one branch per item. Comparing what
+   * was gathered against the tree's totals is how a walk that had already collected
+   * its Scrap Metal went on showing Scrap Metal on every other bubble.
+   *
+   * An item with no entry here is not something the walk collects at all: an
+   * intermediate it builds, or the armor the survivor walks in with.
+   */
+  required: Record<string, number>;
+  /** True when the stops traced so far finish everything the plan needs. */
+  complete: boolean;
+}
+
+/**
+ * Walks an area order the reader clicked into the route a solver would have
+ * returned, so the rail and the island can treat the two identically.
+ *
+ * Two things are deliberately unlike {@link buildRoutes}:
+ *
+ * Sourcing is decided against the **whole island**, not against the stops traced
+ * so far. A trace is a walk in progress, and deciding "gathered or built" from the
+ * few areas clicked so far would make the plan unreachable at the first click —
+ * nothing would be gathered anywhere until the trace happened to cover every
+ * ingredient at once. Deciding it up front instead means a stop picks up what it
+ * holds and builds whatever its materials allow, which is what a reader tracing a
+ * route expects to see.
+ *
+ * The order is not searched, and an unfinished trace is not an error: the reader
+ * is mid-walk, so the stops they have clicked come back as they are, with
+ * `complete` saying whether the plan is finished yet. An empty order is not an
+ * error either — that is the reader who has picked the mode and not clicked
+ * anything — and it still answers with the requirement, so the island can show what
+ * a walk would have to collect before there is one.
+ *
+ * A stop the image map does not carry is dropped: an area with no polygon has
+ * nowhere to be drawn and no anchor for its bubble, so it cannot be a stop. This
+ * is also the filter a walk arriving from a link passes through, since the link's
+ * areas are only checked against the dataset, not against the map.
+ */
+export function buildManualRoute(
+  dataset: WikiDataset,
+  trees: RecipeNode[],
+  areaIds: string[],
+  options: { startingClothes?: string | null } = {},
+): ManualRoute | null {
+  if (trees.length === 0) return null;
+
+  const order = areaIds
+    .map((areaId) => dataset.areasById[areaId])
+    .filter((area): area is WikiArea => area !== undefined && area.mapped);
+
+  const startingClothes =
+    options.startingClothes && dataset.itemsById[options.startingClothes]
+      ? options.startingClothes
+      : null;
+
+  const requirements = trees.map(toRequirement);
+  const assumed = assumedItems(dataset, requirements);
+  const candidates = candidateAreas(dataset, requirements);
+
+  const plan = compilePlan(
+    requirements,
+    new Set(candidates.map((area) => area.id)),
+    dataset,
+    startingClothes,
+    assumed,
+  );
+  if (!plan) return null;
+
+  const required: Record<string, number> = {};
+  for (const [itemId, need] of plan.gather) required[itemId] = need.quantity;
+
+  if (order.length === 0) return { route: null, gathered: {}, required, complete: false };
+
+  const weaponTypes = planWeaponTypes(trees.map((tree) => tree.item));
+  const steps = runRoute(dataset, plan, order, startingClothes, assumed, weaponTypes, true);
+  if (!steps) return null;
+
+  const gathered: Record<string, number> = {};
+  for (const step of steps) {
+    for (const collection of stepGathers(step)) {
+      gathered[collection.item.id] = (gathered[collection.item.id] ?? 0) + collection.quantity;
+    }
+  }
+
+  return {
+    route: toRoute(dataset, order, order, steps, cookableFoods(dataset)),
+    gathered,
+    required,
+    complete: planDone(plan, steps),
   };
 }

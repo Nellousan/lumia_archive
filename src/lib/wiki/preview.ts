@@ -1,8 +1,7 @@
-import { areaCountLabel, itemCountLabel, planTrees, plannedItemsFor } from "./plan";
-import { buildRoutes } from "./routes";
+import { areaCountLabel, itemCountLabel, plannedItemsFor } from "./plan";
 import type { SharedPlan } from "./share";
 import { itemTypeLabel } from "./taxonomy";
-import type { WikiDataset, WikiItem } from "./types";
+import type { WikiArea, WikiDataset, WikiItem } from "./types";
 
 /**
  * What a shared link unfurls into.
@@ -10,10 +9,9 @@ import type { WikiDataset, WikiItem } from "./types";
  * An unfurler is a program that fetches the page and reads its `<head>`; it runs
  * no JavaScript and knows nothing about the plan in the query string. So the card
  * has to be built on the server, from the same payload the reader's browser
- * decodes — including the *route*, which means running the solver for a route link
- * exactly as the page does. Same inputs, same code, same list: `lib/wiki/plan.ts`
- * is shared with the island for that reason, and the check compares the areas in a
- * card against the areas the page draws.
+ * decodes — and that payload now names the walk's own areas, so the route card is
+ * a lookup in `data.json` rather than a solve. An unfurl costs the same whether
+ * the link names one item or a twelve-stop route; nothing here imports the solver.
  */
 
 /** The site's own card, for a link that carries no plan at all. */
@@ -60,7 +58,7 @@ export interface LinkPreview {
 }
 
 /**
- * The card for a plan: the site itself, one item, a plan, or one route of it.
+ * The card for a plan: the site itself, one item, a plan, or one walk of it.
  *
  * The four cases are decided in that order, and the route wins outright — a link
  * that names a route is about the walk, even though it also carries the items the
@@ -80,17 +78,21 @@ export function linkPreview(dataset: WikiDataset, plan: SharedPlan | null): Link
 
   const names = planned.map((item) => item.name).join(", ");
 
-  if (plan.routeNumber !== null) {
-    const route = routeAt(dataset, planned, plan, plan.routeNumber);
-    if (route !== null) {
+  if (plan.routeAreaIds.length > 0) {
+    // The walk as the link names it. An area this build no longer has drops out
+    // the same way an unknown item does; a walk with none of its areas left is
+    // not a walk, and the card falls through to the plan.
+    const areas = plan.routeAreaIds
+      .map((areaId) => dataset.areasById[areaId])
+      .filter((area): area is WikiArea => area !== undefined);
+    if (areas.length > 0) {
       return {
         kind: "route",
-        title: `${TITLE_PREFIX}${itemCountLabel(planned.length)} route (${areaCountLabel(route.steps.length)})`,
-        description: `${names}\n${route.steps.map((step) => step.area.name).join(" → ")}`,
+        title: `${TITLE_PREFIX}${itemCountLabel(planned.length)} route (${areaCountLabel(areas.length)})`,
+        description: `${names}\n${areas.map((area) => area.name).join(" → ")}`,
         image: ROUTE_IMAGE,
       };
     }
-    // A rank the plan no longer reaches is a stale link; the items still stand.
   }
 
   // A plan is several items, or any link whose items are all bookmarks: there is
@@ -111,21 +113,6 @@ export function linkPreview(dataset: WikiDataset, plan: SharedPlan | null): Link
     description: itemDescription(dataset, item),
     image: itemImage(item),
   };
-}
-
-/** The ranked route at `rank`, or `null` when the list does not reach it. */
-function routeAt(
-  dataset: WikiDataset,
-  planned: WikiItem[],
-  plan: SharedPlan,
-  rank: number,
-): ReturnType<typeof buildRoutes>["routes"][number] | null {
-  const { routes } = buildRoutes(dataset, planTrees(dataset, planned), {
-    startingClothes: plan.startingClothes,
-    mode: plan.mode,
-    lookAhead: plan.lookAhead,
-  });
-  return routes[rank - 1] ?? null;
 }
 
 /**

@@ -1,7 +1,7 @@
 "use client";
 
 import { BubbleMaterialCard } from "./BubbleMaterialCard";
-import { BUBBLE_WIDTH, toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
+import { toLayerPosition, BUBBLE_WIDTH, type BubblePlacement } from "@/lib/map-layout";
 import type { AreaBubble, MapFocus } from "@/lib/wiki/route";
 
 export interface AreaBubbleCardProps {
@@ -25,9 +25,20 @@ export interface AreaBubbleCardProps {
    * hovered would lose it — which withdraws the answer, which returns the pointer
    * to that card, which brings the answer back. Measured, that cycle runs every
    * 13ms and the island strobes. Letting the pointer through makes the answer
-   * unable to end the question that asked for it.
+   * unable to end the question that asked it.
+   *
+   * While a route is being traced by hand this is *every* bubble, for a stronger
+   * reason: the polygons are then the only thing a click may reach, and a bubble
+   * that took the pointer could also swallow the entry that fades it.
    */
   passThrough?: boolean;
+  /**
+   * True when the pointer is inside this bubble's own area, under a manual trace:
+   * the bubble steps back so the reader can click the area it is sitting on. Faded
+   * rather than hidden, so the reader keeps seeing what is in the area they are
+   * about to add.
+   */
+  faded?: boolean;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
   onHoverMaterial: (itemId: string | null) => void;
@@ -40,7 +51,11 @@ export interface AreaBubbleCardProps {
  *
  * The material cards themselves are read-only and hover-only — see
  * `BubbleMaterialCard` — so the header is the one control in the bubble, and the
- * count beside it is the number of materials the body draws.
+ * count beside it is the number of cards the body draws. A bubble the pointer
+ * falls through (`passThrough`) has no control at all, and its header is drawn as
+ * text rather than as a button only the keyboard could reach. A traced stop draws
+ * no material bubble at all: it is a step of the walk, and `RouteStepBubbleCard`
+ * draws it the way a highlighted route's steps are drawn.
  *
  * Every size below is in island pixels: the card is drawn inside the map's own
  * coordinate layer, so these numbers are also what the placement solver spaces
@@ -55,6 +70,7 @@ export function AreaBubbleCard({
   routeActive,
   inRoute,
   passThrough = false,
+  faded = false,
   onHoverArea,
   onSelectArea,
   onHoverMaterial,
@@ -67,7 +83,16 @@ export function AreaBubbleCard({
     focus !== null && bubble.cards.some((card) => focus.subtreeIds.includes(card.material.item.id));
   // A highlighted route overrides the material focus: everything off the route
   // fades back, so the path reads at a glance.
-  const dimmed = routeActive ? !inRoute : focus !== null && !containsSupport;
+  const dimmed = faded || (routeActive ? !inRoute : focus !== null && !containsSupport);
+
+  const header = (
+    <>
+      <span className="min-w-0 truncate font-display text-[21px] font-bold uppercase tracking-[0.1em] text-stone-100">
+        {bubble.area.name}
+      </span>
+      <span className="shrink-0 font-mono text-[18px] text-emerald-300/90">{bubble.cards.length}</span>
+    </>
+  );
 
   return (
     <div
@@ -97,18 +122,19 @@ export function AreaBubbleCard({
                   : "border-emerald-300/25 bg-ink-950/80"
         }`}
       >
-        <button
-          type="button"
-          onClick={() => onSelectArea(bubble.area.id)}
-          className="flex w-full items-center justify-between gap-[12px] rounded-[13px] px-[10px] py-[3px] text-left transition hover:bg-white/[0.06]"
-        >
-          <span className="min-w-0 truncate font-display text-[21px] font-bold uppercase tracking-[0.1em] text-stone-100">
-            {bubble.area.name}
-          </span>
-          <span className="shrink-0 font-mono text-[18px] text-emerald-300/90">
-            {bubble.cards.length}
-          </span>
-        </button>
+        {passThrough ? (
+          <div className="flex w-full items-center justify-between gap-[12px] rounded-[13px] px-[10px] py-[3px] text-left">
+            {header}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSelectArea(bubble.area.id)}
+            className="flex w-full items-center justify-between gap-[12px] rounded-[13px] px-[10px] py-[3px] text-left transition hover:bg-white/[0.06]"
+          >
+            {header}
+          </button>
+        )}
 
         <div className="mt-[6px] flex flex-wrap justify-center gap-[8px]">
           {bubble.cards.map((card) => (

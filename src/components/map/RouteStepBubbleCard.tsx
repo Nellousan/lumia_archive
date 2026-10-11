@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { BubbleMaterialCard } from "./BubbleMaterialCard";
-import { ItemFrame } from "@/components/ui/ItemFrame";
-import { BUBBLE_CARD_WIDTH, toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
+import { StepCard } from "./StepCard";
+import { toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
 import { stepCrafts, stepGathers, type RouteStep } from "@/lib/wiki/routes";
 import type { BubbleCard, MapFocus } from "@/lib/wiki/route";
-import type { WikiItem } from "@/lib/wiki/types";
 
 export interface RouteStepBubbleCardProps {
   step: RouteStep;
@@ -38,107 +36,18 @@ export interface RouteStepBubbleCardProps {
    * island answers about one of its stops.
    */
   dimmed: boolean;
+  /**
+   * True when the step is an answer rather than a control, so the pointer falls
+   * straight through it — the manual trace's stops, where the polygons are the only
+   * thing a click may reach, and the entry that fades a bubble has to reach it too.
+   * Its header is then drawn as text rather than as a button only the keyboard
+   * could reach.
+   */
+  passThrough?: boolean;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
   /** Focuses the item while the pointer is on its card; see below. */
   onHoverItem: (itemId: string | null) => void;
-}
-
-interface StepCardProps {
-  item: WikiItem;
-  /** How much the route needs here: the number a route card carries. */
-  quantity: number;
-  /**
-   * How much the area holds, from the plan's material view — or `null` when that
-   * view has no card for this item, which happens for anything the plan assumes is
-   * carried rather than found.
-   */
-  areaQuantity: number | null;
-  /** True for something built here, false for something picked up. */
-  built: boolean;
-  /** True while this card's own item is the focused one. */
-  focused: boolean;
-  onHoverItem: (itemId: string | null) => void;
-}
-
-/**
- * One thing the route does at a stop: a pickup, or a build.
- *
- * The number under a pickup is the amount the *route* needs there, which is not the
- * amount the area holds — the two are different numbers that used to be the same
- * colour, so a reader comparing cards could not tell which question a `×1` was
- * answering. They are told apart by colour: amber is what the route needs, emerald
- * is what the area holds, and that holds across the app — the material cards on the
- * island are emerald for the same reason.
- *
- * Pointing at a card settles it: the number becomes the area's, in emerald, so that
- * everything on screen while a material is hovered is answering the same question.
- * Letting go puts the route's number and its amber back.
- *
- * The accessible name does not switch with it. It stays the action ("Pick up Iron
- * Ore ×2 here"), which is what the card reports.
- *
- * The card is drawn through the same {@link ItemFrame} as a material card, and for
- * the same reason it takes no `onSelect`: a bubble card is something to point at,
- * never something to activate. Clicking one used to open the item in the rail, which
- * made the same gesture mean two different things depending on whether a route was
- * highlighted — a card that answers "where else is this?" while the pointer is on it
- * should not also navigate when the hand moves a pixel first.
- */
-function StepCard({
-  item,
-  quantity,
-  areaQuantity,
-  built,
-  focused,
-  onHoverItem,
-}: StepCardProps) {
-  const [pointing, setPointing] = useState(false);
-  const label = built
-    ? `Build ${item.name}${quantity > 1 ? ` ×${quantity}` : ""} here`
-    : `Pick up ${item.name} ×${quantity} here`;
-  // An item the plan assumes is carried has no card in the area's view, so there is
-  // no area number to borrow and the route's stands.
-  const showsArea = pointing && areaQuantity !== null;
-  const amount = showsArea ? areaQuantity : quantity;
-
-  return (
-    <ItemFrame
-      item={item}
-      label={label}
-      tone={
-        focused
-          ? "inset-ring-amber-300/70 bg-amber-300/20"
-          : built
-            ? "inset-ring-amber-300/50 bg-amber-300/10 hover:inset-ring-amber-200/70 hover:bg-amber-300/20"
-            : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45"
-      }
-      className="gap-[2px] px-[4px] pb-[4px] pt-[7px]"
-      style={{ width: BUBBLE_CARD_WIDTH }}
-      onHover={(itemId) => {
-        // Entering is a non-null id and leaving is null, which is all the pointing
-        // state needs — the frame reports both.
-        setPointing(itemId !== null);
-        onHoverItem(itemId);
-      }}
-      footnote={
-        built ? (
-          // Same marker as the route list: a build, not a pickup.
-          <span aria-hidden="true" className="text-[21px] leading-none text-amber-300">
-            ✦
-          </span>
-        ) : (
-          <span
-            className={`font-mono text-[20px] font-bold leading-none transition-colors ${
-              showsArea ? "text-emerald-300" : "text-amber-300"
-            }`}
-          >
-            ×{amount}
-          </span>
-        )
-      }
-    />
-  );
 }
 
 /**
@@ -168,6 +77,7 @@ export function RouteStepBubbleCard({
   foundCard,
   areaCards,
   dimmed,
+  passThrough = false,
   onHoverArea,
   onSelectArea,
   onHoverItem,
@@ -181,9 +91,25 @@ export function RouteStepBubbleCard({
   const areaQuantityOf = (itemId: string) =>
     areaCards.find((card) => card.material.item.id === itemId)?.quantityInArea ?? null;
 
+  /**
+   * Where in the walk this stop is, what happens there, and how many cards say so —
+   * the same header whether it is a button or the text a traced stop draws.
+   */
+  const header = (
+    <>
+      <span className="grid size-[26px] shrink-0 place-items-center rounded-[7px] bg-amber-300/90 font-mono text-[16px] font-bold text-ink-950">
+        {step.number}
+      </span>
+      <span className="min-w-0 flex-1 truncate font-display text-[21px] font-bold uppercase tracking-[0.1em] text-stone-100">
+        {step.area.name}
+      </span>
+      <span className="shrink-0 font-mono text-[18px] text-emerald-300/90">{total}</span>
+    </>
+  );
+
   return (
     <div
-      className={`pointer-events-auto absolute z-20 transition-opacity ${
+      className={`${passThrough ? "pointer-events-none" : "pointer-events-auto"} absolute z-20 transition-opacity ${
         dimmed ? "opacity-35" : "opacity-100"
       }`}
       style={{
@@ -200,19 +126,19 @@ export function RouteStepBubbleCard({
           active ? "border-amber-300/70 bg-ink-950/92" : "border-amber-300/45 bg-ink-950/88"
         }`}
       >
-        <button
-          type="button"
-          onClick={() => onSelectArea(step.area.id)}
-          className="flex w-full items-center gap-[10px] rounded-[13px] px-[10px] py-[3px] text-left transition hover:bg-white/[0.06]"
-        >
-          <span className="grid size-[26px] shrink-0 place-items-center rounded-[7px] bg-amber-300/90 font-mono text-[16px] font-bold text-ink-950">
-            {step.number}
-          </span>
-          <span className="min-w-0 flex-1 truncate font-display text-[21px] font-bold uppercase tracking-[0.1em] text-stone-100">
-            {step.area.name}
-          </span>
-          <span className="shrink-0 font-mono text-[18px] text-emerald-300/90">{total}</span>
-        </button>
+        {passThrough ? (
+          <div className="flex w-full items-center gap-[10px] rounded-[13px] px-[10px] py-[3px] text-left">
+            {header}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSelectArea(step.area.id)}
+            className="flex w-full items-center gap-[10px] rounded-[13px] px-[10px] py-[3px] text-left transition hover:bg-white/[0.06]"
+          >
+            {header}
+          </button>
+        )}
 
         <div className="mt-[6px] flex flex-wrap justify-center gap-[8px]">
           {crafts.map((built) => (

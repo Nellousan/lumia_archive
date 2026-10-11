@@ -166,11 +166,19 @@ rank in it — see [Sharing a route](#sharing-a-route).
 and the routes answer for: the selected item, then every bookmark. Under it, the PNG artwork with the
 image map overlaid as clickable polygons, and a **bubble anchored over every area that holds a
 material the plan needs** — each bubble names the area and lists one compact card per material found
-there, artwork plus the quantity available. Clicking any material opens it. Clicking an area opens a
+there, artwork plus the quantity available. Pointing at a card is the only thing a card does: it
+widens the answer to every other area holding that material (see *Focusing a material* below), and
+clicking one does nothing at all. Opening a raw material from a bubble was a trap rather than a
+shortcut — a reader comparing areas would click and lose the map they were reading — and the same
+rule holds whether or not a route is highlighted, because both kinds of bubble card are drawn through
+the same `ItemFrame` with no `onSelect`. Clicking an area opens a
 wide slide-over with everything that spawns there; clicking the island outside it — or Escape, or
 the ✕ — closes it.
 Highlight a route and the bubbles swap to that route's steps: **what gets picked up and what gets
-built** at each one, numbered in walk order.
+built** at each one, numbered in walk order. Those step cards are hover-only for the same reason: a
+card that answers "where else is this?" while the pointer is on it must not also navigate when the
+hand moves a pixel first. The random-spawn box is the one place a card still opens something, and on
+purpose — nothing else can reach those items.
 
 **Focusing a material widens up the chain.** Hovering a material in the recipe tree highlights the
 areas holding it *and* the areas holding everything needed to craft it: strong amber for the
@@ -868,6 +876,15 @@ missing from `CATEGORY_TABS` raises its own note.
   the first calibrated at 1920 CSS px, which is 10% off on a screen viewed at 110% zoom, and the second
   dropped the ceilings altogether, which made it match at exactly one viewport. What the numbers cannot
   say on their own is which viewport the person looking at it is actually at.
+- The bubble cards' one interaction was checked on both kinds of bubble, because it is the sort of
+  thing that only holds on the surface it was last changed on: `check-area-bubble-click.mjs` pins a
+  route, clicks a step card and requires the selection to move *nothing* — the same requirement it
+  puts on a material card, and the opposite of what it asserted before this change. The change itself
+  is structural rather than a removed handler: both kinds of card are now the same `ItemFrame` with no
+  `onSelect`, which is also the branch that makes them non-focusable, so a bubble draws no tab stop on
+  either surface. The checks had to follow: they used to tell the two apart by tag, since step cards
+  were `<button>`s and material cards were `<span role="img">`, and now tell them apart by label —
+  material labels name the area's stock, step labels are the action.
 
 ---
 

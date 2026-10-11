@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BubbleMaterialCard } from "./BubbleMaterialCard";
-import { ItemSprite } from "@/components/ui/ItemSprite";
+import { ItemFrame } from "@/components/ui/ItemFrame";
 import { BUBBLE_CARD_WIDTH, toLayerPosition, type BubblePlacement } from "@/lib/map-layout";
 import { stepCrafts, stepGathers, type RouteStep } from "@/lib/wiki/routes";
 import type { BubbleCard, MapFocus } from "@/lib/wiki/route";
@@ -40,14 +40,11 @@ export interface RouteStepBubbleCardProps {
   dimmed: boolean;
   onHoverArea: (areaId: string | null) => void;
   onSelectArea: (areaId: string) => void;
-  onSelectItem: (itemId: string) => void;
   /** Focuses the item while the pointer is on its card; see below. */
   onHoverItem: (itemId: string | null) => void;
 }
 
 interface StepCardProps {
-  itemId: string;
-  name: string;
   item: WikiItem;
   /** How much the route needs here: the number a route card carries. */
   quantity: number;
@@ -61,7 +58,6 @@ interface StepCardProps {
   built: boolean;
   /** True while this card's own item is the focused one. */
   focused: boolean;
-  onSelectItem: (itemId: string) => void;
   onHoverItem: (itemId: string | null) => void;
 }
 
@@ -80,8 +76,14 @@ interface StepCardProps {
  * Letting go puts the route's number and its amber back.
  *
  * The accessible name does not switch with it. It stays the action ("Pick up Iron
- * Ore ×2 here"), because that is what the button *is* — the number is a readout that
- * borrows the area's while the pointer is on it.
+ * Ore ×2 here"), which is what the card reports.
+ *
+ * The card is drawn through the same {@link ItemFrame} as a material card, and for
+ * the same reason it takes no `onSelect`: a bubble card is something to point at,
+ * never something to activate. Clicking one used to open the item in the rail, which
+ * made the same gesture mean two different things depending on whether a route was
+ * highlighted — a card that answers "where else is this?" while the pointer is on it
+ * should not also navigate when the hand moves a pixel first.
  */
 function StepCard({
   item,
@@ -89,7 +91,6 @@ function StepCard({
   areaQuantity,
   built,
   focused,
-  onSelectItem,
   onHoverItem,
 }: StepCardProps) {
   const [pointing, setPointing] = useState(false);
@@ -102,58 +103,41 @@ function StepCard({
   const amount = showsArea ? areaQuantity : quantity;
 
   return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={(event) => {
-        event.stopPropagation();
-        onSelectItem(item.id);
-      }}
-      // Keyboard parity, the same as the other item frames: focusing the card
-      // with the keyboard asks the island the same question the pointer asks, and
-      // the number follows the same way.
-      onMouseEnter={() => {
-        setPointing(true);
-        onHoverItem(item.id);
-      }}
-      onMouseLeave={() => {
-        setPointing(false);
-        onHoverItem(null);
-      }}
-      onFocus={() => {
-        setPointing(true);
-        onHoverItem(item.id);
-      }}
-      onBlur={() => {
-        setPointing(false);
-        onHoverItem(null);
-      }}
-      style={{ width: BUBBLE_CARD_WIDTH }}
-      className={`flex shrink-0 flex-col items-center gap-[2px] rounded-[13px] inset-ring-1 px-[4px] pb-[4px] pt-[7px] transition ${
+    <ItemFrame
+      item={item}
+      label={label}
+      tone={
         focused
           ? "inset-ring-amber-300/70 bg-amber-300/20"
           : built
             ? "inset-ring-amber-300/50 bg-amber-300/10 hover:inset-ring-amber-200/70 hover:bg-amber-300/20"
             : "inset-ring-white/[0.08] bg-black/30 hover:inset-ring-emerald-300/40 hover:bg-black/45"
-      }`}
-    >
-      <ItemSprite item={item} size="tile" bare />
-      {built ? (
-        // Same marker as the route list: a build, not a pickup.
-        <span aria-hidden="true" className="text-[21px] leading-none text-amber-300">
-          ✦
-        </span>
-      ) : (
-        <span
-          className={`font-mono text-[20px] font-bold leading-none transition-colors ${
-            showsArea ? "text-emerald-300" : "text-amber-300"
-          }`}
-        >
-          ×{amount}
-        </span>
-      )}
-    </button>
+      }
+      className="gap-[2px] px-[4px] pb-[4px] pt-[7px]"
+      style={{ width: BUBBLE_CARD_WIDTH }}
+      onHover={(itemId) => {
+        // Entering is a non-null id and leaving is null, which is all the pointing
+        // state needs — the frame reports both.
+        setPointing(itemId !== null);
+        onHoverItem(itemId);
+      }}
+      footnote={
+        built ? (
+          // Same marker as the route list: a build, not a pickup.
+          <span aria-hidden="true" className="text-[21px] leading-none text-amber-300">
+            ✦
+          </span>
+        ) : (
+          <span
+            className={`font-mono text-[20px] font-bold leading-none transition-colors ${
+              showsArea ? "text-emerald-300" : "text-amber-300"
+            }`}
+          >
+            ×{amount}
+          </span>
+        )
+      }
+    />
   );
 }
 
@@ -186,7 +170,6 @@ export function RouteStepBubbleCard({
   dimmed,
   onHoverArea,
   onSelectArea,
-  onSelectItem,
   onHoverItem,
 }: RouteStepBubbleCardProps) {
   const { left, top } = toLayerPosition(placement, bubbleScale);
@@ -235,28 +218,22 @@ export function RouteStepBubbleCard({
           {crafts.map((built) => (
             <StepCard
               key={`build-${built.item.id}`}
-              itemId={built.item.id}
-              name={built.item.name}
               item={built.item}
               quantity={built.quantity}
               areaQuantity={areaQuantityOf(built.item.id)}
               built
               focused={focus?.itemId === built.item.id}
-              onSelectItem={onSelectItem}
               onHoverItem={onHoverItem}
             />
           ))}
           {gathers.map((picked) => (
             <StepCard
               key={`pick-${picked.item.id}`}
-              itemId={picked.item.id}
-              name={picked.item.name}
               item={picked.item}
               quantity={picked.quantity}
               areaQuantity={areaQuantityOf(picked.item.id)}
               built={false}
               focused={focus?.itemId === picked.item.id}
-              onSelectItem={onSelectItem}
               onHoverItem={onHoverItem}
             />
           ))}

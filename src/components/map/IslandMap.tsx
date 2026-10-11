@@ -466,7 +466,6 @@ export function IslandMap({
                   dimmed={unrelatedStepAreaIds.has(step.area.id)}
                   onHoverArea={onHoverArea}
                   onSelectArea={onSelectArea}
-                  onSelectItem={onSelectItem}
                   onHoverItem={onHoverMaterial}
                 />
               );

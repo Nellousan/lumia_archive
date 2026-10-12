@@ -523,7 +523,9 @@ missing from `CATEGORY_TABS` raises its own note.
   costs one step on a copied pack rather than a re-walk — which is what keeps a front of twelve
   affordable. `_verify/check-greedy-order.cjs` holds both ends: over twelve plans × three armors × four
   look-aheads it compares 8 608 covers against the version in `HEAD` — 5 797 walks improved, 54 covers
-  made walkable that the sampler could not walk at all, and none worse.
+  made walkable that the sampler could not walk at all, and none worse (read beside the change; with
+  the change committed the same check reads zero improvements and stands as the regression guard, so
+  nothing can quietly start choosing a worse walk or dropping a cover).
 - **A traced stop is a step of the walk, drawn like one.** A route the reader clicked and a route
   the solver found are the same kind of thing, so they are drawn by the same component: the numbered
   badge in the header, the amber outline, and the cards on one line rather than wrapped into the
@@ -615,7 +617,11 @@ missing from `CATEGORY_TABS` raises its own note.
   `assemble` ranks the answer, so the pooled path and the fallback cannot drift — the fallback *is* the
   single-threaded solver, and it takes over when workers are missing, refused or dead. Measured on a
   four-item greedy plan: ~700 ms of work on one thread, 225 ms of wall clock over three workers, and a
-  main thread whose worst frame gap was 37 ms against 393 ms. The fallback is the old
+  main thread whose worst frame gap was 37 ms against 393 ms. The rail holds its own height while the
+  list is a placeholder — measured and re-applied by the panel, which outlives the list it wraps — so
+  switching mode, look-ahead or starting armor never moves the reader: without it, replacing a page of
+  cards with a two-line row shrinks the pane, and a shrunken pane has its scroll position clamped to
+  the shorter content. The fallback is the old
   behaviour and says so: with no worker the thread is held for the whole solve, so it cannot show a
   spinner — it paints the click first and then blocks, and `_verify/check-route-solve.mjs` asserts
   both paths (the section must never claim the plan has no route while it is still working). The route section says it is working

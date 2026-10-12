@@ -510,6 +510,7 @@ export function RoutePlanList({
    * the same box without its text, so nothing jumps when the spinner arrives.
    */
   const [spinnerFor, setSpinnerFor] = useState<string | null>(null);
+
   /** The row the arriving link names, so it can be brought into view. */
   const walkRowRef = useRef<HTMLLIElement | null>(null);
   /** Set once the arrival has been scrolled to, so nothing pulls the rail back. */
@@ -528,6 +529,7 @@ export function RoutePlanList({
     const timer = setTimeout(() => setSpinnerFor(solvingKey), 140);
     return () => clearTimeout(timer);
   }, [solving, solvingKey]);
+
   const showSolving = solving && spinnerFor === solvingKey;
 
   useEffect(() => {
@@ -556,16 +558,20 @@ export function RoutePlanList({
    * replaced by this — the reader's own walk is theirs.
    */
   if (routes.length === 0 && solving) {
-    return showSolving ? (
-      <p className="flex items-center gap-2.5 rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
-        <Spinner className="size-3.5 shrink-0 text-amber-300/80" />
-        <span>
-          <span className="text-stone-400">Solving the walk…</span> {plannedCount} item
-          {plannedCount === 1 ? "" : "s"} to cover, every set of areas weighed against the others.
-        </span>
-      </p>
-    ) : (
-      <p aria-hidden="true" className="h-[52px] rounded-xl border border-dashed border-white/10" />
+    return (
+      <>
+        {showSolving ? (
+          <p className="flex items-center gap-2.5 rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
+            <Spinner className="size-3.5 shrink-0 text-amber-300/80" />
+            <span>
+              <span className="text-stone-400">Solving the walk…</span> {plannedCount} item
+              {plannedCount === 1 ? "" : "s"} to cover, every set of areas weighed against the others.
+            </span>
+          </p>
+        ) : (
+          <p aria-hidden="true" className="h-[52px] rounded-xl border border-dashed border-white/10" />
+        )}
+      </>
     );
   }
 

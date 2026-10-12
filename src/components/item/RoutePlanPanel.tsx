@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { RoutePlanList } from "./RoutePlanList";
 import { PaneDivider } from "@/components/ui/PaneDivider";
 import { ItemSprite } from "@/components/ui/ItemSprite";
@@ -98,8 +99,43 @@ export function RoutePlanPanel({
   onOpenManual,
 }: RoutePlanPanelProps) {
   const startingItem = startingClothes ? (startingOptions.find((item) => item.id === startingClothes) ?? null) : null;
+
   const lookAheadOptions = Array.from({ length: MAX_LOOK_AHEAD }, (_, index) => index + 1);
   const manual = mode === "manual";
+
+  /**
+   * The height the route body had, so the working row can stand in its place.
+   *
+   * Replacing a page of route cards with a two-line row collapses the rail — by a
+   * thousand pixels, on a four-item plan — and a pane that shrank has its scroll
+   * position clamped to the shorter content, which the reader sees as the rail moving
+   * under them and staying moved once the routes are back. Holding the height is the
+   * whole fix: nothing below the row moves, so there is no scroll position to lose.
+   *
+   * It lives here rather than in the list because the list is remounted whenever the
+   * plan key changes — which is exactly the mode, look-ahead and armor switches this
+   * is for — while this panel outlives them.
+   */
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [heldHeight, setHeldHeight] = useState(0);
+
+  // Measured after every commit, so what is held is always what was last painted —
+  // the trace when the reader leaves manual, the previous list when they change mode.
+  // A layout effect: the reserved space is in place before the swap paints. The state
+  // only moves when a whole pixel has, and the reservation makes the measurement equal
+  // to itself, so this cannot oscillate.
+  useLayoutEffect(() => {
+    if (bodyRef.current === null) return;
+    const height = bodyRef.current.offsetHeight;
+    setHeldHeight((current) => (Math.abs(current - height) < 1 ? current : height));
+  }, [manual, manualRoute, planKey, routes, solving]);
+
+  /**
+   * True while the route body is a placeholder rather than an answer — the one case
+   * where the space it had has to be held. A trace is not replaced while the fastest
+   * list is solved underneath it, so Manual needs none.
+   */
+  const holding = solving && !manual && routes.length === 0;
 
   return (
     <section className="shrink-0 px-4 pb-6 sm:px-6">
@@ -194,34 +230,41 @@ export function RoutePlanPanel({
         </div>
       </div>
 
-      <RoutePlanList
-        // The plan is the identity: a new one starts on its own fold, rather than
-        // inheriting the one the reader left open on the plan before it.
-        key={planKey}
-        routes={manual ? (manualRoute ? [manualRoute] : []) : routes}
-        plannedCount={plannedCount}
-        truncated={manual ? false : truncated}
-        unobtainableNames={unobtainableNames}
-        inventoryBlocked={inventoryBlocked}
-        assumed={assumed}
-        nothingToGather={nothingToGather}
-        solving={manual ? false : solving}
-        solvingKey={`${planKey}#${mode}#${lookAhead}#${startingClothes ?? ""}`}
-        activeRouteId={manual ? (manualRoute?.id ?? null) : activeRouteId}
-        startingItem={startingItem}
-        mode={mode}
-        lookAhead={lookAhead}
-        onHoverRoute={onHoverRoute}
-        onSelectRoute={onSelectRoute}
-        onSelectArea={onSelectArea}
-        onSelectItem={onSelectItem}
-        onShareRoute={onShareRoute}
-        onOpenManual={onOpenManual}
-        revealWalk={revealWalk}
-        manual={manual}
-        manualComplete={manualComplete}
-        onClearManual={onClearManual}
-      />
+      {/* The body is wrapped so its height can be held while the routes are solved: the
+          list below is remounted on every plan key, this wrapper is not. */}
+      <div
+        ref={bodyRef}
+        style={holding && heldHeight > 0 ? { minHeight: heldHeight } : undefined}
+      >
+        <RoutePlanList
+          // The plan is the identity: a new one starts on its own fold, rather than
+          // inheriting the one the reader left open on the plan before it.
+          key={planKey}
+          routes={manual ? (manualRoute ? [manualRoute] : []) : routes}
+          plannedCount={plannedCount}
+          truncated={manual ? false : truncated}
+          unobtainableNames={unobtainableNames}
+          inventoryBlocked={inventoryBlocked}
+          assumed={assumed}
+          nothingToGather={nothingToGather}
+          solving={manual ? false : solving}
+          solvingKey={`${planKey}#${mode}#${lookAhead}#${startingClothes ?? ""}`}
+          activeRouteId={manual ? (manualRoute?.id ?? null) : activeRouteId}
+          startingItem={startingItem}
+          mode={mode}
+          lookAhead={lookAhead}
+          onHoverRoute={onHoverRoute}
+          onSelectRoute={onSelectRoute}
+          onSelectArea={onSelectArea}
+          onSelectItem={onSelectItem}
+          onShareRoute={onShareRoute}
+          onOpenManual={onOpenManual}
+          revealWalk={revealWalk}
+          manual={manual}
+          manualComplete={manualComplete}
+          onClearManual={onClearManual}
+        />
+      </div>
     </section>
   );
 }

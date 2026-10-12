@@ -173,17 +173,21 @@ fields, the **crafting chain drawn as a tree**, and the **fastest routes**.
 fewest areas, then the tidiest line. *Greedy* is about not spending the trip naked — in this game a
 survivor who hauls every ingredient to one spot and crafts at the end is weak the whole way — so at
 **every** step it asks what the next N areas (2 by default, 1–6) can leave the survivor wearing, and
-ranks the resulting profile step by step. Each step prints the worn value beside its pack dots, so the
-curve being ranked is visible. *Manual* ranks nothing: the reader clicks areas on the island and the
-walk is the order they clicked, one stop per click, taken back out by clicking the area again. It is
-the same walk either way — the solver runs underneath to say what each stop picks up and builds, and
-the trace is drawn with the same numbered stops and the same cards. Every walk in the rail can be
-handed to someone else with the **Share** control in its bottom right corner, which copies a link
-carrying *that walk's areas* — see [Sharing a route](#sharing-a-route) — and opening one lands in
-Manual mode with the trace prefilled, **locked**, and one click from editable. A route the solver
-found can also be taken into manual directly, with **Open in manual** beside its Share control: the
-row's areas become the trace, and the reader edits from there rather than clicking the whole walk
-back in.
+ranks the resulting profile step by step; ties fall through to the same question asked with N-1
+areas, then N-2, down to 1, which is what keeps a wider look-ahead *refining* a narrower one rather
+than contradicting it. Each step prints the worn value beside its pack dots, so the curve being
+ranked is visible. Which walk through a given set of areas greedy returns is **searched**, not
+sampled: the walk is grown area by area, the candidates are ranked on the peaks they have already
+settled, and the good orders are found rather than hoped for — see *How greedy finds its walk*
+below. *Manual* ranks nothing: the reader clicks areas on the island and the walk is the order they
+clicked, one stop per click, taken back out by clicking the area again. It is the same walk either
+way — the solver runs underneath to say what each stop picks up and builds, and the trace is drawn
+with the same numbered stops and the same cards. Every walk in the rail can be handed to someone
+else with the **Share** control in its bottom right corner, which copies a link carrying *that
+walk's areas* — see [Sharing a route](#sharing-a-route) — and opening one lands in Manual mode with
+the trace prefilled, **locked**, and one click from editable. A route the solver found can also be
+taken into manual directly, with **Open in manual** beside its Share control: the row's areas become
+the trace, and the reader edits from there rather than clicking the whole walk back in.
 
 **Right pane — Lumia Island.** The **plan bar** sits directly above the island and lists what the map
 and the routes answer for: the selected item, then every bookmark. Under it, the PNG artwork with the
@@ -506,6 +510,20 @@ missing from `CATEGORY_TABS` raises its own note.
   with the quantity available in that area; a material two planned items both need collapses into
   one card with the summed quantity. Bubbles are spread by a small collision solver
   (`lib/map-layout.ts`) and clamped inside the map.
+- **How greedy finds its walk.** The old per-cover search tried a fixed handful of orders — the
+  tidiest line, a few nearest-neighbour sweeps, then seeded shuffles — and kept the best of those. That
+  is a sample, and it showed: on the reported plan (Maverick Runner, Sheet Metal Armor, Uchiwa, from
+  Fabric Armor) it walked 24 of one cover's 120 orders and returned `Lighthouse → Alley → Town Hall →
+  Tunnel → Chapel` while `Lighthouse → Alley → Town Hall`'s better sibling was never tried, even though
+  the ranking code already preferred it. The search now **grows** walks: every one-area walk is extended
+  by every area left, extensions are ranked on the peaks they have settled (a peak whose window is fully
+  walked can no longer move, so a partial walk that is behind on one is behind for good), the best
+  twelve stay alive, and the process repeats. Covers small enough to enumerate are enumerated outright.
+  The sampling it replaces is kept as the floor, so nothing it found can be lost, and a partial walk
+  costs one step on a copied pack rather than a re-walk — which is what keeps a front of twelve
+  affordable. `_verify/check-greedy-order.cjs` holds both ends: over twelve plans × three armors × four
+  look-aheads it compares 8 608 covers against the version in `HEAD` — 5 797 walks improved, 54 covers
+  made walkable that the sampler could not walk at all, and none worse.
 - **A traced stop is a step of the walk, drawn like one.** A route the reader clicked and a route
   the solver found are the same kind of thing, so they are drawn by the same component: the numbered
   badge in the header, the amber outline, and the cards on one line rather than wrapped into the
@@ -588,6 +606,22 @@ missing from `CATEGORY_TABS` raises its own note.
   and nothing needs evicting by hand. The result is shared and treated as read-only, which is what a
   `RoutePlanSet` already was. `_verify/check-route-cache.cjs` asserts the contract in node: the same
   question is the same object, and another mode, look-ahead, armor or plan each solves for itself.
+- **The solve is not on the main thread.** A whole plan's worth of walking is a few hundred
+  milliseconds, and it used to happen inside a render, which is a frozen page rather than a slow one.
+  `route-pool.ts` splits the work where it is naturally independent — one job per set of areas, which
+  is exactly what a solve is — hands the slices to up to four module workers (`route-worker.ts`, one
+  core left for the page), and merges what comes back through the same comparator the single-threaded
+  solver uses. The seam is `createRouteSolver`: `solveCovers(from, to)` solves a slice anywhere, and
+  `assemble` ranks the answer, so the pooled path and the fallback cannot drift — the fallback *is* the
+  single-threaded solver, and it takes over when workers are missing, refused or dead. Measured on a
+  four-item greedy plan: ~700 ms of work on one thread, 225 ms of wall clock over three workers, and a
+  main thread whose worst frame gap was 37 ms against 393 ms. The fallback is the old
+  behaviour and says so: with no worker the thread is held for the whole solve, so it cannot show a
+  spinner — it paints the click first and then blocks, and `_verify/check-route-solve.mjs` asserts
+  both paths (the section must never claim the plan has no route while it is still working). The route section says it is working
+  (a spinner, after a beat so a one-item plan never flashes it) while a pinned walk keeps its highlight
+  and the address bar keeps its walk — the pin is a snapshot of the route, not a position in a list
+  that has not arrived yet.
 - **Fastest routes, not a spawn list.** The rail's bottom section lists the ways to gather everything
   the plan needs, best first, and highlights the picked one on the island when hovered or clicked
   (`Esc` releases it). It sits outside the item detail on purpose: the routes answer for the bookmarks

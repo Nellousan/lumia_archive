@@ -37,6 +37,7 @@
   ],
   "exclude": [
     "node_modules",
-    "_reference_figma"
+    "_reference_figma",
+    "_verify"
   ]
 }

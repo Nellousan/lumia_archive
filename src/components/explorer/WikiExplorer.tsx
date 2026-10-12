@@ -20,7 +20,7 @@ import { plannedItemsFor } from "@/lib/wiki/plan";
 import { scrollWithinScroller } from "@/lib/scroll";
 import { STARTING_CLOTHES_IDS } from "@/lib/wiki/inventory";
 import type { MapFocus } from "@/lib/wiki/route";
-import { DEFAULT_LOOK_AHEAD, type RouteModeChoice } from "@/lib/wiki/routes";
+import { DEFAULT_LOOK_AHEAD, type RouteModeChoice, type RoutePlan } from "@/lib/wiki/routes";
 import { buildSharedUrl, readSharedUrl } from "@/lib/wiki/share";
 import type {
   AreaItemRef,
@@ -193,13 +193,16 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
 
   const [lookAhead, setLookAhead] = useState(DEFAULT_LOOK_AHEAD);
   /**
-   * The route the reader pinned, if they have touched one for this plan.
+   * The walk the reader pinned, if they have touched one for this plan.
    *
-   * `routeId: null` is not "nothing" — it is the reader *clearing* the highlight,
-   * which has to outrank the route a shared link arrived with, or the one pin a
-   * link sets could never be dismissed.
+   * A *snapshot* of the route rather than its place in the list, for two reasons.
+   * `route: null` is not "nothing" — it is the reader *clearing* the highlight,
+   * which has to outrank the walk a shared link arrived with, or the one pin a link
+   * sets could never be dismissed. And the routes themselves arrive asynchronously
+   * now: looking the pin up in the list would blink the island's highlight off, and
+   * rewrite the address bar without its walk, for as long as a solve takes.
    */
-  const [readerRoute, setReaderRoute] = useState<{ planKey: string; routeId: string | null } | null>(
+  const [readerRoute, setReaderRoute] = useState<{ planKey: string; route: RoutePlan | null } | null>(
     null,
   );
   /**
@@ -409,12 +412,12 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     ? (dataset.animalsByAreaId[selectedAreaId] ?? NO_ANIMALS)
     : NO_ANIMALS;
 
-  /** `undefined` until the reader touches a route for this plan, `null` once they clear it. */
-  const readerRouteId =
-    readerRoute && readerRoute.planKey === planKey ? readerRoute.routeId : undefined;
-
-  /** Hover wins over nothing; a pinned route outlives the pointer leaving the row. */
-  const pinnedRouteId = readerRouteId ?? null;
+  /**
+   * The pinned walk for the plan on screen, or `null`. A pin belongs to the plan it
+   * was taken from, so moving the plan on drops it — the walk it names is a walk
+   * through the old one.
+   */
+  const pinnedRoute = readerRoute && readerRoute.planKey === planKey ? readerRoute.route : null;
 
   /**
    * Brings the crafting section to the top of the rail.
@@ -434,10 +437,12 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     scrollWithinScroller(usedToCraftRef.current, "start");
   }, [linkApplied]);
 
-  const activeRouteId = pinnedRouteId ?? hoveredRouteId;
-  const activeRoute = activeRouteId
-    ? (route.routes.find((candidate) => candidate.id === activeRouteId) ?? null)
-    : null;
+  /** Hover wins over nothing; a pinned route outlives the pointer leaving the row. */
+  const hoveredRoute =
+    hoveredRouteId === null
+      ? null
+      : (route.routes.find((candidate) => candidate.id === hoveredRouteId) ?? null);
+  const activeRoute = pinnedRoute ?? hoveredRoute;
 
   /**
    * Tracing by hand: the rail shows the trace instead of the route list, and the
@@ -461,12 +466,6 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
           }
         : null,
     [manualLocked, manualMode, route.manualRoute, toggleManualArea, toggleManualLocked],
-  );
-
-  /** The pinned route itself, which is the walk the URL describes. */
-  const pinnedRoute = useMemo(
-    () => (pinnedRouteId ? (route.routes.find((candidate) => candidate.id === pinnedRouteId) ?? null) : null),
-    [pinnedRouteId, route.routes],
   );
 
   /**
@@ -535,9 +534,14 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     (routeId: string) => {
       // The highlight being clicked is the one to drop: whether it came from a link
       // or from the reader, one click puts it back the way it was found.
-      setReaderRoute({ planKey, routeId: pinnedRouteId === routeId ? null : routeId });
+      setReaderRoute({
+        planKey,
+        route: pinnedRoute?.id === routeId
+          ? null
+          : (route.routes.find((candidate) => candidate.id === routeId) ?? null),
+      });
     },
-    [planKey, pinnedRouteId],
+    [planKey, pinnedRoute, route.routes],
   );
 
   /**
@@ -625,8 +629,8 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
     onEscape: () => {
       if (selectedAreaId) {
         setSelectedAreaId(null);
-      } else if (pinnedRouteId) {
-        setReaderRoute({ planKey, routeId: null });
+      } else if (pinnedRoute) {
+        setReaderRoute({ planKey, route: null });
       } else if (focusedMaterialId) {
         setFocusedMaterialId(null);
       } else if (document.activeElement instanceof HTMLElement) {
@@ -723,6 +727,7 @@ function WikiExplorerContent({ dataset }: WikiExplorerProps) {
       onClearManual={clearManualTrace}
       onOpenManual={handleOpenManual}
       revealWalk={revealWalk}
+      solving={route.solving}
     />
     ) : null;
 

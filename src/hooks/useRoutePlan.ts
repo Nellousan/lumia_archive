@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   bubbleScaleFor,
   estimateBubbleSize,
@@ -19,12 +19,17 @@ import {
   buildManualRoute,
   buildRoutesCached,
   type RouteModeChoice,
+  type RoutePlan,
+  type RoutePlanSet,
 } from "@/lib/wiki/routes";
+import { solveRoutes } from "@/lib/wiki/route-pool";
 import { buildAreaBubbles, type MapOverlayMode } from "@/lib/wiki/route";
 import type { RecipeMaterial, RecipeNode, WikiDataset, WikiItem } from "@/lib/wiki/types";
 
-/** Stable empty so a plan with no trace does not re-solve on every render. */
+/** Stable empties, so a plan with nothing to show does not churn identities. */
 const NO_AREAS: string[] = [];
+const NO_ROUTES: RoutePlan[] = [];
+const NO_ITEMS: WikiItem[] = [];
 
 /**
  * Turns the planning set — the selected item plus every bookmark — into
@@ -244,22 +249,49 @@ export function useRoutePlan(
    * of crafted, which is often the whole point of the fastest route.
    *
    * `manual` is not a way of ranking, so it solves as `fastest`: the rail shows
-   * the trace instead of the list, but the number the reader compares against —
-   * and the empty states above it — should still be the shortest walk there is.
+   * the trace instead of the list, but the empty states above it — and the number
+   * a trace is read against — should still describe the shortest walk there is.
    *
-   * Cached, so the same plan solved again — a mode switched and switched back, the
-   * fastest list a trace is measured against — is answered from memory instead of
-   * swept a second time; see `buildRoutesCached`.
+   * The solve is the one thing on this screen that is expensive (a wide plan costs
+   * a few hundred milliseconds), so it does not happen here: it is asked for, off
+   * the main thread, and lands in state a moment later. Nothing else in this hook
+   * waits for it — the material list, the bubbles, their placement and the reader's
+   * own trace are all derived on the spot — so the island is live while the route
+   * section says it is still working.
+   *
+   * The answer is held **with the key it was asked for**, so a stale one can never
+   * be read: a plan is whatever its trees and settings say it is, and when they
+   * move the old answer stops matching the key and the section goes back to solving.
+   * The pool behind `solveRoutes` caches by that same key, in flight included, so
+   * switching mode and back is free.
    */
-  const routePlans = useMemo(
+  const plannedKey = useMemo(
     () =>
-      buildRoutesCached(dataset, plannedTrees, {
-        startingClothes,
-        mode: mode === "manual" ? "fastest" : mode,
-        lookAhead,
-      }),
-    [dataset, plannedTrees, startingClothes, mode, lookAhead],
+      `${plannedTrees.map((tree) => `${tree.item.id}x${tree.quantity}`).join("|")}#${startingClothes ?? ""}#${
+        mode === "manual" ? "fastest" : mode
+      }#${lookAhead}`,
+    [lookAhead, mode, plannedTrees, startingClothes],
   );
+  const [solved, setSolved] = useState<{ key: string; plans: RoutePlanSet } | null>(null);
+
+  useEffect(() => {
+    if (plannedTrees.length === 0) return;
+    let live = true;
+    void solveRoutes(dataset, plannedTrees, {
+      startingClothes,
+      mode: mode === "manual" ? "fastest" : mode,
+      lookAhead,
+    }).then((plans) => {
+      if (live) setSolved({ key: plannedKey, plans });
+    });
+    return () => {
+      live = false;
+    };
+  }, [dataset, lookAhead, mode, plannedKey, plannedTrees, startingClothes]);
+
+  const routePlans = solved !== null && solved.key === plannedKey ? solved.plans : null;
+  /** True while the routes for what is on screen have not arrived yet. */
+  const solving = plannedTrees.length > 0 && routePlans === null;
 
   /**
    * Planned items nothing can obtain. Components the island has no location for
@@ -268,7 +300,9 @@ export function useRoutePlan(
    * a safety net so a future dataset cannot produce a silently empty route list.
    */
   const unobtainable = useMemo(() => {
-    if (routePlans.routes.length > 0 || routePlans.inventoryBlocked) return [];
+    if (routePlans === null || routePlans.routes.length > 0 || routePlans.inventoryBlocked) {
+      return [];
+    }
     return plannedItems.filter((planned) => {
       const plannedTree = buildRecipeTree(dataset, planned.id);
       return (
@@ -288,15 +322,17 @@ export function useRoutePlan(
     placements,
     areaCount,
     recipeAreaCount,
-    routes: routePlans.routes,
+    routes: routePlans?.routes ?? NO_ROUTES,
     /** The reader's own trace, in `manual` mode; `null` otherwise. */
     manualRoute: manual?.route ?? null,
     /** True when that trace finishes the plan. */
     manualComplete: manual?.complete ?? false,
-    routesTruncated: routePlans.truncated,
-    inventoryBlocked: routePlans.inventoryBlocked,
-    assumed: routePlans.assumed,
-    nothingToGather: routePlans.nothingToGather,
+    routesTruncated: routePlans?.truncated ?? false,
+    inventoryBlocked: routePlans?.inventoryBlocked ?? false,
+    assumed: routePlans?.assumed ?? NO_ITEMS,
+    nothingToGather: routePlans?.nothingToGather ?? false,
+    /** True while the routes for the plan on screen are still being solved. */
+    solving,
     unobtainable,
   };
 }

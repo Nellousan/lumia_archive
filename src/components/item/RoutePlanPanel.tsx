@@ -40,6 +40,8 @@ export interface RoutePlanPanelProps {
   onClearManual: () => void;
   /** True on the visit that arrived on a link naming a walk; see the list. */
   revealWalk: boolean;
+  /** True while the routes for the plan on screen are still being solved. */
+  solving: boolean;
   /** How many areas greedy looks ahead, counting the first. */
   lookAhead: number;
   onLookAheadChange: (lookAhead: number) => void;
@@ -85,6 +87,7 @@ export function RoutePlanPanel({
   manualComplete,
   onClearManual,
   revealWalk,
+  solving,
   lookAhead,
   onLookAheadChange,
   onHoverRoute,
@@ -202,6 +205,8 @@ export function RoutePlanPanel({
         inventoryBlocked={inventoryBlocked}
         assumed={assumed}
         nothingToGather={nothingToGather}
+        solving={manual ? false : solving}
+        solvingKey={`${planKey}#${mode}#${lookAhead}#${startingClothes ?? ""}`}
         activeRouteId={manual ? (manualRoute?.id ?? null) : activeRouteId}
         startingItem={startingItem}
         mode={mode}

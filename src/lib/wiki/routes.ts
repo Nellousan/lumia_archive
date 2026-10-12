@@ -160,11 +160,32 @@ export const DEFAULT_LOOK_AHEAD = 2;
 export const MAX_LOOK_AHEAD = 6;
 
 /**
- * Visit orders tried per cover in greedy mode. The order is what decides when
- * each part gets built, so greedy has to look at several instead of stopping at
- * the first workable one.
+ * The greedy order search, per cover.
+ *
+ * The order is what decides when each part gets built, so greedy has to look at
+ * several instead of stopping at the first workable one. It does that by *growing*
+ * walks: every walk of one area is extended by every area left, the extensions are
+ * ranked on the peaks they have already settled, and the best {@link GREEDY_FRONT}
+ * are grown again. The front is the whole of the trade: 1 is "take the best next
+ * area and never look back", and a wider front keeps alternatives alive so a step
+ * that looks weak over two areas but is strong over three still gets completed.
  */
-const GREEDY_ORDERS_PER_COVER = 24;
+const GREEDY_FRONT = 12;
+
+/**
+ * Walks grown per cover before the search stops and finishes what it has.
+ *
+ * Every cover used to draw from one shared budget of visit orders, which made a
+ * cover's answer depend on how many covers came before it. The search is bounded
+ * per cover instead, so one cover's order is decided by that cover alone; when the
+ * bound bites, each surviving walk is finished by the nearest-neighbour line and
+ * the best of those wins, so the answer is always a walk that can be walked.
+ *
+ * A five-area cover spends about 150 walks here and a nine-area one about 500, so
+ * the bound is a guard against a dense future dataset rather than a limit anyone
+ * reaches today.
+ */
+const GREEDY_SEARCH_WALKS = 600;
 
 export interface RoutePlanSet {
   /** Fastest first; `truncated` says whether more equal-or-slower ones exist. */
@@ -210,13 +231,20 @@ const MAX_EXHAUSTIVE_AREAS = 20;
  */
 const MAX_ROUTES = 100;
 
-/** Covers up to this width are tried in every visit order; wider ones sample. */
+/**
+ * Covers up to this width are tried in every visit order. Wider ones cannot be —
+ * twenty areas is 2.4 quintillion orders — so greedy searches them instead
+ * ({@link greedyChoice}) and fastest draws on {@link orderings}.
+ */
 const MAX_PERMUTED_AREAS = 4;
 
 /**
- * Route run-throughs allowed per `buildRoutes` call. The per-cover order search
- * is the only unbounded part of the pipeline, so a shared budget keeps a greedy
- * plan — ten items, hundreds of covers — from turning into seconds of work.
+ * Route run-throughs allowed per solve, shared by every cover in it.
+ *
+ * This bounds the *fastest* mode's generator: its tidiest line is almost always the
+ * answer, and the rest of its list is the rescue for a cover that line cannot shop.
+ * Greedy has a per-cover bound of its own ({@link GREEDY_SEARCH_WALKS}), because a
+ * cover's walk should not depend on how many covers were solved before it.
  */
 const RUN_BUDGET = 8000;
 
@@ -770,6 +798,20 @@ class Pack {
     this.held.set(itemId, (this.held.get(itemId) ?? 0) + 1);
   }
 
+  /**
+   * A pack that can be filled a different way.
+   *
+   * The greedy search continues one walk two ways at once, so each candidate needs
+   * its own pack; everything a pack holds is a small map of ids and counts, which
+   * is what makes copying it cheaper than re-walking the route to get there.
+   */
+  clone(): Pack {
+    const copy = new Pack(this.dataset, this.weaponTypes);
+    for (const [id, units] of this.held) copy.held.set(id, units);
+    for (const [slot, id] of this.worn) copy.worn.set(slot, id);
+    return copy;
+  }
+
   /** Walks in already wearing the chosen clothes: one item, no bag slot. */
   startWearing(itemId: string): void {
     this.held.set(itemId, (this.held.get(itemId) ?? 0) + 1);
@@ -941,82 +983,124 @@ function runRoute(
   weaponTypes: ReadonlySet<string>,
   allowIncomplete = false,
 ): RouteStep[] | null {
+  const walk = startWalk(dataset, startingClothes, assumed, weaponTypes);
+  for (const area of order) advanceWalk(walk, plan, area);
+
+  if (!planDone(plan, walk.steps) && !allowIncomplete) return null;
+  return walk.steps;
+}
+
+/**
+ * A walk being built, one area at a time: the pack, what has been gathered and
+ * built, and the stops so far.
+ *
+ * The run-through is sequential — what a stop does depends on the pack and on
+ * nothing that comes after it — so a walk can be stopped between two areas and
+ * resumed, or copied and continued a different way. That is what lets the greedy
+ * search grow several candidate walks at once, and it is the same walk the route
+ * list, the link preview and the reader's own trace are drawn from: one
+ * implementation of "what happens at a stop", whoever asks.
+ */
+interface Walk {
+  pack: Pack;
+  gathered: Map<string, number>;
+  crafted: Map<string, number>;
+  steps: RouteStep[];
+}
+
+/** A walk at its first area: the clothes worn, the assumed items carried. */
+function startWalk(
+  dataset: WikiDataset,
+  startingClothes: string | null,
+  assumed: ReadonlyMap<string, WikiItem>,
+  weaponTypes: ReadonlySet<string>,
+): Walk {
   const pack = new Pack(dataset, weaponTypes);
   if (startingClothes && dataset.itemsById[startingClothes]) pack.startWearing(startingClothes);
   // Rare components are carried from the first move; they take bag slots like
   // anything else, and get worn at the first stop if they are equipment.
   for (const itemId of assumed.keys()) pack.startHolding(itemId);
-  const gathered = new Map<string, number>();
-  const crafted = new Map<string, number>();
-  const steps: RouteStep[] = [];
+  return { pack, gathered: new Map(), crafted: new Map(), steps: [] };
+}
 
-  for (let index = 0; index < order.length; index += 1) {
-    const area = order[index];
-    const actions: StepAction[] = [];
+/** Copies a walk, so one state can be continued two different ways. */
+function cloneWalk(walk: Walk): Walk {
+  return {
+    pack: walk.pack.clone(),
+    gathered: new Map(walk.gathered),
+    crafted: new Map(walk.crafted),
+    steps: [...walk.steps],
+  };
+}
 
-    // What this area holds, spent down as it is picked from: a step visits the
-    // area once, so a second pass must not draw the same stack again.
-    const stock = new Map<string, number>();
-    for (const spawn of area.spawns) {
-      stock.set(spawn.itemId, (stock.get(spawn.itemId) ?? 0) + spawn.quantity);
-    }
+/**
+ * One stop: pick up what this area holds, build what the pack now allows, and
+ * record the step.
+ *
+ * Everything that can happen here happens in repeated passes, because a craft
+ * frees the slots that let the next pickup happen and a pickup enables the next
+ * craft. Builds come first: they are what makes room for the next pickup.
+ */
+function advanceWalk(walk: Walk, plan: SimPlan, area: WikiArea): void {
+  const { pack, gathered, crafted } = walk;
+  const actions: StepAction[] = [];
 
-    // Everything that can happen here, in repeated passes: a craft frees the
-    // slots that let the next pickup happen, and a pickup enables the next craft.
-    for (;;) {
-      let progressed = false;
-      pack.equipWhatFits();
-
-      // Builds come first: they are what makes room for the next pickup.
-      for (const [itemId, recipe] of plan.recipes) {
-        const need = plan.craftNeed.get(itemId) ?? 0;
-        if ((crafted.get(itemId) ?? 0) >= need) continue;
-        if (!recipe.children.every((child) => pack.quantity(child.item.id) >= child.perCraft))
-          continue;
-        if (!pack.canCraft(recipe)) continue;
-
-        pack.craft(recipe);
-        crafted.set(itemId, (crafted.get(itemId) ?? 0) + 1);
-        actions.push({ kind: "craft", craft: { item: recipe.item, quantity: recipe.yield } });
-        progressed = true;
-      }
-
-      for (const [itemId, need] of plan.gather) {
-        const collected = gathered.get(itemId) ?? 0;
-        const outstanding = need.quantity - collected;
-        if (outstanding <= 0) continue;
-
-        const available = stock.get(itemId) ?? 0;
-        if (available <= 0) continue;
-
-        const units = Math.min(outstanding, available);
-        if (!pack.canAdd(itemId, units)) continue;
-
-        pack.add(itemId, units);
-        gathered.set(itemId, collected + units);
-        stock.set(itemId, available - units);
-        actions.push({
-          kind: "gather",
-          collection: { item: need.item, available, quantity: units },
-        });
-        progressed = true;
-      }
-
-      if (!progressed) break;
-    }
-
-    steps.push({
-      number: index + 1,
-      area,
-      actions,
-      bagUsed: pack.bagUsed(),
-      equipped: pack.wornItems(),
-    });
+  // What this area holds, spent down as it is picked from: a step visits the
+  // area once, so a second pass must not draw the same stack again.
+  const stock = new Map<string, number>();
+  for (const spawn of area.spawns) {
+    stock.set(spawn.itemId, (stock.get(spawn.itemId) ?? 0) + spawn.quantity);
   }
 
-  if (!planDone(plan, steps) && !allowIncomplete) return null;
+  for (;;) {
+    let progressed = false;
+    pack.equipWhatFits();
 
-  return steps;
+    // Builds come first: they are what makes room for the next pickup.
+    for (const [itemId, recipe] of plan.recipes) {
+      const need = plan.craftNeed.get(itemId) ?? 0;
+      if ((crafted.get(itemId) ?? 0) >= need) continue;
+      if (!recipe.children.every((child) => pack.quantity(child.item.id) >= child.perCraft))
+        continue;
+      if (!pack.canCraft(recipe)) continue;
+
+      pack.craft(recipe);
+      crafted.set(itemId, (crafted.get(itemId) ?? 0) + 1);
+      actions.push({ kind: "craft", craft: { item: recipe.item, quantity: recipe.yield } });
+      progressed = true;
+    }
+
+    for (const [itemId, need] of plan.gather) {
+      const collected = gathered.get(itemId) ?? 0;
+      const outstanding = need.quantity - collected;
+      if (outstanding <= 0) continue;
+
+      const available = stock.get(itemId) ?? 0;
+      if (available <= 0) continue;
+
+      const units = Math.min(outstanding, available);
+      if (!pack.canAdd(itemId, units)) continue;
+
+      pack.add(itemId, units);
+      gathered.set(itemId, collected + units);
+      stock.set(itemId, available - units);
+      actions.push({
+        kind: "gather",
+        collection: { item: need.item, available, quantity: units },
+      });
+      progressed = true;
+    }
+
+    if (!progressed) break;
+  }
+
+  walk.steps.push({
+    number: walk.steps.length + 1,
+    area,
+    actions,
+    bagUsed: pack.bagUsed(),
+    equipped: pack.wornItems(),
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1292,11 +1376,11 @@ function shuffle<T>(items: T[], seed: number): T[] {
 /**
  * Orders worth trying for one cover, tidiest first.
  *
- * Travel time is the same whichever way round the same areas are visited, so the
- * order only matters for the *pack*: which ingredients are in hand when. Tiny
- * covers get the full permutation treatment; wider ones get a bounded sample of
- * nearest-neighbour sweeps, rotations of the tidiest line and shuffles, all
- * sharing one budget with every other cover so a greedy plan cannot stall the UI.
+ * This is the *fastest* mode's generator, which stops at the first order that
+ * works: the tidiest line is almost always it, and the rest of the list is the
+ * rescue for a cover the tidiest line cannot shop — a different order can put the
+ * right ingredients in the pack at the right time. Greedy has its own search, see
+ * {@link greedyChoice}.
  */
 function* orderings(cover: WikiArea[], budget: { left: number }): Generator<WikiArea[]> {
   const tidiest = bestOrder(cover).order;
@@ -1324,6 +1408,266 @@ function* orderings(cover: WikiArea[], budget: { left: number }): Generator<Wiki
     budget.left -= 1;
     yield candidate;
   }
+}
+
+/**
+ * Every visit order of a cover small enough to enumerate, each one once.
+ *
+ * The permutation generator yields *one* array over and over, mutating it between
+ * yields — which is what makes it cheap to stream and what makes it useless to
+ * collect: `[...permutations(...)]` is the same array n! times, and a search that
+ * collected it would walk one order and call it exhaustive. Every consumer maps
+ * each yield as it arrives, into an array of its own.
+ */
+function everyOrder(cover: WikiArea[]): WikiArea[][] {
+  const orders: WikiArea[][] = [];
+  for (const permutation of permutations(cover.map((_, index) => index))) {
+    orders.push(permutation.map((index) => cover[index]));
+  }
+  return orders;
+}
+
+/** The areas a walk has not visited yet, nearest first from where it stands. */
+function nearestRest(cover: WikiArea[], visited: WikiArea[]): WikiArea[] {
+  const remaining = cover.filter((area) => !visited.includes(area));
+  const out: WikiArea[] = [];
+  let last = visited[visited.length - 1];
+
+  while (remaining.length > 0) {
+    let pick = 0;
+    for (let index = 1; index < remaining.length; index += 1) {
+      if (anchorDistance(last, remaining[index]) < anchorDistance(last, remaining[pick])) {
+        pick = index;
+      }
+    }
+    last = remaining.splice(pick, 1)[0];
+    out.push(last);
+  }
+
+  return out;
+}
+
+/**
+ * True when a partial walk is already behind the best complete one **for good**.
+ *
+ * A peak whose window lies entirely inside the part walked can no longer change:
+ * no continuation of this walk can raise it. So the first place the two keys
+ * differ, if it is one of those settled peaks, settles the comparison for every
+ * completion — and the branch can be dropped without ever being finished. This is
+ * the one prune in the search that is not a bound: the rest of it is a beam.
+ */
+function beatenForGood(
+  key: number[][],
+  incumbent: number[][],
+  walked: number,
+  lookAhead: number,
+): boolean {
+  const at = (profile: number[], index: number) =>
+    profile.length === 0 ? 0 : profile[Math.min(index, profile.length - 1)];
+
+  for (let window = 0; window < Math.min(key.length, incumbent.length); window += 1) {
+    const width = lookAhead - window;
+    const mine = key[window];
+    const theirs = incumbent[window];
+    for (let index = 0; index < Math.max(mine.length, theirs.length); index += 1) {
+      const difference = at(mine, index) - at(theirs, index);
+      if (difference === 0) continue;
+      // The peak covers areas `index .. index + width - 1`; all of them walked
+      // means nothing can move it any more.
+      return difference < 0 && index + width - 1 <= walked - 1;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Compares two partial walks on the peaks they have **settled**, and returns 0 when
+ * the two are still tied — the peaks that could still move by walking on say
+ * nothing yet.
+ *
+ * This is what the fronts are ranked by, and it matters more than the width does.
+ * Early on, every start of a cover reads alike: one area walked with a two-area
+ * window settles no peak at all, and ranking those walks by the *padded* key — the
+ * value they happen to be carrying now, repeated — would throw away the start that
+ * gathers nothing for two areas and is worth the most at three. Peaks a walk has
+ * already produced are the only thing it has actually said; the rest is a tie, and
+ * ties are kept (up to {@link GREEDY_FRONT}) rather than broken by a number nobody
+ * has earned yet.
+ */
+function compareSettled(a: number[][], b: number[][], walked: number, lookAhead: number): number {
+  const at = (profile: number[], index: number) =>
+    profile.length === 0 ? 0 : profile[Math.min(index, profile.length - 1)];
+
+  for (let window = 0; window < Math.min(a.length, b.length); window += 1) {
+    const width = lookAhead - window;
+    // The whole window has to be walked before any entry in it can move.
+    for (let index = 0; index + width - 1 <= walked - 1; index += 1) {
+      const difference = at(a[window], index) - at(b[window], index);
+      if (difference !== 0) return difference;
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * A walk grown by the search: the areas so far, the walk state that got there, and
+ * the key it was grown for.
+ *
+ * The state is carried rather than rebuilt because that is what makes growing cheap:
+ * extending a walk is one `advanceWalk` on a copy of the pack, not a re-walk of the
+ * prefix, so a front of twelve walks costs twelve steps a level instead of twelve
+ * prefixes.
+ */
+interface GrownWalk {
+  order: WikiArea[];
+  walk: Walk;
+  key: number[][];
+}
+
+/**
+ * The walk through one cover that greedy asks for, and the search that finds it.
+ *
+ * The old version tried a fixed handful of orders per cover — the tidiest line, a
+ * few nearest-neighbour sweeps, then seeded shuffles — and took the best of those.
+ * That is a sample, and it is why a cover could come back with a walk that is
+ * worse than one the very same comparison would have preferred: the good order was
+ * one of the permutations nobody drew. Measured on the reported plan (Maverick
+ * Runner, Sheet Metal Armor, Uchiwa, from Fabric Armor), the sampler walked 24 of
+ * that cover's 120 orders and returned `Lighthouse → Alley → Town Hall → Tunnel →
+ * Chapel` while `Lighthouse → Alley → Tunnel → Chapel → Town Hall` — walkable, and
+ * greedier at every window — was never tried.
+ *
+ * So the walk is *grown* instead. Every one-area walk is extended by every area
+ * left; the extensions are scored with the same greedy key the route list ranks
+ * with, kept to the best {@link GREEDY_BEAM}, and grown again. A partial walk is
+ * cheap because a walk is resumable ({@link advanceWalk}) and a pack can be copied
+ * ({@link Pack.clone}), and it is scored on the part of its curve it has already
+ * produced. Branches that are behind for good are dropped outright
+ * ({@link beatenForGood}); covers small enough to enumerate are enumerated
+ * instead, which is the same thing with certainty.
+ *
+ * Ties fall to the tidier line, then to the order's own name, so the answer is
+ * stable and there is never a draw left to chance.
+ */
+function greedyChoice(
+  dataset: WikiDataset,
+  plan: SimPlan,
+  cover: WikiArea[],
+  startingClothes: string | null,
+  assumed: ReadonlyMap<string, WikiItem>,
+  weaponTypes: ReadonlySet<string>,
+  lookAhead: number,
+  budget: { left: number },
+): GrownWalk | null {
+  // Held in an object so the closure below can replace it: a captured `let` would
+  // leave the compiler narrowing it to `null` for the rest of the function.
+  const found: { walk: GrownWalk | null } = { walk: null };
+
+  const start = () => startWalk(dataset, startingClothes, assumed, weaponTypes);
+  /** One whole order walked from the start, which the floor needs and the fronts do not. */
+  const walkThrough = (order: WikiArea[]): Walk => {
+    const walk = start();
+    for (const area of order) advanceWalk(walk, plan, area);
+    return walk;
+  };
+  const consider = (order: WikiArea[], walk: Walk) => {
+    const steps = walk.steps;
+    if (!planDone(plan, steps)) return;
+    const key = greedyKey(steps, lookAhead);
+    const incumbent = found.walk;
+    if (incumbent !== null) {
+      const greedier = compareKeys(key, incumbent.key);
+      if (greedier < 0) return;
+      if (greedier === 0) {
+        const tidier = pathDistance(order) - pathDistance(incumbent.order);
+        if (tidier > 0) return;
+        if (
+          tidier === 0 &&
+          order
+            .map((area) => area.id)
+            .join()
+            .localeCompare(incumbent.order.map((area) => area.id).join()) >= 0
+        ) {
+          return;
+        }
+      }
+    }
+    found.walk = { order: [...order], walk, key };
+  };
+
+  // Small covers: every order there is, so the answer is the best one, full stop.
+  if (cover.length <= MAX_PERMUTED_AREAS) {
+    for (const order of everyOrder(cover)) consider(order, walkThrough(order));
+    return found.walk;
+  }
+
+  // The floor: the orders the sampler this replaces used to try, shuffles and all,
+  // so a walk it found is never lost to the search. What the fronts add is the
+  // walks no seed happened to draw.
+  for (const order of orderings(cover, budget)) consider(order, walkThrough(order));
+
+  let frontier: GrownWalk[] = cover.map((area) => {
+    const walk = walkThrough([area]);
+    return { order: [area], walk, key: greedyKey(walk.steps, lookAhead) };
+  });
+  let grown = frontier.length;
+
+  while (frontier.length > 0 && frontier[0].order.length < cover.length) {
+    const next: GrownWalk[] = [];
+    for (const node of frontier) {
+      const last = node.order[node.order.length - 1];
+      const rest = cover.filter((area) => !node.order.includes(area));
+      // Nearest first: a deterministic expansion order, and the one that matters
+      // most for a walk ranked on what it is wearing soonest.
+      rest.sort(
+        (a, b) => anchorDistance(last, a) - anchorDistance(last, b) || a.id.localeCompare(b.id),
+      );
+
+      for (const area of rest) {
+        const order = [...node.order, area];
+        // One stop on a copy of the pack, not a re-walk of the prefix: this is what
+        // keeps a front of twelve affordable.
+        const walk = cloneWalk(node.walk);
+        advanceWalk(walk, plan, area);
+        const key = greedyKey(walk.steps, lookAhead);
+        // Behind the best walk already in hand, on a peak that cannot move: this
+        // branch and everything under it are settled.
+        const incumbent = found.walk;
+        if (incumbent !== null && beatenForGood(key, incumbent.key, order.length, lookAhead)) {
+          continue;
+        }
+        next.push({ order, walk, key });
+      }
+    }
+
+    if (grown + next.length > GREEDY_SEARCH_WALKS) {
+      // Out of search: finish what is on the boards, tidiest continuation first,
+      // so the cover still answers with a walk rather than with nothing.
+      for (const node of frontier) {
+        const rest = nearestRest(cover, node.order);
+        const walk = cloneWalk(node.walk);
+        for (const area of rest) advanceWalk(walk, plan, area);
+        consider([...node.order, ...rest], walk);
+      }
+      return found.walk;
+    }
+
+    grown += next.length;
+    const walked = frontier[0].order.length + 1;
+    next.sort(
+      (a, b) =>
+        compareSettled(b.key, a.key, walked, lookAhead) ||
+        compareKeys(b.key, a.key) ||
+        pathDistance(a.order) - pathDistance(b.order) ||
+        a.order.map((area) => area.id).join().localeCompare(b.order.map((area) => area.id).join()),
+    );
+    frontier = next.slice(0, GREEDY_FRONT);
+  }
+
+  for (const node of frontier) consider(node.order, node.walk);
+  return found.walk;
 }
 
 /**
@@ -1385,28 +1729,74 @@ export function buildRoutesCached(
   return solved;
 }
 
+/** One slice of a solve: the routes of a run of covers, and why any were dropped. */
+export interface RouteSlice {
+  /** One route per cover in the slice, in cover order and unsorted. */
+  routes: RoutePlan[];
+  /**
+   * Covers in the slice the island cannot supply at all — the plain cannot be
+   * shopped there whatever order it is walked in.
+   */
+  unreachable: number;
+  /** True when the slice stopped at {@link MAX_ROUTES} rather than exhausting. */
+  truncated: boolean;
+}
+
 /**
- * Fewest areas needed to obtain every item behind `trees`, sorted fastest first.
+ * A plan, ready to be solved in pieces.
  *
- * Returns every inclusion-minimal cover that a survivor can actually walk: a
- * route with a spare area is strictly slower, so it is left out, and so is any
- * cover whose plan cannot fit the pack in any order. Best-first: fewest moves,
- * then the tidiest line, then a stable name order. At most {@link MAX_ROUTES}
- * come back — the fastest ones, with `truncated` telling the UI more exist.
+ * Everything a solve needs that does **not** depend on the visit order — the
+ * requirements, what the island can supply, which areas are worth visiting, and
+ * above all the covers — is computed once here. Covers are independent of each
+ * other, so `solveCovers(from, to)` can be handed to another thread while the
+ * caller solves its own slice, and `assemble` puts the pieces back together with
+ * the ranking the app renders. This is the seam the worker pool uses; the
+ * single-threaded `buildRoutes` below is the same thing with one slice.
  */
-export function buildRoutes(
+export interface RouteSolver {
+  /** How many covers the plan has; the range `solveCovers` may be asked for. */
+  readonly covers: number;
+  /** True when the cover sweep itself hit {@link MAX_ROUTES}. */
+  readonly truncated: boolean;
+  /** Items the plan takes as carried; the panel says so when nothing is gathered. */
+  readonly assumed: WikiItem[];
+  readonly nothingToGather: boolean;
+  /** Solves covers `[from, to)`; `to` past the end is clamped. */
+  solveCovers(from: number, to: number): RouteSlice;
+  /** Merges slices into the answer the app renders: sorted, with its notices. */
+  assemble(slices: RouteSlice[]): RoutePlanSet;
+}
+
+const NO_ROUTES: RoutePlanSet = {
+  routes: [],
+  truncated: false,
+  inventoryBlocked: false,
+  assumed: [],
+  nothingToGather: false,
+};
+
+/**
+ * Prepares a plan for solving: the covers, the assumptions, and the two halves of a
+ * solve — one slice at a time, then the merge.
+ *
+ * A plan nothing can supply needs no walk, and answers from the assumptions alone;
+ * its solver has no covers, which is a legitimate answer rather than an error.
+ */
+export function createRouteSolver(
   dataset: WikiDataset,
   trees: RecipeNode[],
   options: RouteOptions = {},
-): RoutePlanSet {
-  const empty: RoutePlanSet = {
-    routes: [],
+): RouteSolver {
+  const empty = (assumed: WikiItem[], nothingToGather: boolean): RouteSolver => ({
+    covers: 0,
     truncated: false,
-    inventoryBlocked: false,
-    assumed: [],
-    nothingToGather: false,
-  };
-  if (trees.length === 0) return empty;
+    assumed,
+    nothingToGather,
+    solveCovers: () => ({ routes: [], unreachable: 0, truncated: false }),
+    assemble: () => ({ ...NO_ROUTES, assumed, nothingToGather }),
+  });
+
+  if (trees.length === 0) return empty([], false);
 
   const startingClothes =
     options.startingClothes && dataset.itemsById[options.startingClothes]
@@ -1429,7 +1819,8 @@ export function buildRoutes(
   // Nothing on the island is worth visiting: the whole plan is either worn or
   // carried already, so there is no walk to plan.
   if (candidates.length === 0) {
-    return { ...empty, assumed: [...assumed.values()], nothingToGather: assumed.size > 0 };
+    const carried = [...assumed.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return empty(carried, assumed.size > 0);
   }
 
   // Only when the sweep would be expensive: dropping areas another one beats
@@ -1455,71 +1846,111 @@ export function buildRoutes(
       ? sweepCovers(visited.length, isCover)
       : { masks: greedyCovers(visited.length, missing), truncated: false };
 
-  const routes: RoutePlan[] = [];
-  const budget = { left: RUN_BUDGET };
   const cookableCandidates = cookableFoods(dataset);
-  /** Covers dropped because the ground cannot supply them, not because of the pack. */
-  let unreachable = 0;
-
-  for (const mask of masks) {
-    const cover = visited.filter((_, index) => mask & (1 << index));
-    const chosen = new Set(cover.map((area) => area.id));
-    const plan = compilePlan(requirements, chosen, dataset, startingClothes, assumed);
-    // The demand side of the cover test is per node, so a cover can survive it
-    // and still be impossible to shop for. Nothing to try here: the order
-    // cannot change what the areas hold.
-    if (!plan) {
-      unreachable += 1;
-      continue;
-    }
-
-    // Fastest stops at the first order that works. Greedy keeps looking, because
-    // the order decides how early each part gets built and therefore how early
-    // the survivor is worth anything.
-    let best: { order: WikiArea[]; steps: RouteStep[]; key: number[][] } | null = null;
-    let tried = 0;
-
-    for (const order of orderings(cover, budget)) {
-      const steps = runRoute(dataset, plan, order, startingClothes, assumed, weaponTypes);
-      if (!steps) continue;
-
-      if (!greedy) {
-        best = { order, steps, key: [] };
-        break;
-      }
-
-      const key = greedyKey(steps, lookAhead);
-      if (!best || compareKeys(key, best.key) > 0) best = { order, steps, key };
-      tried += 1;
-      if (tried >= GREEDY_ORDERS_PER_COVER) break;
-    }
-
-    if (best) {
-      const route = toRoute(dataset, cover, best.order, best.steps, cookableCandidates);
-      routes.push({ ...route, greedyScore: greedyScore(best.steps, lookAhead) });
-    }
-    if (routes.length >= MAX_ROUTES || budget.left <= 0) break;
-  }
-
-  routes.sort(
-    greedy
-      ? (a, b) => compareGreedy(a, b, lookAhead)
-      : (a, b) =>
-          a.moves - b.moves ||
-          a.walkDistance - b.walkDistance ||
-          a.areaIds.join().localeCompare(b.areaIds.join()),
-  );
+  const named = [...assumed.values()].sort((a, b) => a.name.localeCompare(b.name));
 
   return {
-    routes,
-    truncated: truncated || routes.length >= MAX_ROUTES,
-    // Covers exist but none of them can be walked with six bag slots. Only when
-    // no cover was dropped for want of supply: "the pack is too small" would be
-    // the wrong thing to say about a plan the island cannot equip at all.
-    inventoryBlocked: routes.length === 0 && masks.length > 0 && unreachable === 0,
-    assumed: [...assumed.values()].sort((a, b) => a.name.localeCompare(b.name)),
+    covers: masks.length,
+    truncated,
+    assumed: named,
     nothingToGather: false,
+
+    solveCovers(from: number, to: number): RouteSlice {
+      const routes: RoutePlan[] = [];
+      const budget = { left: RUN_BUDGET };
+      /** Covers dropped because the ground cannot supply them, not the pack. */
+      let unreachable = 0;
+      let cut = false;
+
+      for (let index = Math.max(0, from); index < Math.min(to, masks.length); index += 1) {
+        const mask = masks[index];
+        const cover = visited.filter((_, position) => mask & (1 << position));
+        const chosen = new Set(cover.map((area) => area.id));
+        const plan = compilePlan(requirements, chosen, dataset, startingClothes, assumed);
+        // The demand side of the cover test is per node, so a cover can survive it
+        // and still be impossible to shop for. Nothing to try here: the order
+        // cannot change what the areas hold.
+        if (!plan) {
+          unreachable += 1;
+          continue;
+        }
+
+        // Fastest stops at the first order that works; greedy searches for the walk
+        // its own rule would pick, because the order decides how early each part
+        // gets built and therefore how early the survivor is worth anything.
+        const choice = greedy
+          ? greedyChoice(dataset, plan, cover, startingClothes, assumed, weaponTypes, lookAhead, budget)
+          : null;
+        const best = greedy
+          ? (choice === null ? null : { order: choice.order, steps: choice.walk.steps })
+          : (() => {
+              for (const order of orderings(cover, budget)) {
+                const steps = runRoute(dataset, plan, order, startingClothes, assumed, weaponTypes);
+                if (steps) return { order, steps };
+                // Orders the cover cannot be shopped in are the reason the generator
+                // keeps going past the tidiest line.
+              }
+              return null;
+            })();
+
+        if (best) {
+          const route = toRoute(dataset, cover, best.order, best.steps, cookableCandidates);
+          routes.push({ ...route, greedyScore: greedyScore(best.steps, lookAhead) });
+        }
+        if (routes.length >= MAX_ROUTES || budget.left <= 0) {
+          cut = true;
+          break;
+        }
+      }
+
+      return { routes, unreachable, truncated: cut };
+    },
+
+    assemble(slices: RouteSlice[]): RoutePlanSet {
+      const routes = slices.flatMap((slice) => slice.routes);
+      routes.sort(
+        greedy
+          ? (a, b) => compareGreedy(a, b, lookAhead)
+          : (a, b) =>
+              a.moves - b.moves ||
+              a.walkDistance - b.walkDistance ||
+              a.areaIds.join().localeCompare(b.areaIds.join()),
+      );
+
+      const unreachable = slices.reduce((total, slice) => total + slice.unreachable, 0);
+      return {
+        routes,
+        truncated: truncated || slices.some((slice) => slice.truncated) || routes.length >= MAX_ROUTES,
+        // Covers exist but none of them can be walked with six bag slots. Only when
+        // no cover was dropped for want of supply: "the pack is too small" would be
+        // the wrong thing to say about a plan the island cannot equip at all.
+        inventoryBlocked: routes.length === 0 && masks.length > 0 && unreachable === 0,
+        assumed: named,
+        nothingToGather: false,
+      };
+    },
   };
+}
+
+/**
+ * Fewest areas needed to obtain every item behind `trees`, sorted fastest first.
+ *
+ * Returns every inclusion-minimal cover that a survivor can actually walk: a
+ * route with a spare area is strictly slower, so it is left out, and so is any
+ * cover whose plan cannot fit the pack in any order. Best-first: fewest moves,
+ * then the tidiest line, then a stable name order. At most {@link MAX_ROUTES}
+ * come back — the fastest ones, with `truncated` telling the UI more exist.
+ *
+ * One slice, on this thread: the same solver the worker pool splits up, which is
+ * what keeps the two paths answering identically.
+ */
+export function buildRoutes(
+  dataset: WikiDataset,
+  trees: RecipeNode[],
+  options: RouteOptions = {},
+): RoutePlanSet {
+  const solver = createRouteSolver(dataset, trees, options);
+  return solver.assemble([solver.solveCovers(0, solver.covers)]);
 }
 
 /** A route the reader traced by clicking areas, walked exactly like a computed one. */

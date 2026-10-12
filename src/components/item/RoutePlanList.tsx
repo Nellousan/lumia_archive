@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { ItemSprite } from "@/components/ui/ItemSprite";
+import { Spinner } from "@/components/ui/Spinner";
 import { scrollWithinScroller } from "@/lib/scroll";
 import { BAG_SLOTS } from "@/lib/wiki/inventory";
 import { RARITY_META, itemTypeLabel } from "@/lib/wiki/taxonomy";
@@ -29,6 +30,16 @@ export interface RoutePlanListProps {
   assumed: WikiItem[];
   /** True when the plan needs no walking at all. */
   nothingToGather: boolean;
+  /**
+   * True while the routes for the plan on screen are still being solved.
+   *
+   * The solve is off the main thread, so this is not a frozen page: it is the route
+   * section saying that its list is the one thing that has to wait, while the island
+   * and everything above stay live.
+   */
+  solving: boolean;
+  /** Identity of the solve in flight — what the delay below is measured against. */
+  solvingKey: string;
   /** Route currently highlighted on the map — hovered, or pinned by a click. */
   activeRouteId: string | null;
   /** Clothes worn from the first move, when one was picked. */
@@ -472,6 +483,8 @@ export function RoutePlanList({
   inventoryBlocked,
   assumed,
   nothingToGather,
+  solving,
+  solvingKey,
   activeRouteId,
   startingItem,
   mode,
@@ -488,6 +501,15 @@ export function RoutePlanList({
   onClearManual,
 }: RoutePlanListProps) {
   const [expanded, setExpanded] = useState(false);
+  /**
+   * Whether the spinner has earned its place yet.
+   *
+   * A one-item plan is solved before this fires, so the common case never flashes a
+   * "solving" row at all; a wide plan is still thinking a fifth of a second in, and
+   * by then the row is the honest thing to show. The placeholder in the meantime is
+   * the same box without its text, so nothing jumps when the spinner arrives.
+   */
+  const [spinnerFor, setSpinnerFor] = useState<string | null>(null);
   /** The row the arriving link names, so it can be brought into view. */
   const walkRowRef = useRef<HTMLLIElement | null>(null);
   /** Set once the arrival has been scrolled to, so nothing pulls the rail back. */
@@ -501,6 +523,13 @@ export function RoutePlanList({
    * and land the row under the header instead of against it — and it is spent on
    * arrival, so browsing on from there never pulls it back.
    */
+  useEffect(() => {
+    if (!solving) return;
+    const timer = setTimeout(() => setSpinnerFor(solvingKey), 140);
+    return () => clearTimeout(timer);
+  }, [solving, solvingKey]);
+  const showSolving = solving && spinnerFor === solvingKey;
+
   useEffect(() => {
     if (!manual || !revealWalk || revealed.current) return;
     const row = walkRowRef.current;
@@ -516,6 +545,27 @@ export function RoutePlanList({
         add it as a stop, and click it again to take it out. Stops connect in the order you click
         them, and what a stop picks up comes off the other bubbles.
       </p>
+    );
+  }
+
+  /*
+   * The list is the one part of this screen that is computed elsewhere, so it is the
+   * one part that can be waited for. It says so itself rather than falling through to
+   * an empty state: "no route gathers this plan" is a claim, and it must not be made
+   * by a section whose answer has not arrived yet. A trace already on screen is never
+   * replaced by this — the reader's own walk is theirs.
+   */
+  if (routes.length === 0 && solving) {
+    return showSolving ? (
+      <p className="flex items-center gap-2.5 rounded-xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-stone-500">
+        <Spinner className="size-3.5 shrink-0 text-amber-300/80" />
+        <span>
+          <span className="text-stone-400">Solving the walk…</span> {plannedCount} item
+          {plannedCount === 1 ? "" : "s"} to cover, every set of areas weighed against the others.
+        </span>
+      </p>
+    ) : (
+      <p aria-hidden="true" className="h-[52px] rounded-xl border border-dashed border-white/10" />
     );
   }
 

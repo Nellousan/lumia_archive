@@ -234,7 +234,7 @@
         "ingredients"
       ],
       "value": null,
-      "defaultQuantity": 2,
+      "defaultQuantity": 1,
       "recipe": [
         "iron_ore",
         "scrap_metal"
@@ -322,7 +322,7 @@
       "name": "Burdock",
       "rarity": "common",
       "type": [
-        "ingredients"
+        "health"
       ],
       "value": 10,
       "defaultQuantity": 1,
@@ -8288,6 +8288,76 @@
       "recipe": [
         "engineered_arcane_motor",
         "rdx"
+      ]
+    },
+    {
+      "id": "fried_chicken",
+      "name": "Fried Chicken",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 65,
+      "defaultQuantity": 2,
+      "recipe": [
+        "bird_meat",
+        "heated_oil"
+      ]
+    },
+    {
+      "id": "healing_potion",
+      "name": "Healing Potion",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 65,
+      "defaultQuantity": 2,
+      "recipe": [
+        "herb",
+        "glass_bottle"
+      ]
+    },
+    {
+      "id": "spicy_noodle",
+      "name": "Spicy Noodle",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 54,
+      "defaultQuantity": 5,
+      "recipe": [
+        "ramen",
+        "soy_sauce"
+      ]
+    },
+    {
+      "id": "baked_mudfish",
+      "name": "Baked Mudfish",
+      "rarity": "rare",
+      "type": [
+        "health"
+      ],
+      "value": 50,
+      "defaultQuantity": 3,
+      "recipe": [
+        "mudfish",
+        "heated_whetstone"
+      ]
+    },
+    {
+      "id": "chicken_carpaccio",
+      "name": "Chicken Carpaccio",
+      "rarity": "uncommon",
+      "type": [
+        "health"
+      ],
+      "value": 60,
+      "defaultQuantity": 1,
+      "recipe": [
+        "bird_meat",
+        "kitchen_knife"
       ]
     }
   ],

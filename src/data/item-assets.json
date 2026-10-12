@@ -44,7 +44,7 @@
     "band_aid",
     "bandage",
     "bastard_sword",
-    "bat_weapon",
+    "bat",
     "battery",
     "battle_axe",
     "battle_boots",
@@ -984,7 +984,7 @@
       "w": 222,
       "h": 109
     },
-    "bat_weapon": {
+    "bat": {
       "sw": 256,
       "sh": 128,
       "x": 4,
